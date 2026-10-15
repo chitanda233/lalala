@@ -1,0 +1,16 @@
+{
+  "name": "lalala",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "一个关于配方、等待和放松的小游戏。",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "check": "node --check app.js && node --check bristol.js && node --check server.mjs",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0"
+  }
+}

@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f7f0" />
+    <meta
+      name="description"
+      content="lalala，一个关于吃点什么、放空一会儿和痛快释放的轻松小游戏。"
+    />
+    <title>lalala · 今天也要痛快一点</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <svg
+      class="icon-definitions"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <symbol id="i-leaf" viewBox="0 0 24 24">
+          <path d="M20 4C8 2 2 7 5 15s17 4 15-11Z" />
+          <path d="m4 21 12-12M9 16v-5m0 5h5" />
+        </symbol>
+        <symbol id="i-drop" viewBox="0 0 24 24">
+          <path d="M12 3c-2 4-7 8-7 12a7 7 0 0 0 14 0c0-4-5-8-7-12Z" />
+          <path d="M8 15c0 2 1 3 3 3" />
+        </symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 6v6l4 2" />
+        </symbol>
+        <symbol id="i-spark" viewBox="0 0 24 24">
+          <path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z" />
+        </symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24">
+          <path d="M4 12h15m-6-6 6 6-6 6" />
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+          <path d="m5 12 5 5L20 7" />
+        </symbol>
+        <symbol id="i-book" viewBox="0 0 24 24">
+          <path
+            d="M12 5c-3-2-7-2-10-1v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v15"
+          />
+        </symbol>
+        <symbol id="i-sound" viewBox="0 0 24 24">
+          <path d="m11 4-6 5H2v6h3l6 5ZM16 8c3 2 3 6 0 8m3-11c5 4 5 10 0 14" />
+        </symbol>
+        <symbol id="i-mute" viewBox="0 0 24 24">
+          <path d="m11 4-6 5H2v6h3l6 5ZM16 9l6 6m0-6-6 6" />
+        </symbol>
+        <symbol id="i-dice" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="18" height="18" rx="5" />
+          <path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01" />
+        </symbol>
+        <symbol id="i-close" viewBox="0 0 24 24">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </symbol>
+        <symbol id="i-coffee" viewBox="0 0 24 24">
+          <path
+            d="M3 8h13v7a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5Zm13 1h2a3 3 0 0 1 0 6h-2M6 3v2m5-2v2M1 22h19"
+          />
+        </symbol>
+        <symbol id="i-chili" viewBox="0 0 24 24">
+          <path d="M17 6c-1 11-6 16-14 14 6-3 5-12 11-14ZM15 6c-1-3 2-5 5-4" />
+        </symbol>
+        <symbol id="i-heart" viewBox="0 0 24 24">
+          <path d="M12 21 3.5 12.5C-3 5 6-1 12 6c6-7 15-1 8.5 6.5Z" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="lalala 首页"
+          ><img src="/assets/favicon.svg" alt="" /><span
+            >lalala<span class="brand-dot">.</span></span
+          ></a
+        >
+        <div class="header-note">
+          <span class="little-star">✳</span> 人生大事，慢慢来。
+        </div>
+        <nav class="topnav" aria-label="主导航">
+          <span class="nav-current"><span></span> 卫生间</span
+          ><button class="nav-button" id="collection-button">
+            <svg class="icon"><use href="#i-book" /></svg>我的图鉴
+            <span class="count" id="collection-count">00</span></button
+          ><button class="help-button" id="help-button" aria-label="玩法说明">
+            ?
+          </button>
+        </nav>
+      </header>
+
+      <main>
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">YOUR DAILY MOMENT OF RELIEF</div>
+            <h1>
+              今天，也要<span>痛快一点。</span
+              ><svg class="title-spark icon"><use href="#i-spark" /></svg>
+            </h1>
+          </div>
+          <div class="room-status">
+            <span class="status-dot"></span
+            ><span id="room-status">私人卫生间 · 空闲中</span>
+          </div>
+        </div>
+
+        <div class="game-layout">
+          <aside class="ingredients-panel" aria-label="配方设置">
+            <div class="panel-heading">
+              <span class="step-number">01</span>
+              <h2>调配一下</h2>
+              <span class="panel-caption">好好吃，好好拉</span>
+            </div>
+            <section class="recipe-section">
+              <div class="section-label">
+                <h3>
+                  <svg class="icon"><use href="#i-leaf" /></svg>主要配方
+                </h3>
+                <span>选一种喜欢的</span>
+              </div>
+              <div class="recipe-grid" role="group" aria-label="主要配方">
+                <button
+                  class="recipe-card selected"
+                  data-recipe="balanced"
+                  aria-pressed="true"
+                >
+                  <span class="recipe-art art-balanced"
+                    ><svg viewBox="0 0 80 66" aria-hidden="true">
+                      <path
+                        d="M12 34h56c-2 19-13 25-28 25S14 53 12 34"
+                        fill="#e9b786"
+                        stroke="#946d4f"
+                        stroke-width="2.3"
+                      />
+                      <path
+                        d="M11 34q29 9 58 0"
+                        fill="#f6ddaf"
+                        stroke="#946d4f"
+                        stroke-width="2.3"
+                      />
+                      <path
+                        d="M19 30c-5-10 5-18 12-11 0-12 17-15 21-5 8-3 16 6 11 16"
+                        fill="#8cb270"
+                        stroke="#617c53"
+                        stroke-width="2.3"
+                      />
+                      <path
+                        d="m32 30 6-9m12 10-4-12"
+                        stroke="#617c53"
+                        stroke-width="2"
+                      />
+                      <circle
+                        cx="24"
+                        cy="33"
+                        r="8"
+                        fill="#e88e6d"
+                        stroke="#a46551"
+                        stroke-width="2"
+                      />
+                      <circle
+                        cx="54"
+                        cy="33"
+                        r="8"
+                        fill="#edcf78"
+                        stroke="#ac9251"
+                        stroke-width="2"
+                      /></svg></span
+                  ><span class="recipe-name">均衡套餐</span
+                  ><span class="recipe-desc">荤素搭配，稳稳的</span
+                  ><span class="selection-check"
+                    ><svg class="icon"><use href="#i-check" /></svg
+                  ></span>
+                </button>
+                <button
+                  class="recipe-card"
+                  data-recipe="garden"
+                  aria-pressed="false"
+                >
+                  <span class="recipe-art art-garden"
+                    ><svg viewBox="0 0 80 66" aria-hidden="true">
+                      <path
+                        d="M27 32c-19-2-21-20-6-24 1-12 18-9 20 0 14-10 28 1 22 12 17 7 8 23-9 20"
+                        fill="#94b97d"
+                        stroke="#628157"
+                        stroke-width="2.2"
+                      />
+                      <path
+                        d="M29 26c7 13 5 24 1 32h22c-6-15-5-20-1-29M40 29v24"
+                        fill="#bdd39c"
+                        stroke="#628157"
+                        stroke-width="2.2"
+                      />
+                      <path
+                        d="M18 19q6-8 13 0m14-2q7-8 13-1"
+                        fill="none"
+                        stroke="#6f955f"
+                        stroke-width="2.2"
+                      /></svg></span
+                  ><span class="recipe-name">绿色生活</span
+                  ><span class="recipe-desc">满满纤维，轻盈派</span
+                  ><span class="selection-check"
+                    ><svg class="icon"><use href="#i-check" /></svg
+                  ></span>
+                </button>
+                <button
+                  class="recipe-card"
+                  data-recipe="carbs"
+                  aria-pressed="false"
+                >
+                  <span class="recipe-art art-carbs"
+                    ><svg viewBox="0 0 80 66" aria-hidden="true">
+                      <path
+                        d="M14 32C1 17 24 3 41 8c21-6 40 11 26 25v24H14Z"
+                        fill="#dba569"
+                        stroke="#a97b4b"
+                        stroke-width="2.3"
+                      />
+                      <path
+                        d="M21 31C10 21 28 10 41 15c16-6 31 8 18 17v18H21Z"
+                        fill="#fae2af"
+                      />
+                      <path
+                        d="m31 26-5 11m16-14-6 15m17-12-5 11"
+                        stroke="#dfbd85"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                      /></svg></span
+                  ><span class="recipe-name">快乐碳水</span
+                  ><span class="recipe-desc">面包脑袋的快乐</span
+                  ><span class="selection-check"
+                    ><svg class="icon"><use href="#i-check" /></svg
+                  ></span>
+                </button>
+                <button
+                  class="recipe-card"
+                  data-recipe="spicy"
+                  aria-pressed="false"
+                >
+                  <span class="recipe-art art-spicy"
+                    ><svg viewBox="0 0 80 66" aria-hidden="true">
+                      <path
+                        d="M53 17C56 49 30 66 13 48c17 0 14-30 40-31Z"
+                        fill="#df8a71"
+                        stroke="#a75f50"
+                        stroke-width="2.3"
+                      />
+                      <path
+                        d="M48 19c-4-5 0-10 7-8l4 11-11-3Z"
+                        fill="#8ca477"
+                        stroke="#637956"
+                        stroke-width="2"
+                      />
+                      <path
+                        d="M54 12c0-7 6-10 11-9"
+                        fill="none"
+                        stroke="#637956"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M28 43c8-2 12-8 15-14"
+                        stroke="#efb09a"
+                        stroke-width="3"
+                        fill="none"
+                        stroke-linecap="round"
+                      /></svg></span
+                  ><span class="recipe-name">火辣挑战</span
+                  ><span class="recipe-desc">有点刺激，有点上头</span
+                  ><span class="selection-check"
+                    ><svg class="icon"><use href="#i-check" /></svg
+                  ></span>
+                </button>
+              </div>
+            </section>
+            <section class="water-section">
+              <div class="section-label">
+                <h3>
+                  <svg class="icon"><use href="#i-drop" /></svg>喝水量
+                </h3>
+                <output id="water-value" for="water"
+                  >1,500 <small>mL</small></output
+                >
+              </div>
+              <div class="water-control">
+                <input
+                  type="range"
+                  id="water"
+                  min="250"
+                  max="2500"
+                  step="250"
+                  value="1500"
+                  aria-label="喝水量，毫升"
+                />
+                <div class="range-labels">
+                  <span>小口润润</span><span>吨吨吨吨</span>
+                </div>
+              </div>
+            </section>
+            <section class="additives-section">
+              <div class="section-label">
+                <h3>
+                  <svg class="icon"><use href="#i-spark" /></svg>额外添加剂
+                </h3>
+                <span>自由加点料</span>
+              </div>
+              <div class="additive-list">
+                <label class="additive"
+                  ><span class="additive-icon probiotic">✳</span
+                  ><span class="additive-copy"
+                    ><strong>益生菌</strong
+                    ><small>给肚子一点小帮手</small></span
+                  ><input
+                    type="checkbox"
+                    value="probiotic"
+                    class="additive-input" /><span
+                    class="switch"
+                    aria-hidden="true"
+                  ></span
+                ></label>
+                <label class="additive"
+                  ><span class="additive-icon coffee"
+                    ><svg class="icon"><use href="#i-coffee" /></svg></span
+                  ><span class="additive-copy"
+                    ><strong>一杯咖啡</strong
+                    ><small>叫醒沉睡的灵魂</small></span
+                  ><input
+                    type="checkbox"
+                    value="coffee"
+                    class="additive-input" /><span
+                    class="switch"
+                    aria-hidden="true"
+                  ></span
+                ></label>
+                <label class="additive"
+                  ><span class="additive-icon chili"
+                    ><svg class="icon"><use href="#i-chili" /></svg></span
+                  ><span class="additive-copy"
+                    ><strong>神秘辣酱</strong
+                    ><small>给平静的生活加点戏</small></span
+                  ><input
+                    type="checkbox"
+                    value="chili"
+                    class="additive-input" /><span
+                    class="switch"
+                    aria-hidden="true"
+                  ></span
+                ></label>
+              </div>
+            </section>
+          </aside>
+
+          <section class="bathroom-panel" aria-label="马桶和游戏状态">
+            <div class="scene-caption">
+              <span></span>你的专属放空角落<span></span>
+            </div>
+            <div class="bathroom-scene" id="bathroom-scene">
+              <div class="tiled-wall">
+                <div class="wall-top"></div>
+                <div class="window"><span></span><span></span></div>
+                <span class="wall-sticker">take it<br /><em>easy.</em></span>
+              </div>
+              <div class="scene-floor"></div>
+              <div class="floor-shadow"></div>
+              <svg
+                class="bathroom-illustration"
+                viewBox="0 0 560 520"
+                role="img"
+                aria-label="薄荷绿浴室里一只微笑的白色马桶和一盆绿植"
+              >
+                <defs>
+                  <linearGradient id="ceramic" x1="0" x2="1" y1="0" y2=".8">
+                    <stop stop-color="#fffef5" />
+                    <stop offset=".55" stop-color="#f5f7eb" />
+                    <stop offset="1" stop-color="#c9d8cc" />
+                  </linearGradient>
+                  <linearGradient id="tank" x1="0" x2="1">
+                    <stop stop-color="#fcfcf2" />
+                    <stop offset="1" stop-color="#e0e8d9" />
+                  </linearGradient>
+                  <linearGradient id="bowl" x1="0" y1="0" x2="0" y2="1">
+                    <stop stop-color="#8eafa5" />
+                    <stop offset="1" stop-color="#c6ded4" />
+                  </linearGradient>
+                  <linearGradient id="pot" x1="0" x2="1">
+                    <stop stop-color="#d5ab7f" />
+                    <stop offset="1" stop-color="#b98b65" />
+                  </linearGradient>
+                </defs>
+                <g
+                  class="plant"
+                  stroke="#647b5e"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                >
+                  <path
+                    d="M86 405c1-39 0-61-9-103m9 78c17-13 24-28 29-48m-31 25c-17-14-22-25-28-41"
+                    fill="none"
+                  />
+                  <path
+                    d="M79 337c-27-3-32-19-25-38 20 4 28 15 25 38Z"
+                    fill="#9bb481"
+                  />
+                  <path
+                    d="M88 367c28-4 39-21 32-41-24 4-35 20-32 41Z"
+                    fill="#8ca779"
+                  />
+                  <path
+                    d="M79 312c-19-7-20-26-10-43 17 11 20 26 10 43Z"
+                    fill="#78976c"
+                  />
+                  <path
+                    d="M65 365c-25 1-38-12-37-32 23-3 38 12 37 32Z"
+                    fill="#a4bc8d"
+                  />
+                  <path
+                    d="M58 398h56l-7 43c-2 16-40 16-42 0Z"
+                    fill="url(#pot)"
+                    stroke="#9d7e61"
+                  />
+                  <ellipse
+                    cx="86"
+                    cy="398"
+                    rx="28"
+                    ry="7"
+                    fill="#e6bf91"
+                    stroke="#9d7e61"
+                  />
+                  <path d="m75 415 3 23m12-23v25" stroke="#b18b67" />
+                </g>
+                <g
+                  class="toilet-body"
+                  stroke="#667c70"
+                  stroke-width="2.7"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M265 114 395 104q18 0 18 20v133l-152 18-18-130q-2-26 22-31Z"
+                    fill="url(#tank)"
+                  />
+                  <path
+                    d="m396 106 16 11v139l-20 11Z"
+                    fill="#cbd9ca"
+                    stroke="none"
+                  />
+                  <path
+                    d="M251 111q75-26 153-6l13 17q-75-8-171 9Z"
+                    fill="#fffef6"
+                  />
+                  <path
+                    d="m275 162 26-2q8-1 8 6t-8 8l-26 2q-7 0-7-6t7-8Z"
+                    fill="#a9b9a9"
+                    stroke="#7c9281"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M179 305c-5 65 23 100 61 110l-12 54q-3 13 25 20c37 10 82 3 90-12l-8-77c39-18 65-51 65-98Z"
+                    fill="url(#ceramic)"
+                  />
+                  <path
+                    d="M318 369c-16 40-26 66-12 116 18-1 33-5 37-12l-8-73c23-14 41-29 52-54Z"
+                    fill="#c7d7c9"
+                    stroke="none"
+                    opacity=".55"
+                  />
+                  <path
+                    d="M239 416c14 6 43 7 58 3"
+                    fill="none"
+                    stroke="#aebfb0"
+                  />
+                  <path
+                    d="M149 279c0-38 53-68 123-68 72 0 135 30 135 69s-51 71-127 71-131-31-131-72Z"
+                    fill="#eef3e5"
+                  />
+                  <ellipse
+                    cx="278"
+                    cy="277"
+                    rx="105"
+                    ry="48"
+                    fill="url(#bowl)"
+                  />
+                  <ellipse
+                    class="toilet-water"
+                    cx="279"
+                    cy="289"
+                    rx="76"
+                    ry="29"
+                    fill="#c4e4df"
+                    stroke="#a0c6ba"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M160 277c15-29 57-47 116-47 60 0 106 20 120 45-10-33-58-57-120-57-60 0-106 22-116 59Z"
+                    fill="#fffef8"
+                    stroke="none"
+                  />
+                  <path
+                    d="M164 303c42 43 158 60 218 7"
+                    fill="none"
+                    stroke="#fffef9"
+                    stroke-width="7"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M195 354c3 17 10 28 21 37"
+                    fill="none"
+                    stroke="#fffef9"
+                    stroke-width="7"
+                    stroke-linecap="round"
+                  />
+                  <g
+                    class="toilet-face"
+                    stroke="#607567"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                  >
+                    <path d="M256 365v5m42-6v5" />
+                    <path d="M269 377q9 10 17 0" fill="none" />
+                    <ellipse
+                      cx="245"
+                      cy="377"
+                      rx="7"
+                      ry="4"
+                      fill="#e6bcb0"
+                      stroke="none"
+                    />
+                    <ellipse
+                      cx="308"
+                      cy="376"
+                      rx="7"
+                      ry="4"
+                      fill="#e6bcb0"
+                      stroke="none"
+                    />
+                  </g>
+                </g>
+                <g class="paper-roll" stroke="#9a9d83" stroke-width="2.2">
+                  <path d="M448 348v39h47v-39" fill="#f9f2db" />
+                  <path
+                    d="M445 350h48v41q-8-8-16 0t-16 0-16 0Z"
+                    fill="#fffae8"
+                  />
+                  <ellipse cx="469" cy="347" rx="24" ry="10" fill="#fdf6df" />
+                  <ellipse cx="469" cy="347" rx="8" ry="3.8" fill="#c5ba9a" />
+                  <path
+                    d="M449 375h40"
+                    stroke-dasharray="3 4"
+                    stroke-width="1.4"
+                  />
+                </g>
+                <g
+                  class="sparkles"
+                  fill="none"
+                  stroke="#a7ae71"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                >
+                  <path d="m181 158 3 10 9 3-9 3-3 10-3-10-9-3 9-3Z" />
+                  <path d="m438 222 3 10 9 3-9 3-3 10-3-10-9-3 9-3Z" />
+                  <path d="M161 376v10m-5-5h10" />
+                </g>
+              </svg>
+              <div class="floating-note" id="floating-note">
+                <svg class="icon"><use href="#i-leaf" /></svg>
+                放轻松，好事正在发生
+              </div>
+              <div class="steam steam-one">～</div>
+              <div class="steam steam-two">～</div>
+              <div class="steam steam-three">～</div>
+            </div>
+            <div class="action-area" aria-live="polite">
+              <span class="ready-tag" id="ready-tag"
+                ><span></span>一切就绪，等你落座</span
+              >
+              <h2 id="action-title">把烦恼，统统冲走。</h2>
+              <p id="action-description">选好今天的配方，剩下的交给时间。</p>
+              <div class="session-progress" id="session-progress" hidden>
+                <div>
+                  <span id="session-label">正在酝酿</span
+                  ><strong id="countdown">00:04</strong>
+                </div>
+                <div class="progress-track">
+                  <span id="progress-fill"></span>
+                </div>
+              </div>
+              <button class="start-button" id="start-button">
+                <span class="button-text">开始拉屎</span
+                ><svg class="icon"><use href="#i-arrow" /></svg></button
+              ><span class="keyboard-hint" id="keyboard-hint"
+                >给自己一点时间 <span>SPACE</span> 也可以开始</span
+              >
+            </div>
+          </section>
+
+          <aside class="time-panel" aria-label="时间和本次配方预览">
+            <div class="panel-heading">
+              <span class="step-number">02</span>
+              <h2>放空多久</h2>
+            </div>
+            <p class="time-intro">世界很忙，你可以慢一点。</p>
+            <div class="time-options" role="group" aria-label="时长选择">
+              <button
+                class="time-option"
+                data-duration="2"
+                aria-pressed="false"
+              >
+                <span class="time-option-icon"
+                  ><svg class="icon"><use href="#i-clock" /></svg></span
+                ><span class="time-copy"
+                  ><strong>2 <small>秒</small></strong
+                  ><span>速战速决</span></span
+                ><span class="radio-mark"></span>
+              </button>
+              <button
+                class="time-option selected"
+                data-duration="4"
+                aria-pressed="true"
+              >
+                <span class="time-option-icon"
+                  ><svg class="icon"><use href="#i-clock" /></svg></span
+                ><span class="time-copy"
+                  ><strong
+                    >4 <small>秒</small
+                    ><span class="recommend">刚刚好</span></strong
+                  ><span>享受片刻宁静</span></span
+                ><span class="radio-mark"></span>
+              </button>
+              <button
+                class="time-option"
+                data-duration="8"
+                aria-pressed="false"
+              >
+                <span class="time-option-icon"
+                  ><svg class="icon"><use href="#i-clock" /></svg></span
+                ><span class="time-copy"
+                  ><strong>8 <small>秒</small></strong
+                  ><span>深度放空一下</span></span
+                ><span class="radio-mark"></span>
+              </button>
+              <button
+                class="time-option random-option"
+                data-duration="random"
+                aria-pressed="false"
+              >
+                <span class="time-option-icon"
+                  ><svg class="icon"><use href="#i-dice" /></svg></span
+                ><span class="time-copy"
+                  ><strong class="random-label">交给命运</strong
+                  ><span>2–8 秒，开个盲盒</span></span
+                ><span class="radio-mark"></span>
+              </button>
+            </div>
+            <section class="forecast-card">
+              <div class="forecast-heading">
+                <svg class="icon"><use href="#i-spark" /></svg>
+                <h3>本次配方小预告</h3>
+              </div>
+              <div class="forecast-row">
+                <span>顺畅指数</span>
+                <div
+                  class="forecast-bars"
+                  id="smooth-bars"
+                  aria-label="顺畅指数 4 / 5"
+                >
+                  <i></i><i></i><i></i><i></i><i></i>
+                </div>
+              </div>
+              <div class="forecast-row">
+                <span>惊喜程度</span
+                ><strong id="surprise-value">小小期待</strong>
+              </div>
+              <div class="forecast-row forecast-type-row">
+                <span>预计形态</span
+                ><strong id="forecast-type">4 型 · 光滑柔软型</strong>
+              </div>
+              <div class="forecast-divider"></div>
+              <p id="forecast-description">平平淡淡，才是肚子的浪漫。</p>
+              <span class="forecast-footnote">配方不同，结果也会不一样哦</span>
+            </section>
+            <div class="little-reminder">
+              <span class="reminder-icon">☀</span>
+              <p>生活不必时刻用力，<br />偶尔也要<span>顺其自然。</span></p>
+            </div>
+          </aside>
+        </div>
+        <footer class="footer">
+          <span><span class="status-dot"></span>今天的快乐，从畅快开始。</span>
+          <div>
+            <span class="saved-note" id="saved-note">进度自动保存在本机</span
+            ><button
+              class="sound-button"
+              id="sound-button"
+              aria-label="开启音效"
+              aria-pressed="false"
+            >
+              <svg class="icon"><use href="#i-mute" /></svg
+              ><span>音效关</span></button
+            ><span class="version">VOL. 01</span>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <dialog id="result-dialog" class="result-dialog">
+      <div class="result-decoration">✦ <span>一件人生大事，完成！</span> ✦</div>
+      <div id="result-character" class="result-character"></div>
+      <span class="result-rarity" id="result-rarity">日常小确幸</span>
+      <h2 id="result-name">顺畅小能手</h2>
+      <div class="result-form">
+        <span id="result-type" class="result-type type-group formed"></span>
+        <p id="result-form-description"></p>
+      </div>
+      <p id="result-description"></p>
+      <div class="result-stats">
+        <div><span>本次配方</span><strong id="result-recipe"></strong></div>
+        <div><span>放空时间</span><strong id="result-time"></strong></div>
+        <div><span>畅快得分</span><strong id="result-score"></strong></div>
+      </div>
+      <div class="result-new" id="result-new">已收进你的图鉴</div>
+      <button id="play-again" class="start-button">
+        冲掉烦恼，再来一次<svg class="icon"><use href="#i-arrow" /></svg>
+      </button>
+    </dialog>
+    <dialog id="collection-dialog" class="collection-dialog">
+      <div class="dialog-heading">
+        <div>
+          <div class="eyebrow">THE LITTLE COLLECTION</div>
+          <h2>我的快乐图鉴 <span id="collection-total">0 / 7 型</span></h2>
+        </div>
+        <button
+          class="close-button"
+          data-close="collection-dialog"
+          aria-label="关闭图鉴"
+        >
+          <svg class="icon"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <p class="dialog-intro">
+        用布里斯托的七种形态，收藏每一份不一样的小惊喜。
+      </p>
+      <div class="collection-tabs" role="tablist" aria-label="图鉴视图">
+        <button
+          id="forms-tab"
+          role="tab"
+          aria-selected="true"
+          aria-controls="bristol-panel"
+          data-collection-view="forms"
+          class="selected"
+        >
+          布里斯托分类 <span>07</span>
+        </button>
+        <button
+          id="characters-tab"
+          role="tab"
+          aria-selected="false"
+          aria-controls="characters-panel"
+          data-collection-view="characters"
+        >
+          角色收藏 <span>08</span>
+        </button>
+      </div>
+      <section id="bristol-panel" role="tabpanel" aria-labelledby="forms-tab">
+        <div class="type-filters" role="group" aria-label="形态筛选">
+          <button data-type-filter="all" aria-pressed="true" class="selected">
+            全部形态
+          </button>
+          <button data-type-filter="hard" aria-pressed="false">
+            偏硬 <span>1–2 型</span>
+          </button>
+          <button data-type-filter="formed" aria-pressed="false">
+            成形 <span>3–4 型</span>
+          </button>
+          <button data-type-filter="loose" aria-pressed="false">
+            偏稀 <span>5–7 型</span>
+          </button>
+        </div>
+        <div id="bristol-grid" class="bristol-grid"></div>
+        <p class="classification-source">
+          形态定义参考
+          <a
+            href="https://my.clevelandclinic.org/health/articles/bristol-stool-chart"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Cleveland Clinic · Bristol Stool Chart ↗</a
+          >。配方与形态的对应关系为游戏设定。
+        </p>
+      </section>
+      <section
+        id="characters-panel"
+        role="tabpanel"
+        aria-labelledby="characters-tab"
+        hidden
+      >
+        <div id="collection-grid" class="collection-grid"></div>
+      </section>
+      <div class="collection-summary" id="collection-summary"></div>
+    </dialog>
+    <dialog id="help-dialog" class="help-dialog">
+      <div class="dialog-heading">
+        <h2>人生大事，三步搞定。</h2>
+        <button
+          class="close-button"
+          data-close="help-dialog"
+          aria-label="关闭说明"
+        >
+          <svg class="icon"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <ol class="help-steps">
+        <li>
+          <strong>调配一下</strong>
+          <p>选一种主要配方，调节喝水量，再加点你喜欢的添加剂。</p>
+        </li>
+        <li>
+          <strong>坐一小会儿</strong>
+          <p>
+            选 2、4、8 秒或随机时长。点击「开始拉屎」，看看这次会有什么惊喜。
+          </p>
+        </li>
+        <li>
+          <strong>收集小快乐</strong>
+          <p>
+            配方、喝水量和添加剂会影响结果。试试不同组合，发现布里斯托 1–7
+            型，收集全部 8 种角色外观吧。
+          </p>
+        </li>
+      </ol>
+      <p class="help-note">
+        这是一个天马行空的配方小游戏，所有效果都是游戏设定。
+      </p>
+      <button class="start-button" data-close="help-dialog">
+        懂了，去放松一下<svg class="icon"><use href="#i-arrow" /></svg>
+      </button>
+    </dialog>
+    <div class="toast" id="toast" role="status"></div>
+  </body>
+</html>
