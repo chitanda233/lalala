@@ -1,0 +1,15 @@
+export const stoolColors = {
+  clay: { name: "陶土浅灰", color: "#b8b0a0", light: "#e1d9c8" },
+  classic: { name: "原味棕", color: "#ac8861", light: "#cba880" },
+  garden: { name: "蔬菜绿", color: "#91a66d", light: "#b1c18d" },
+  bread: { name: "谷物黄棕", color: "#d3a365", light: "#edc68c" },
+  fire: { name: "辣味暖红", color: "#c87d5d", light: "#e5a27b" },
+  coffee: { name: "咖啡棕", color: "#826b56", light: "#a58b6e" },
+  dragon: { name: "火龙果玫红", color: "#c67596", light: "#eaa9bf" },
+  beet: { name: "甜菜砖红", color: "#a86d65", light: "#d79b90" },
+  berry: { name: "蓝莓紫", color: "#9b7ca6", light: "#c9a8d3" },
+  ink: { name: "深海墨黑", color: "#4f6264", light: "#83999b" },
+  milk: { name: "奶油白", color: "#d6d2b9", light: "#f3eed7" },
+  honey: { name: "蜜糖琥珀色", color: "#c19c50", light: "#e5c979" },
+  cocoa: { name: "可可棕", color: "#88684d", light: "#b1906c" },
+};

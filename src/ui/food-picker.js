@@ -1,0 +1,183 @@
+import { foods, foodCategories } from "../content/foods.js";
+import { foodById } from "../content/catalog.js";
+import { gameConfig } from "../config/game.js";
+import { canEatFoods } from "../progression/foods.js";
+import { foodArt } from "./artwork/foods.js";
+import { $, $$ } from "./dom.js";
+import { renderPage } from "./pagination.js";
+import { foodAttributeFields } from "../content/food-attributes.js";
+
+export function createFoodPicker({
+  getSelection,
+  getInventory,
+  getTotal,
+  onCommit,
+}) {
+  const dialog = $("#food-dialog");
+  let draft = [],
+    focusedId = "rice",
+    category = "all",
+    activeSlot = null,
+    page = 0,
+    locked = false;
+
+  function showMessage(message = "") {
+    $("#food-picker-message").textContent = message;
+  }
+  function renderSummary() {
+    const ids = getSelection().foodIds;
+    $("#meal-count").textContent =
+      `已选 ${ids.length} / ${gameConfig.maxFoods}`;
+    $("#meal-summary").innerHTML = Array.from(
+      { length: gameConfig.maxFoods },
+      (_, index) => {
+        const food = foodById[ids[index]];
+        return `<button class="meal-summary-slot ${food ? "filled" : ""}" data-open-food-slot="${index}" ${locked ? "disabled" : ""} aria-label="${food ? `更换${food.name}` : `添加第${index + 1}种食物`}">${food ? `${foodArt(food.id)}<span>${food.name}</span>` : '<span class="empty-meal">＋</span><small>添加食物</small>'}</button>`;
+      },
+    ).join("");
+  }
+  function renderDetails() {
+    const food = foodById[focusedId];
+    const unlocked = getInventory().unlocked.includes(food.id);
+    const selected = draft.includes(food.id);
+    const full = draft.length >= gameConfig.maxFoods && activeSlot === null;
+    const canReplace = activeSlot !== null && activeSlot < draft.length;
+    const attributeTags = foodAttributeFields
+      .filter((field) =>
+        ["softness", "retention", "influence"].includes(field.key),
+      )
+      .map(
+        (field) =>
+          `<span>${field.label} ${food.attributes[field.key]}/7</span>`,
+      )
+      .join("");
+    $("#food-details").classList.toggle("locked", !unlocked);
+    $("#food-details").innerHTML =
+      `<div class="food-detail-art">${foodArt(food.id)}</div><h3>${food.name}</h3><p>${unlocked ? food.description : `完成 ${food.unlockAt} 次游戏后解锁，目前 ${Math.min(getTotal(), food.unlockAt)} / ${food.unlockAt} 次。`}</p><button id="add-food" class="food-add" ${!unlocked || selected || full ? "disabled" : ""}>${!unlocked ? "尚未解锁" : selected ? "已在餐盘" : full ? "餐盘已满" : canReplace ? `替换第 ${activeSlot + 1} 格` : "加入餐盘"}</button>${unlocked ? `<div class="food-trait-tags">${attributeTags}${food.fictional ? "<span>幻想配料</span>" : ""}</div>` : ""}`;
+    $("#add-food").addEventListener("click", () => {
+      if (!unlocked || selected || full) return;
+      if (canReplace) draft[activeSlot] = food.id;
+      else draft.push(food.id);
+      activeSlot = null;
+      showMessage(`已加入${food.name}。`);
+      renderDialog();
+    });
+  }
+  function renderDialog() {
+    const inventory = getInventory();
+    const unlockedIds = new Set(inventory.unlocked);
+    $("#food-unlock-count").textContent =
+      `已解锁 ${inventory.unlocked.length} / ${foods.length}`;
+    $("#food-filters").innerHTML = foodCategories
+      .map(
+        (item) =>
+          `<button data-food-category="${item.id}" class="${category === item.id ? "selected" : ""}" aria-pressed="${category === item.id}">${item.name}</button>`,
+      )
+      .join("");
+    const visibleFoods = foods
+      .filter((food) => category === "all" || food.category === category)
+      .sort(
+        (a, b) => Number(unlockedIds.has(b.id)) - Number(unlockedIds.has(a.id)),
+      );
+    $("#food-empty").hidden = visibleFoods.length > 0;
+    $("#food-grid").innerHTML = visibleFoods
+      .map((food) => {
+        const unlocked = unlockedIds.has(food.id);
+        return `<button class="food-card ${unlocked ? "unlocked" : "locked"} ${food.id === focusedId ? "focused" : ""}" data-food="${food.id}" aria-pressed="${food.id === focusedId}" aria-label="${food.name}${unlocked ? "" : "，尚未解锁"}">${foodArt(food.id)}<strong>${food.name}</strong><span>${!unlocked ? `未解锁 · ${food.unlockAt} 次` : draft.includes(food.id) ? "✓ 已加入" : "可选"}</span></button>`;
+      })
+      .join("");
+    $("#food-draft-count").textContent =
+      `${draft.length} / ${gameConfig.maxFoods}`;
+    $("#food-slots").innerHTML = Array.from(
+      { length: gameConfig.maxFoods },
+      (_, index) => {
+        const food = foodById[draft[index]];
+        return `<article class="food-slot ${activeSlot === index ? "active" : ""}"><button data-slot-target="${index}" class="food-slot-main" aria-label="${food ? `替换第${index + 1}格${food.name}` : `选择第${index + 1}格食物`}">${food ? `${foodArt(food.id)}<span>${food.name}</span>` : '<span class="food-slot-plus">＋</span><span>添加食物</span>'}</button>${food ? `<button data-remove-food="${index}" class="food-slot-remove" aria-label="移除${food.name}">×</button>` : ""}</article>`;
+      },
+    ).join("");
+    $("#confirm-foods").disabled = !canEatFoods(inventory, draft);
+    renderDetails();
+    page = renderPage("food", $$("#food-grid .food-card"), page);
+  }
+  function open(index = null) {
+    if (locked) return;
+    draft = [...getSelection().foodIds];
+    focusedId = draft[index] || draft[0] || "rice";
+    category = "all";
+    page = 0;
+    activeSlot = index !== null && index < draft.length ? index : null;
+    showMessage("选中食物看介绍，再加入下方餐盘。最多三种，不重复。");
+    dialog.showModal();
+    renderDialog();
+  }
+  $("#choose-foods").addEventListener("click", () => open());
+  $("#meal-summary").addEventListener("click", (event) => {
+    const slot = event.target.closest("[data-open-food-slot]");
+    if (slot) open(Number(slot.dataset.openFoodSlot));
+  });
+  $("#food-filters").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-food-category]");
+    if (!button) return;
+    category = button.dataset.foodCategory;
+    page = 0;
+    renderDialog();
+    $(`#food-filters [data-food-category="${category}"]`).focus();
+  });
+  $("#food-grid").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-food]");
+    if (!button) return;
+    focusedId = button.dataset.food;
+    renderDialog();
+    $(`#food-grid [data-food="${focusedId}"]`).focus({ preventScroll: true });
+  });
+  $("#food-slots").addEventListener("click", (event) => {
+    const remove = event.target.closest("[data-remove-food]");
+    const slot = event.target.closest("[data-slot-target]");
+    if (remove) {
+      draft.splice(Number(remove.dataset.removeFood), 1);
+      activeSlot = null;
+      showMessage(
+        draft.length
+          ? "已移除，可以选择别的食物。"
+          : "餐盘还是空的，请至少加入一种食物。",
+      );
+    } else if (slot) {
+      const index = Number(slot.dataset.slotTarget);
+      activeSlot = index < draft.length ? index : null;
+      if (draft[index]) focusedId = draft[index];
+      showMessage(
+        draft[index]
+          ? `选另一种食物，替换第 ${index + 1} 格。`
+          : "选一种已解锁食物，加入空位。",
+      );
+    } else return;
+    renderDialog();
+  });
+  $("#confirm-foods").addEventListener("click", () => {
+    if (locked || !canEatFoods(getInventory(), draft)) return;
+    if (onCommit([...draft]) !== false) dialog.close();
+  });
+  $("#food-prev").addEventListener("click", () => {
+    page--;
+    renderDialog();
+  });
+  $("#food-next").addEventListener("click", () => {
+    page++;
+    renderDialog();
+  });
+  window.addEventListener("layoutchange", () => {
+    if (dialog.open) renderDialog();
+  });
+  return {
+    render() {
+      renderSummary();
+      if (dialog.open) renderDialog();
+    },
+    lock(value) {
+      locked = value;
+      $("#choose-foods").disabled = value;
+      if (value && dialog.open) dialog.close();
+      renderSummary();
+    },
+  };
+}

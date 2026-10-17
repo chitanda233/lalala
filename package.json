@@ -7,8 +7,12 @@
   "scripts": {
     "start": "node server.mjs",
     "dev": "node server.mjs",
-    "check": "node --check app.js && node --check bristol.js && node --check server.mjs",
-    "test": "playwright test"
+    "build": "node scripts/build.mjs",
+    "preview": "node server.mjs --preview",
+    "check": "node scripts/check.mjs",
+    "test:unit": "node --test tests/*.test.js",
+    "test:e2e": "playwright test",
+    "test": "npm run test:unit && npm run test:e2e"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0"

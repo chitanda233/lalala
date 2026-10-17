@@ -1,60 +1,70 @@
 import { test, expect } from "@playwright/test";
+import {
+  chooseSpecimen,
+  setWater,
+  startRound,
+  stopForce,
+  chooseMeal,
+  chooseDrink,
+  chooseAdditives,
+  armSpecimen,
+} from "./helpers.js";
 
-const storageKey = "lalala-save-v1";
+const storageKey = "lalala-dev";
 
-test("desktop: recipe controls, 2-second round, collection, and saved progress", async ({
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    Math.random = () => 0.5;
+  });
+});
+
+test("desktop: recipe controls, quick result, collection, and saved progress", async ({
   page,
 }) => {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page).toHaveTitle(/lalala/);
-  await expect(page.locator('[data-duration="4"]')).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(page.locator("#time-options")).toHaveCount(0);
   await page.screenshot({ path: "qa/desktop.png", fullPage: true });
-  await page.locator('[data-recipe="garden"]').click();
-  await page.locator("#water").fill("1750");
-  await page.locator('[value="probiotic"]').check();
-  await page.locator('[data-duration="2"]').click();
+  await chooseMeal(page, ["broccoli"]);
+  await setWater(page, "1750");
+  await chooseAdditives(page, ["probiotic"]);
+
   await expect(page.locator("#water-value")).toContainText("1,750");
-  await page.locator("#start-button").click();
+  await startRound(page);
   await expect(page.locator("#start-button")).toBeDisabled();
   await expect(page.locator("#water")).toBeDisabled();
-  await expect(page.locator("#session-progress")).toBeVisible();
+  await expect(page.locator("#force-meter")).toHaveClass(/locked/);
   await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 5000 });
-  await expect(page.locator("#result-name")).toHaveText("黄金传说");
-  await expect(page.locator("#result-time")).toHaveText("2 秒");
+  await expect(page.locator("#result-name")).toHaveText("森林小精灵");
+  await expect(page.locator("#result-time")).toContainText("秒");
   await expect(page.locator("#collection-count")).toHaveText("01");
   await page.screenshot({ path: "qa/result.png", fullPage: true });
   await page.locator("#play-again").click();
   await page.locator("#collection-button").click();
-  await page.locator('[data-collection-view="characters"]').click();
-  await expect(page.locator(".collection-item:not(.locked)")).toHaveCount(1);
+  await chooseSpecimen(page, "garden:4");
+  await expect(page.locator("#collection-detail")).toContainText("森林小精灵");
   await expect(page.locator("#collection-summary")).toContainText("畅快 1 次");
   await page.keyboard.press("Escape");
   await page.reload();
-  await expect(page.locator('[data-recipe="garden"]')).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(page.locator("#meal-summary")).toContainText("西兰花");
   await expect(page.locator("#water-value")).toContainText("1,750");
   await expect(page.locator("#collection-count")).toHaveText("01");
   expect(errors).toEqual([]);
 });
 
-test("reload resumes an 8-second round and credits it once", async ({
+test("reload resumes a locked quick reveal and credits it once", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.locator('[data-duration="8"]').click();
-  await page.locator("#start-button").click();
-  await page.waitForTimeout(900);
+
+  await startRound(page);
+
   await page.reload();
   await expect(page.locator("#start-button")).toBeDisabled();
   await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 10000 });
-  await expect(page.locator("#result-time")).toHaveText("8 秒");
+  await expect(page.locator("#result-time")).toContainText("秒");
   await page.reload();
   expect(
     await page.evaluate(
@@ -65,52 +75,57 @@ test("reload resumes an 8-second round and credits it once", async ({
   await expect(page.locator("#start-button")).toBeEnabled();
 });
 
-test("random round uses 2–8 seconds; all eight discoveries can be reached", async ({
+test("quick rounds retain all eight discoveries and the fixed reveal delay", async ({
   page,
 }) => {
+  test.setTimeout(60000);
   const cases = [
-    ["classic", "balanced", 1500, []],
-    ["garden", "garden", 1500, []],
-    ["bread", "carbs", 1500, []],
-    ["fire", "spicy", 1500, []],
-    ["coffee", "balanced", 1500, ["coffee"]],
-    ["cloud", "balanced", 2250, ["probiotic"]],
-    ["pebble", "balanced", 500, []],
-    ["gold", "garden", 1750, ["probiotic"]],
+    ["classic", "rice", 1500, []],
+    ["garden", "broccoli", 1500, []],
+    ["bread", "toast", 1500, []],
+    ["fire", "burger", 1500, ["chili"]],
+    ["coffee", "rice", 1500, ["coffee"]],
+    ["cloud", "rice", 2250, ["probiotic"]],
+    ["pebble", "rice", 500, []],
+    ["gold", "broccoli", 1750, ["probiotic"]],
   ];
   await page.goto("/");
   for (const [id, recipe, water, additives] of cases) {
-    await page.locator(`[data-recipe="${recipe}"]`).click();
-    await page.locator("#water").fill(String(water));
-    for (const value of ["probiotic", "coffee", "chili"])
-      await page
-        .locator(`.additive-input[value="${value}"]`)
-        .setChecked(additives.includes(value));
-    await page.locator('[data-duration="2"]').click();
-    await page.locator("#start-button").click();
+    await chooseMeal(page, [recipe]);
+    await setWater(page, String(water));
+    await chooseDrink(page, additives.includes("coffee") ? "coffee" : "water");
+    await chooseAdditives(
+      page,
+      additives.filter((id) => id !== "coffee"),
+    );
+
+    await armSpecimen(page, id);
+    await startRound(page);
     await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 4000 });
     expect(
       await page.evaluate(
-        (key) => JSON.parse(localStorage.getItem(key)).collection.at(-1),
+        (key) =>
+          JSON.parse(localStorage.getItem(key)).individuals.at(-1).characterId,
         storageKey,
       ),
     ).toBe(id);
     await page.locator("#play-again").click();
   }
-  await page.locator('[data-duration="random"]').click();
-  await page.locator("#start-button").click();
+
+  await startRound(page);
   const seconds = await page.evaluate((key) => {
     const session = JSON.parse(localStorage.getItem(key)).session;
-    return (session.endsAt - session.startedAt) / 1000;
+    return session.endsAt - session.lockedAt;
   }, storageKey);
-  expect(seconds).toBeGreaterThanOrEqual(2);
-  expect(seconds).toBeLessThanOrEqual(8);
+  expect(seconds).toBe(400);
   await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 10000 });
   await page.locator("#play-again").click();
   await page.locator("#collection-button").click();
-  await page.locator('[data-collection-view="characters"]').click();
-  await expect(page.locator(".collection-item.locked")).toHaveCount(0);
-  await expect(page.locator("#collection-total")).toHaveText("8 / 8");
+  await expect(page.locator("#collection-summary")).toContainText(
+    "8 / 50 种便便",
+  );
+  await expect(page.locator(".stool-card.collected")).toHaveCount(8);
+  await expect(page.locator("#collection-total")).toHaveText("5 / 7 型");
   await page.screenshot({ path: "qa/collection.png", fullPage: true });
 });
 
@@ -125,11 +140,11 @@ test("mobile: no horizontal overflow, all controls accessible, round works", asy
     ),
   ).toBe(true);
   await page.screenshot({ path: "qa/mobile.png", fullPage: true });
-  await page.locator('[data-recipe="carbs"]').click();
-  await page.locator('[data-duration="2"]').click();
-  await page.locator("#start-button").click();
+  await chooseMeal(page, ["toast"]);
+
+  await startRound(page);
   await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 5000 });
-  await expect(page.locator("#result-name")).toHaveText("碳水小面包");
+  await expect(page.locator("#result-name")).toHaveText("顺畅小能手");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -156,9 +171,10 @@ test("keyboard, help, sound, and no external runtime requests", async ({
     "aria-pressed",
     "true",
   );
-  await page.locator('[data-duration="2"]').click();
+
   await page.locator("h1").click();
   await page.keyboard.press("Space");
+  await stopForce(page);
   await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 5000 });
   expect(external).toEqual([]);
 });

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>食物调参台 · 便便收藏计划</title>
+    <link rel="stylesheet" href="/admin/admin.css" />
+    <script type="module" src="/admin/admin.js"></script>
+  </head>
+  <body>
+    <div class="studio-shell">
+      <header class="studio-header">
+        <div>
+          <div class="eyebrow">COLLECTION LAB <span>个人策划工作台</span></div>
+          <h1>食物调参台<span class="heading-dot"></span></h1>
+          <p class="subtitle">调食物的个性，看下一份便便会变成什么样。</p>
+        </div>
+        <div class="header-actions">
+          <a class="text-link" href="/" target="_blank" rel="noopener"
+            >打开游戏 <span aria-hidden="true">↗</span></a
+          >
+          <button id="reload-data" class="button button-quiet" type="button">
+            重新读取磁盘
+          </button>
+          <button
+            id="save-foods"
+            class="button button-primary"
+            type="button"
+            disabled
+          >
+            保存到项目
+          </button>
+        </div>
+      </header>
+      <div class="workspace-status" aria-live="polite">
+        <span id="save-status" class="status-dot">正在读取食物配置…</span>
+        <span class="dev-note">开发专用 · 正式发布不包含此页面</span>
+      </div>
+      <main class="workspace">
+        <aside class="food-library panel" aria-label="食物库">
+          <div class="panel-heading">
+            <h2>食物库</h2>
+            <span id="food-count" class="count-badge">—</span>
+          </div>
+          <div class="library-tools">
+            <label class="sr-only" for="food-category">食物分类</label>
+            <select id="food-category" class="category-select"></select>
+          </div>
+          <div
+            id="food-list"
+            class="food-list"
+            aria-label="选择要调整的食物"
+          ></div>
+          <div class="library-footer">
+            <span class="dirty-indicator"></span>小圆点表示有未保存的调整
+          </div>
+        </aside>
+        <section class="editor panel" aria-labelledby="selected-food-name">
+          <div id="food-summary" class="food-summary"></div>
+          <section class="food-influence" aria-label="整份食物的影响强度">
+            <span class="section-kicker">整体影响 · 混搭时的食物权重</span>
+            <div id="food-influence" class="attribute-list"></div>
+          </section>
+          <div class="section-heading">
+            <div>
+              <span class="section-kicker">01 / 食物个性</span>
+              <h2>把感觉变成参数</h2>
+            </div>
+            <span class="level-hint">统一使用 1–7 级</span>
+          </div>
+          <div id="main-attributes" class="attribute-list"></div>
+          <div class="pigment-field">
+            <div>
+              <label for="pigment-id">食物颜色</label>
+              <p>与染色能力共同决定底色；稀有材质另行抽签。</p>
+            </div>
+            <div class="pigment-control">
+              <span id="pigment-swatch" class="pigment-swatch"></span
+              ><select id="pigment-id"></select>
+            </div>
+          </div>
+          <details id="advanced-attributes" class="advanced-attributes">
+            <summary>高级参数 <span>蓬松与顺滑</span></summary>
+            <div id="extra-attributes" class="attribute-list"></div>
+          </details>
+          <div class="editor-footer">
+            <span id="selected-dirty-status">与已保存配置一致</span
+            ><button id="reset-food" class="text-button" type="button" disabled>
+              还原这份食物
+            </button>
+          </div>
+        </section>
+        <section class="preview panel" aria-labelledby="preview-heading">
+          <div class="section-heading">
+            <div>
+              <span class="section-kicker">02 / 配方试验</span>
+              <h2 id="preview-heading">边调边看</h2>
+            </div>
+            <span class="live-badge"><i></i> 实时预览</span>
+          </div>
+          <p class="preview-intro">
+            左边是磁盘上次保存的配置，右边是当前草稿。
+          </p>
+          <div class="preview-controls">
+            <label>一起吃 · 食物 2<select id="companion-1"></select></label>
+            <label>一起吃 · 食物 3<select id="companion-2"></select></label>
+            <label>饮料<select id="preview-drink"></select></label>
+            <label>饮水量<select id="preview-water"></select></label>
+            <label>消化时间<select id="preview-digestion"></select></label>
+            <label
+              >模拟拉屎力度<input
+                id="preview-force"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value="50"
+            /></label>
+            <label>马桶<select id="preview-toilet"></select></label>
+          </div>
+          <div id="preview-recipe" class="preview-recipe"></div>
+          <div id="specimen-preview" class="specimen-preview"></div>
+          <div class="chart-heading">
+            <h3>七型产出概率</h3>
+            <div>
+              <span class="legend-before"></span>已保存
+              <span class="legend-after"></span>草稿
+            </div>
+          </div>
+          <div
+            id="type-chart"
+            class="type-chart"
+            aria-label="调整前后七型产出概率"
+          ></div>
+          <p id="preview-features" class="preview-features"></p>
+          <div class="preview-note">
+            代表外观展示最可能形态中、概率最高的普通候选，实际产出仍会抽签。保存后刷新游戏，新开局使用新配置，已开始的局和既有藏品保留原样。
+          </div>
+        </section>
+      </main>
+      <footer class="studio-footer">
+        <span>便便收藏计划 / CONTENT STUDIO</span
+        ><span>所有参数均为游戏设计数值</span>
+      </footer>
+    </div>
+  </body>
+</html>
