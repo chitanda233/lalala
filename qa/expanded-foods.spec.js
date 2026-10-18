@@ -15,7 +15,7 @@ test("find banana, clay and twenty new foods through categories and pages", asyn
   await focusFood(page, "guanyin-clay");
   await expect(page.locator("#food-details")).toContainText("幻想配料");
   await expect(page.locator("#food-details")).toContainText("软硬程度 6/7");
-  await expect(page.locator("#add-food")).toBeEnabled();
+  await expect(page.locator('[data-add-food="guanyin-clay"]')).toBeEnabled();
   await page.locator('[data-food-category="fantasy"]').click();
   await expect(page.locator(".food-card")).toHaveCount(4);
   await page.locator('[data-food-category="all"]').click();
@@ -90,7 +90,7 @@ for (const [width, height] of [
     await page.locator("#choose-foods").click();
     await focusFood(page, "guanyin-clay");
     await expect(page.locator("#food-details")).toContainText("幻想配料");
-    await page.locator("#add-food").click();
+    await page.locator('[data-add-food="guanyin-clay"]').click();
     await expect(page.locator("#confirm-foods")).toBeInViewport();
     expect(
       await page

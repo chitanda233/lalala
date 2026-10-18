@@ -21,6 +21,7 @@ test("seven recent unique species retain cumulative unlocks and replace repeated
       createdAt: (index + 1) * 1000, marks: [], colorId: "classic",
       appearance: { ...appearance, variationSeed: index + 1 },
     }));
+    save.settings.water = 1250;
     save.total = 10;
     save.version = 5;
     delete save.discoveredSpecimens;

@@ -189,7 +189,7 @@ for (const [width, height] of [
       path: `qa/lab-mobile-${width}.png`,
       animations: "disabled",
     });
-    await page.locator(".supply-footer [data-close]").click();
+    await page.locator("#confirm-supply").click();
     await chooseToilet(page, "stone");
     await page.locator("#collection-button").click();
     await chooseSpecimen(page, "meteor:1");

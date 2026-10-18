@@ -219,8 +219,8 @@ test("larger type and cards remain readable on a compact phone", async ({
   }
   for (const [entry, dialog, cards] of [
     ["#choose-foods", "#food-dialog", ".food-card:visible"],
-    ["#choose-drinks", "#supply-dialog", ".supply-drink:visible"],
-    ["#choose-additives", "#supply-dialog", ".supply-additive:visible"],
+    ["#choose-drinks", "#supply-dialog", "#drink-options .supply-card:visible"],
+    ["#choose-additives", "#supply-dialog", "#additive-options .supply-card:visible"],
     ["#choose-digestion", "#digestion-dialog"],
     ["#choose-toilet", "#equipment-dialog"],
     ["#collection-button", "#collection-dialog", ".stool-card:visible"],

@@ -365,16 +365,16 @@
         <div>
           <span class="eyebrow">A LITTLE SOMETHING EXTRA</span>
           <h2 id="supply-dialog-title">今天喝点什么</h2>
+          <span id="supply-intro" class="dialog-intro"></span>
         </div>
         <button
           class="close-button"
           data-close="supply-dialog"
-          aria-label="关闭配料库"
+          aria-label="取消配料选择"
         >
           <svg class="icon"><use href="#i-close" /></svg>
         </button>
       </header>
-      <p id="supply-intro" class="dialog-intro"></p>
       <section id="drink-library" aria-label="饮料库">
         <div
           id="drink-options"
@@ -391,23 +391,30 @@
         ><span id="supply-page"></span
         ><button id="supply-next" aria-label="下一页">›</button>
       </nav>
+      <aside id="supply-details" class="food-details" aria-label="配料介绍" tabindex="-1"></aside>
       <section id="water-section" class="water-section">
         <label for="water"
           >饮用量
-          <output id="water-value" for="water">1,500 mL</output></label
+          <output id="water-value" for="water">750 mL</output></label
         ><input
           type="range"
           id="water"
           aria-label="饮用量，毫升"
-          min="250"
-          max="2500"
+          min="0"
+          max="1250"
           step="250"
-          value="1500"
+          value="750"
         />
+        <div id="water-stops" class="water-stops" aria-hidden="true"></div>
       </section>
-      <footer class="supply-footer">
-        <p id="supply-count" role="status" tabindex="-1"></p>
-        <button class="food-confirm" data-close="supply-dialog">选好了</button>
+      <div class="food-cart">
+        <div class="food-cart-heading"><strong id="supply-cart-title">这次喝这个</strong><span id="supply-draft-count"></span></div>
+        <div id="supply-slots" class="food-slots supply-slots" aria-label="配料添加栏"></div>
+        <p id="supply-count" class="sr-only" role="status"></p>
+      </div>
+      <footer class="food-dialog-actions supply-footer">
+        <button class="food-cancel" data-close="supply-dialog">取消</button>
+        <button id="confirm-supply" class="food-confirm">确认选择</button>
       </footer>
     </dialog>
     <dialog

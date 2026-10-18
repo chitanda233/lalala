@@ -24,6 +24,18 @@ export function createFoodPicker({
   function showMessage(message = "") {
     $("#food-picker-message").textContent = message;
   }
+  function addFood(id) {
+    const canReplace = activeSlot !== null && activeSlot < draft.length;
+    if (locked || !getInventory().unlocked.includes(id) || draft.includes(id) ||
+      (draft.length >= gameConfig.maxFoods && !canReplace)) return;
+    focusedId = id;
+    if (canReplace) draft[activeSlot] = id;
+    else draft.push(id);
+    activeSlot = null;
+    showMessage(`已加入${foodById[id].name}。`);
+    renderDialog(true);
+    $(`#food-grid [data-food="${id}"]`)?.focus({ preventScroll: true });
+  }
   function renderSummary() {
     const ids = getSelection().foodIds;
     $("#meal-count").textContent =
@@ -39,9 +51,6 @@ export function createFoodPicker({
   function renderDetails() {
     const food = foodById[focusedId];
     const unlocked = getInventory().unlocked.includes(food.id);
-    const selected = draft.includes(food.id);
-    const full = draft.length >= gameConfig.maxFoods && activeSlot === null;
-    const canReplace = activeSlot !== null && activeSlot < draft.length;
     const attributeTags = foodAttributeFields
       .filter((field) =>
         ["softness", "retention", "influence"].includes(field.key),
@@ -53,17 +62,9 @@ export function createFoodPicker({
       .join("");
     $("#food-details").classList.toggle("locked", !unlocked);
     $("#food-details").innerHTML =
-      `<div class="food-detail-art">${foodArt(food.id)}</div><h3>${food.name}</h3><p>${unlocked ? food.description : `完成 ${food.unlockAt} 次游戏后解锁，目前 ${Math.min(getTotal(), food.unlockAt)} / ${food.unlockAt} 次。`}</p><button id="add-food" class="food-add" ${!unlocked || selected || full ? "disabled" : ""}>${!unlocked ? "尚未解锁" : selected ? "已在餐盘" : full ? "餐盘已满" : canReplace ? `替换第 ${activeSlot + 1} 格` : "加入餐盘"}</button>${unlocked ? `<div class="food-trait-tags">${attributeTags}${food.fictional ? "<span>幻想配料</span>" : ""}</div>` : ""}`;
-    $("#add-food").addEventListener("click", () => {
-      if (!unlocked || selected || full) return;
-      if (canReplace) draft[activeSlot] = food.id;
-      else draft.push(food.id);
-      activeSlot = null;
-      showMessage(`已加入${food.name}。`);
-      renderDialog();
-    });
+      `<div class="food-detail-art">${foodArt(food.id)}</div><h3>${food.name}</h3><p>${unlocked ? food.description : `完成 ${food.unlockAt} 次游戏后解锁，目前 ${Math.min(getTotal(), food.unlockAt)} / ${food.unlockAt} 次。`}</p>${unlocked ? `<div class="food-trait-tags">${attributeTags}${food.fictional ? "<span>幻想配料</span>" : ""}</div>` : ""}`;
   }
-  function renderDialog() {
+  function renderDialog(revealFocused = false) {
     const inventory = getInventory();
     const unlockedIds = new Set(inventory.unlocked);
     $("#food-unlock-count").textContent =
@@ -83,7 +84,9 @@ export function createFoodPicker({
     $("#food-grid").innerHTML = visibleFoods
       .map((food) => {
         const unlocked = unlockedIds.has(food.id);
-        return `<button class="food-card ${unlocked ? "unlocked" : "locked"} ${food.id === focusedId ? "focused" : ""}" data-food="${food.id}" aria-pressed="${food.id === focusedId}" aria-label="${food.name}${unlocked ? "" : "，尚未解锁"}">${foodArt(food.id)}<strong>${food.name}</strong>${!unlocked ? `<span>${food.unlockAt} 次解锁</span>` : draft.includes(food.id) ? "<span>✓ 已加入</span>" : ""}</button>`;
+        const selected = draft.includes(food.id);
+        const full = draft.length >= gameConfig.maxFoods && activeSlot === null;
+        return `<article class="food-card ${unlocked ? "unlocked" : "locked"} ${food.id === focusedId ? "focused" : ""} ${selected ? "selected" : ""}" data-food-card="${food.id}"><button class="food-card-main ${unlocked ? "unlocked" : "locked"}" data-food="${food.id}" aria-pressed="${food.id === focusedId}" aria-label="${food.name}${unlocked ? "" : "，尚未解锁"}">${foodArt(food.id)}<strong>${food.name}</strong>${!unlocked ? `<span>${food.unlockAt} 次解锁</span>` : ""}</button><button class="card-action" data-add-food="${food.id}" aria-label="${selected ? `已加入${food.name}` : `加入${food.name}`}" ${!unlocked || selected || full ? "disabled" : ""}>${selected ? "✓" : "＋"}</button></article>`;
       })
       .join("");
     $("#food-draft-count").textContent =
@@ -97,7 +100,8 @@ export function createFoodPicker({
     ).join("");
     $("#confirm-foods").disabled = !canEatFoods(inventory, draft);
     renderDetails();
-    page = renderPage("food", $$("#food-grid .food-card"), page);
+    const cards = $$("#food-grid .food-card");
+    page = renderPage("food", cards, page, revealFocused ? cards.find(card => card.dataset.foodCard === focusedId) : null);
   }
   function open(index = null) {
     if (locked) return;
@@ -106,9 +110,9 @@ export function createFoodPicker({
     category = "all";
     page = 0;
     activeSlot = index !== null && index < draft.length ? index : null;
-    showMessage("选中食物看介绍，再加入下方餐盘。最多三种，不重复。");
+    showMessage("点右上角加号加入餐盘，点食物看介绍。最多三种，不重复。");
     dialog.showModal();
-    renderDialog();
+    renderDialog(true);
   }
   $("#choose-foods").addEventListener("click", () => open());
   $("#meal-summary").addEventListener("click", (event) => {
@@ -124,10 +128,12 @@ export function createFoodPicker({
     $(`#food-filters [data-food-category="${category}"]`).focus();
   });
   $("#food-grid").addEventListener("click", (event) => {
+    const add = event.target.closest("[data-add-food]");
+    if (add) return addFood(add.dataset.addFood);
     const button = event.target.closest("[data-food]");
     if (!button) return;
     focusedId = button.dataset.food;
-    renderDialog();
+    renderDialog(true);
     $(`#food-grid [data-food="${focusedId}"]`).focus({ preventScroll: true });
   });
   $("#food-slots").addEventListener("click", (event) => {
@@ -144,14 +150,17 @@ export function createFoodPicker({
     } else if (slot) {
       const index = Number(slot.dataset.slotTarget);
       activeSlot = index < draft.length ? index : null;
-      if (draft[index]) focusedId = draft[index];
+      if (draft[index]) {
+        focusedId = draft[index];
+        category = "all";
+      }
       showMessage(
         draft[index]
           ? `选另一种食物，替换第 ${index + 1} 格。`
           : "选一种已解锁食物，加入空位。",
       );
     } else return;
-    renderDialog();
+    renderDialog(Boolean(slot && !remove));
   });
   $("#confirm-foods").addEventListener("click", () => {
     if (locked || !canEatFoods(getInventory(), draft)) return;

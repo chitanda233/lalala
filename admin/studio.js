@@ -15,6 +15,7 @@ import { toiletSvg } from "/src/ui/artwork/toilets.js";
 import { getRecipeForecast } from "/src/game/outcome-pool.js";
 import { sourceRequirementText } from "/src/game/source-conditions.js";
 import { stoolColors } from "/src/content/colors.js";
+import { gameConfig } from "/src/config/game.js";
 
 const $ = (selector) => document.querySelector(selector);
 const copy = (value) => structuredClone(value);
@@ -156,7 +157,7 @@ function renderForm() {
   let fields = "";
   if (active === "recipes") {
     const volumeOptions = values => values.map(value => ({ id: String(value), name: `${value} mL` }));
-    fields = group("食物集合 · 1–3 种，不分顺序", [0, 1, 2].map((index) => select(`foodIds.${index}`, `食物 ${index + 1}${index === 0 ? " · 必选" : ""}`, foods, item.foodIds[index] || "", index ? "不添加" : undefined)).join("")) + group("液体、阶段与力度", select("drinkId", "饮料", drinks, item.drinkId) + select("water", "饮用量", volumeOptions(Array.from({ length: 10 }, (_, i) => (i + 1) * 250)), String(item.water)) + select("digestionTime", "消化阶段", ["2", "4", "8"].map(id => ({ id, name: `阶段 ${id}` })), item.digestionTime) + select("forceZone", "力度区间", forceZones.map((zone) => ({ id: zone.id, name: `${zone.name} ${zone.min}–${zone.max}` })), item.forceZone) + select("requiredAdditive", "必选添加剂", additives, item.requiredAdditive || "", "不限，益生菌可选"));
+    fields = group("食物集合 · 1–3 种，不分顺序", [0, 1, 2].map((index) => select(`foodIds.${index}`, `食物 ${index + 1}${index === 0 ? " · 必选" : ""}`, foods, item.foodIds[index] || "", index ? "不添加" : undefined)).join("")) + group("液体、阶段与力度", select("drinkId", "饮料", drinks, item.drinkId) + select("water", "饮用量", volumeOptions(Array.from({ length: (gameConfig.water.max - gameConfig.water.min) / gameConfig.water.step + 1 }, (_, i) => gameConfig.water.min + i * gameConfig.water.step)), String(item.water)) + select("digestionTime", "消化阶段", ["2", "4", "8"].map(id => ({ id, name: `阶段 ${id}` })), item.digestionTime) + select("forceZone", "力度区间", forceZones.map((zone) => ({ id: zone.id, name: `${zone.name} ${zone.min}–${zone.max}` })), item.forceZone) + select("requiredAdditive", "必选添加剂", additives, item.requiredAdditive || "", "不限，益生菌可选"));
     fields += '<p class="field-note">理想配方普通分支为 80%，只有一个合法候选时为 100%；偏离后平滑变化。益生菌也能稳定自由组合。必需来源始终要满足。</p>';
   } else {
     fields = group("基本资料", input("name", "名称", item.name, { maxLength: 60 }) + (item.category ? input("category", "分类", item.category, { maxLength: 40 }) : "") + area("description", "描述", item.description) + (item.effectLabel ? area("effectLabel", "效果说明", item.effectLabel) : ""));

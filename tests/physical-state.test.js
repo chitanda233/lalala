@@ -29,8 +29,8 @@ test("all 46 ordinary centres and ten rare themes agree with their actual physic
   assert.equal(characterById["enoki-jet"].homeType, 7);
 });
 
-test("the same rice meal moves through types 2, 3, 4 and 6 using only drink intake and digestion phase", () => {
-  for (const [water, digestionTime, type, score] of [[250,"8",2,-1.9],[500,"4",3,-.8],[1500,"4",4,.2],[2500,"2",6,1.75]]) {
+test("the same rice meal moves through types 2, 3, 4 and 5 using only drink intake and digestion phase", () => {
+  for (const [water, digestionTime, type, score] of [[0,"8",2,-1.95],[500,"4",3,-.8],[1250,"4",4,-.05],[1250,"2",5,.7]]) {
     const input = { ...base, water, digestionTime, additives:["probiotic"] };
     const state = physicalState(input);
     assert.equal(state.type,type); close(state.score,score);
@@ -48,7 +48,7 @@ test("force cannot turn a dry physical class into water and all same-type neighb
     assert.equal(physicalState(input).type,2);
     assert.ok(getOutcomePool(input).filter(entry=>!entry.special).every(entry=>characterById[entry.characterId].homeType===2));
   }
-  for (const change of [{water:1250},{water:1750}]) {
+  for (const change of [{water:1000}]) {
     const input = {...base,...change};
     assert.equal(getRecipeForecast(input).matchedRecipe,null);
     const probability=getOutcomePool(input).find(entry=>entry.characterId==="classic")?.probability;
@@ -69,7 +69,7 @@ test("decorated species require the same material in both the fixed target and t
 });
 
 test("rice and pumpkin never produce an enoki species, including a watery high-intake meal", () => {
-  for (const water of [1500, 2500]) for (const digestionTime of ["2", "4", "8", "random"]) for (const force of [20, 59, 90]) {
+  for (const water of [0, 1250]) for (const digestionTime of ["2", "4", "8", "random"]) for (const force of [20, 59, 90]) {
     const input = { foodIds: ["rice", "pumpkin"], drinkId: "grass-jelly", water, digestionTime, force, additives: ["gold-leaf"] };
     const pool = getOutcomePool(input);
     assert.ok(!pool.some(entry => ["enoki-thread", "enoki-jet"].includes(entry.characterId)), JSON.stringify(input));
@@ -90,11 +90,11 @@ test("the sole drink amount scales moisture, beverage strength and bubbles while
   const state=physicalState({...base,water:500});
   close(state.waterBonus,-.8);
   const small=normalizeSelection({...base,drinkId:"soda",water:250});
-  const large={...small,water:2500};
+  const large={...small,water:1250};
   assert.ok(collectEffects(large).drinkPorosity>collectEffects(small).drinkPorosity);
-  assert.ok(physicalState({...base,drinkId:"coffee",water:2500}).drinkBonus>physicalState({...base,drinkId:"coffee",water:250}).drinkBonus);
+  assert.ok(physicalState({...base,drinkId:"coffee",water:1250}).drinkBonus>physicalState({...base,drinkId:"coffee",water:250}).drinkBonus);
   const strength=water=>resolveColorStrength({...base,drinkId:"prune-juice",water},characterById.classic);
-  assert.ok(strength(250)<strength(1500));
+  assert.ok(strength(250)<strength(1250));
   const appearance=digestionTime=>{const input=normalizeSelection({...base,foodIds:["enoki","corn"],digestionTime});return foodAppearance(input,collectEffects(input),7);};
   assert.ok(appearance("2").enokiRetention>appearance("8").enokiRetention);
   assert.ok(appearance("8").enokiRetention>=2);
@@ -111,7 +111,7 @@ test("random phases lock once, preserve drink intake and phase through reload an
     settleSession(save,session.endsAt);
     assert.equal(save.individuals[0].recipe.digestionTime,phase);
     assert.equal(Object.hasOwn(save.individuals[0].recipe, "drinkVolume"), false);
-    assert.equal(save.individuals[0].recipe.water,1500);
+    assert.equal(save.individuals[0].recipe.water,1250);
     close(getOutcomePool({...base,digestionTime:phase}).filter(entry=>entry.special).reduce((sum,entry)=>sum+entry.probability,0),.02);
   }
 });
@@ -124,6 +124,6 @@ test("existing food knobs stay authoritative and the two new foods have separate
   assert.ok(foodById.beetroot && foodById.potato);
   const configured=JSON.parse(readFileSync(new URL('../src/content/food-attribute-values.js',import.meta.url),'utf8').match(/=\s*([\s\S]*);/)[1]);
   for(const [id,attributes] of Object.entries(configured)) assert.deepEqual(foodById[id].attributes,attributes,id);
-  assert.equal(normalizeSelection({water:-500}).water,250);
-  assert.equal(normalizeSelection({water:9999}).water,2500);
+  assert.equal(normalizeSelection({water:-500}).water,0);
+  assert.equal(normalizeSelection({water:9999}).water,1250);
 });

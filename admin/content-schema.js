@@ -84,7 +84,7 @@ export function validateManagedContent(value) {
     requireValue(drinkIds.has(item.drinkId), "请选择有效饮料。");
     requireValue(["low", "medium", "high"].includes(item.forceZone), "请选择有效力度区间。");
     const intake = gameConfig.water;
-    requireValue(Number.isInteger(item.water) && item.water >= intake.min && item.water <= intake.max && item.water % intake.step === 0, "饮用量请选择 250–2500 mL，每档 250 mL。");
+    requireValue(Number.isInteger(item.water) && item.water >= intake.min && item.water <= intake.max && item.water % intake.step === 0, `饮用量请选择 ${intake.min}–${intake.max} mL，每段 ${intake.step} mL。`);
     requireValue(["2", "4", "8"].includes(item.digestionTime), "固定配方需指定 2 / 4 / 8 阶段。");
     requireValue(!item.requiredAdditive || additiveIds.has(item.requiredAdditive), "必选添加剂无效。");
     return { characterId: original.characterId, foodIds: [...item.foodIds], drinkId: item.drinkId, water: item.water, digestionTime: item.digestionTime, forceZone: item.forceZone, requiredAdditive: item.requiredAdditive || null };

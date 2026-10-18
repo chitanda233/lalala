@@ -5,7 +5,7 @@ import { stoolColors } from "../content/colors.js";
 export function mealSources(selection, catalog = { foodById, drinkById, additiveById }) {
   const tags = new Set([
     ...selection.foodIds.flatMap(id => catalog.foodById[id].tags),
-    ...catalog.drinkById[selection.drinkId].tags,
+    ...(selection.water > 0 ? catalog.drinkById[selection.drinkId].tags : []),
     ...selection.additives.flatMap(id => catalog.additiveById[id].tags),
   ]);
   return { foods: new Set(selection.foodIds), additives: new Set(selection.additives), tags, pigment: sourceColor(selection, catalog)?.id || null };

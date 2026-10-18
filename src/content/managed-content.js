@@ -1730,8 +1730,8 @@ export const contentValues = {
         "bamboo-shoots"
       ],
       "drinkId": "water",
-      "water": 1500,
-      "digestionTime": "8",
+      "water": 1250,
+      "digestionTime": "4",
       "forceZone": "medium",
       "requiredAdditive": null
     },
@@ -1790,7 +1790,7 @@ export const contentValues = {
         "rice"
       ],
       "drinkId": "water",
-      "water": 1500,
+      "water": 1250,
       "digestionTime": "4",
       "forceZone": "medium",
       "requiredAdditive": null
@@ -1814,8 +1814,8 @@ export const contentValues = {
         "enoki"
       ],
       "drinkId": "water",
-      "water": 2000,
-      "digestionTime": "8",
+      "water": 1250,
+      "digestionTime": "4",
       "forceZone": "medium",
       "requiredAdditive": null
     },
@@ -1826,7 +1826,7 @@ export const contentValues = {
         "banana"
       ],
       "drinkId": "water",
-      "water": 2000,
+      "water": 1250,
       "digestionTime": "8",
       "forceZone": "low",
       "requiredAdditive": null
@@ -1837,7 +1837,7 @@ export const contentValues = {
         "rice"
       ],
       "drinkId": "water",
-      "water": 1500,
+      "water": 1250,
       "digestionTime": "4",
       "forceZone": "low",
       "requiredAdditive": null
@@ -1848,7 +1848,7 @@ export const contentValues = {
         "rice"
       ],
       "drinkId": "water",
-      "water": 1500,
+      "water": 1250,
       "digestionTime": "4",
       "forceZone": "high",
       "requiredAdditive": null
@@ -1872,8 +1872,8 @@ export const contentValues = {
         "dragon-fruit"
       ],
       "drinkId": "water",
-      "water": 2000,
-      "digestionTime": "8",
+      "water": 1250,
+      "digestionTime": "4",
       "forceZone": "medium",
       "requiredAdditive": null
     },
@@ -1896,8 +1896,8 @@ export const contentValues = {
         "black-sesame"
       ],
       "drinkId": "water",
-      "water": 2000,
-      "digestionTime": "4",
+      "water": 1250,
+      "digestionTime": "2",
       "forceZone": "low",
       "requiredAdditive": "gold-leaf"
     },
@@ -1920,8 +1920,8 @@ export const contentValues = {
         "rose-cake"
       ],
       "drinkId": "water",
-      "water": 2000,
-      "digestionTime": "8",
+      "water": 1250,
+      "digestionTime": "4",
       "forceZone": "low",
       "requiredAdditive": null
     },
@@ -1932,7 +1932,7 @@ export const contentValues = {
         "pumpkin"
       ],
       "drinkId": "water",
-      "water": 1750,
+      "water": 1250,
       "digestionTime": "8",
       "forceZone": "low",
       "requiredAdditive": null
@@ -1952,11 +1952,11 @@ export const contentValues = {
     {
       "characterId": "coffee",
       "foodIds": [
-        "toast",
+        "rice",
         "red-beans"
       ],
       "drinkId": "coffee",
-      "water": 2000,
+      "water": 1250,
       "digestionTime": "2",
       "forceZone": "medium",
       "requiredAdditive": null
@@ -1968,8 +1968,8 @@ export const contentValues = {
         "yogurt"
       ],
       "drinkId": "soda",
-      "water": 1500,
-      "digestionTime": "4",
+      "water": 1250,
+      "digestionTime": "2",
       "forceZone": "low",
       "requiredAdditive": null
     },
@@ -1980,8 +1980,8 @@ export const contentValues = {
         "oatmeal"
       ],
       "drinkId": "water",
-      "water": 2000,
-      "digestionTime": "4",
+      "water": 1250,
+      "digestionTime": "2",
       "forceZone": "high",
       "requiredAdditive": null
     },
@@ -1992,8 +1992,8 @@ export const contentValues = {
         "pumpkin"
       ],
       "drinkId": "water",
-      "water": 2000,
-      "digestionTime": "4",
+      "water": 1250,
+      "digestionTime": "2",
       "forceZone": "low",
       "requiredAdditive": null
     },
@@ -2012,11 +2012,11 @@ export const contentValues = {
     {
       "characterId": "milk-white",
       "foodIds": [
-        "toast",
+        "rice",
         "yogurt"
       ],
       "drinkId": "milk",
-      "water": 2000,
+      "water": 1250,
       "digestionTime": "2",
       "forceZone": "medium",
       "requiredAdditive": null
@@ -2028,7 +2028,7 @@ export const contentValues = {
         "hotpot"
       ],
       "drinkId": "water",
-      "water": 1500,
+      "water": 1250,
       "digestionTime": "2",
       "forceZone": "high",
       "requiredAdditive": null
@@ -2040,19 +2040,19 @@ export const contentValues = {
         "pumpkin"
       ],
       "drinkId": "water",
-      "water": 2000,
-      "digestionTime": "4",
+      "water": 1250,
+      "digestionTime": "2",
       "forceZone": "low",
       "requiredAdditive": null
     },
     {
       "characterId": "popping",
       "foodIds": [
-        "toast",
+        "banana",
         "popping-chocolate"
       ],
       "drinkId": "soda",
-      "water": 2500,
+      "water": 1250,
       "digestionTime": "2",
       "forceZone": "high",
       "requiredAdditive": null
@@ -2060,12 +2060,12 @@ export const contentValues = {
     {
       "characterId": "pancake",
       "foodIds": [
-        "oatmeal",
+        "yogurt",
         "pear",
         "prune"
       ],
       "drinkId": "prune-juice",
-      "water": 2000,
+      "water": 1250,
       "digestionTime": "2",
       "forceZone": "low",
       "requiredAdditive": null
@@ -2076,7 +2076,7 @@ export const contentValues = {
         "burger"
       ],
       "drinkId": "coffee",
-      "water": 1500,
+      "water": 1250,
       "digestionTime": "2",
       "forceZone": "high",
       "requiredAdditive": null
@@ -2088,8 +2088,8 @@ export const contentValues = {
         "prune"
       ],
       "drinkId": "soda",
-      "water": 2000,
-      "digestionTime": "4",
+      "water": 1250,
+      "digestionTime": "2",
       "forceZone": "medium",
       "requiredAdditive": null
     },
@@ -2097,11 +2097,12 @@ export const contentValues = {
       "characterId": "ink-black",
       "foodIds": [
         "squid-ink-pasta",
-        "pear"
+        "pear",
+        "burger"
       ],
       "drinkId": "prune-juice",
-      "water": 2500,
-      "digestionTime": "4",
+      "water": 1250,
+      "digestionTime": "2",
       "forceZone": "low",
       "requiredAdditive": null
     },
@@ -2112,7 +2113,7 @@ export const contentValues = {
         "enoki"
       ],
       "drinkId": "milk",
-      "water": 1500,
+      "water": 1250,
       "digestionTime": "2",
       "forceZone": "high",
       "requiredAdditive": null
@@ -2123,8 +2124,8 @@ export const contentValues = {
         "burger",
         "corn"
       ],
-      "drinkId": "water",
-      "water": 2500,
+      "drinkId": "prune-juice",
+      "water": 1250,
       "digestionTime": "2",
       "forceZone": "high",
       "requiredAdditive": null
@@ -2133,10 +2134,11 @@ export const contentValues = {
       "characterId": "glitter-galaxy",
       "foodIds": [
         "squid-ink-pasta",
-        "prune"
+        "prune",
+        "burger"
       ],
       "drinkId": "soda",
-      "water": 2500,
+      "water": 1250,
       "digestionTime": "2",
       "forceZone": "medium",
       "requiredAdditive": "glitter"
@@ -2145,11 +2147,12 @@ export const contentValues = {
       "characterId": "ink-fountain",
       "foodIds": [
         "squid-ink-pasta",
-        "pear"
+        "pear",
+        "burger"
       ],
       "drinkId": "prune-juice",
-      "water": 2500,
-      "digestionTime": "4",
+      "water": 1250,
+      "digestionTime": "2",
       "forceZone": "high",
       "requiredAdditive": null
     }

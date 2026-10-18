@@ -3,7 +3,6 @@ import { toiletDrawing, toiletSvg } from "./artwork/toilets.js";
 import { toilets } from "../content/toilets.js";
 import { toiletUnlockHint } from "../progression/toilets.js";
 import { toiletById } from "../content/catalog.js";
-import { gameConfig } from "../config/game.js";
 import { digestionOptions, digestionById } from "../content/digestion.js";
 import { createFoodPicker } from "./food-picker.js";
 import { $, $$ } from "./dom.js";
@@ -94,15 +93,6 @@ export function createSelectionView({
     event.preventDefault();
     switchToilet(event.key === "ArrowLeft" ? -1 : 1);
   });
-  Object.assign($("#water"), {
-    min: gameConfig.water.min,
-    max: gameConfig.water.max,
-    step: gameConfig.water.step,
-  });
-
-  $("#water").addEventListener("input", (event) =>
-    onChange({ water: Number(event.target.value) }),
-  );
   function render() {
     const selection = getSelection();
     const digestion = digestionById[selection.digestionTime];
@@ -112,25 +102,6 @@ export function createSelectionView({
       const selected = button.dataset.digestion === selection.digestionTime;
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", selected);
-    });
-    for (const [attribute, value] of [["drink", selection.drinkId]]) {
-      $$(`[data-${attribute}]`).forEach((button) => {
-        const selected = button.dataset[attribute] === value;
-        button.classList.toggle("selected", selected);
-        button.setAttribute("aria-pressed", selected);
-      });
-    }
-    $("#water").value = selection.water;
-    $("#water-value").innerHTML =
-      `${selection.water.toLocaleString("en-US")} <small>mL</small>`;
-    const percent =
-      ((selection.water - gameConfig.water.min) /
-        (gameConfig.water.max - gameConfig.water.min)) *
-      100;
-    $("#water").style.background =
-      `linear-gradient(to right,#9bb77a 0%,#9bb77a ${percent}%,#e8ecdf ${percent}%,#e8ecdf 100%)`;
-    $$(".additive-input").forEach((input) => {
-      input.checked = selection.additives.includes(input.value);
     });
     const toilet = toiletById[selection.toiletId];
     $("#toilet-name").textContent = toilet.name;

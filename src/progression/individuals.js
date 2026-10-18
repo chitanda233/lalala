@@ -48,7 +48,12 @@ function normalizeIndividual(value, sequence) {
       ? { createdAt: value.createdAt }
       : {}),
     ...(value.recipe && typeof value.recipe === "object"
-      ? { recipe: normalizeSelection(value.recipe) }
+      ? { recipe: {
+          ...normalizeSelection(value.recipe),
+          // Historical quantities describe the actual birth, not today's input limits.
+          ...(Number.isInteger(value.recipe.water) && value.recipe.water >= 0 && value.recipe.water <= 2500 && value.recipe.water % 250 === 0
+            ? { water: value.recipe.water } : {}),
+        } }
       : {}),
     ...(Number.isFinite(value.score) && value.score >= 0 && value.score <= 100
       ? { score: value.score }

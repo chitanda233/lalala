@@ -6,7 +6,7 @@ export async function chooseMeal(page, ids) {
     await page.locator("[data-remove-food]").first().click();
   for (const id of ids) {
     await focusFood(page, id);
-    await page.locator("#add-food").click();
+    await page.locator(`[data-add-food="${id}"]`).click();
   }
   await page.locator("#confirm-foods").click();
 }
@@ -14,8 +14,9 @@ export async function chooseMeal(page, ids) {
 export async function chooseDrink(page, id) {
   await page.locator("#choose-drinks").click();
   await showPageItem(page, `[data-drink="${id}"]`);
-  await page.locator(`[data-drink="${id}"]`).click();
-  await page.locator('.supply-footer [data-close="supply-dialog"]').click();
+  const add = page.locator(`[data-add-drink="${id}"]`);
+  if (await add.isEnabled()) await add.click();
+  await page.locator('#confirm-supply').click();
 }
 export async function chooseAdditives(page, ids) {
   await page.locator("#choose-additives").click();
@@ -28,7 +29,7 @@ export async function chooseAdditives(page, ids) {
     await showPageItem(page, `.additive-input[value="${id}"]`);
     await page.locator(`.additive-input[value="${id}"]`).check();
   }
-  await page.locator('.supply-footer [data-close="supply-dialog"]').click();
+  await page.locator('#confirm-supply').click();
 }
 
 export async function armSpecimen(page, characterId = null, type = null) {
@@ -126,7 +127,7 @@ export async function setWater(page, value) {
   if (!wasOpen) await page.locator("#choose-drinks").click();
   await page.locator("#water").fill(String(value));
   if (!wasOpen)
-    await page.locator('.supply-footer [data-close="supply-dialog"]').click();
+    await page.locator('#confirm-supply').click();
 }
 export async function setCompletedRounds(page, total) {
   await page.evaluate((total) => {

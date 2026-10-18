@@ -55,7 +55,7 @@ export const rareThemeRecipes = [
       "pumpkin"
     ],
     "drinkId": "water",
-    "water": 1500,
+    "water": 1250,
     "digestionTime": "4",
     "forceZone": "medium",
     "additiveId": "gold-leaf"
@@ -67,7 +67,7 @@ export const rareThemeRecipes = [
       "dragon-fruit"
     ],
     "drinkId": "prism-soda",
-    "water": 1500,
+    "water": 1250,
     "digestionTime": "4",
     "forceZone": "medium",
     "additiveId": "rainbow-sugar"
@@ -79,8 +79,8 @@ export const rareThemeRecipes = [
       "konjac"
     ],
     "drinkId": "grass-jelly",
-    "water": 2000,
-    "digestionTime": "4",
+    "water": 1250,
+    "digestionTime": "2",
     "forceZone": "low",
     "additiveId": "gelatin"
   },
@@ -88,10 +88,11 @@ export const rareThemeRecipes = [
     "characterId": "luminous",
     "foodIds": [
       "oatmeal",
-      "yogurt"
+      "yogurt",
+      "banana"
     ],
     "drinkId": "glow-soda",
-    "water": 2000,
+    "water": 1250,
     "digestionTime": "2",
     "forceZone": "low",
     "additiveId": "stardust"
@@ -103,7 +104,7 @@ export const rareThemeRecipes = [
       "prune"
     ],
     "drinkId": "prune-juice",
-    "water": 2000,
+    "water": 1250,
     "digestionTime": "2",
     "forceZone": "high",
     "additiveId": "gold-leaf"
@@ -112,10 +113,11 @@ export const rareThemeRecipes = [
     "characterId": "rainbow-falls",
     "foodIds": [
       "dragon-fruit",
-      "prune"
+      "prune",
+      "burger"
     ],
     "drinkId": "prism-soda",
-    "water": 2000,
+    "water": 1250,
     "digestionTime": "2",
     "forceZone": "high",
     "additiveId": "rainbow-sugar"

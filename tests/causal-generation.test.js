@@ -47,7 +47,7 @@ test("there is a source-free base for each physical type and randomized legal me
   for(let type=1;type<=7;type++)assert.ok(characters.some(c=>c.homeType===type&&c.generation?.base&&Object.values(c.generation.sources).every(v=>Array.isArray(v)?!v.length:v===null)));
   const rng=randomSeed(9042),foods=Object.keys(foodById),drinks=Object.keys(drinkById),additives=Object.keys(additiveById);
   for(let i=0;i<240;i++){
-    const input=normalizeSelection({foodIds:Array.from({length:1+Math.floor(rng()*3)},()=>foods[Math.floor(rng()*foods.length)]),drinkId:drinks[Math.floor(rng()*drinks.length)],water:250*(1+Math.floor(rng()*10)),digestionTime:["2","4","8"][i%3],force:Math.floor(rng()*101),additives:i%3?[additives[Math.floor(rng()*additives.length)]]:[]});
+    const input=normalizeSelection({foodIds:Array.from({length:1+Math.floor(rng()*3)},()=>foods[Math.floor(rng()*foods.length)]),drinkId:drinks[Math.floor(rng()*drinks.length)],water:250*Math.floor(rng()*6),digestionTime:["2","4","8"][i%3],force:Math.floor(rng()*101),additives:i%3?[additives[Math.floor(rng()*additives.length)]]:[]});
     const state=physicalState(input),source=mealSources(input),pool=getOutcomePool(input);
     assert.ok(ordinary(pool).length>0);
     close(pool.reduce((sum,e)=>sum+e.probability,0),1);
@@ -57,7 +57,7 @@ test("there is a source-free base for each physical type and randomized legal me
 });
 
 test("force changes shape but neither physical type nor food and colour identity budgets",()=>{
-  const input={foodIds:["burger","enoki","corn"],drinkId:"water",water:2500,digestionTime:"2",additives:[]};
+  const input={foodIds:["burger","enoki","corn"],drinkId:"prune-juice",water:1250,digestionTime:"2",additives:[]};
   let previous;
   for(const force of [0,20,33,34,50,66,67,90,100]){
     const pool=ordinary(getOutcomePool({...input,force})),groups={};
@@ -68,12 +68,12 @@ test("force changes shape but neither physical type nor food and colour identity
 
 test("one slider step decays the ideal probability smoothly instead of removing the target",()=>{
   const input={foodIds:["rice"],drinkId:"water",digestionTime:"4",force:50,additives:[]};
-  const points=[1000,1250,1500,1750].map(water=>getRecipeForecast({...input,water}));
+  const points=[1000,1250].map(water=>getRecipeForecast({...input,water}));
   assert.ok(points.every(f=>f.primaryCharacterId==="classic"&&f.physicalState.type===4));
-  close(points[2].primaryConditionalProbability,.8);
-  assert.ok(points[1].primaryConditionalProbability>=.65&&points[1].primaryConditionalProbability<=.75);
+  close(points[1].primaryConditionalProbability,.8);
+  assert.ok(points[0].primaryConditionalProbability>=.65&&points[0].primaryConditionalProbability<=.75);
   for(let i=1;i<points.length;i++)assert.ok(Math.abs(points[i].primaryConditionalProbability-points[i-1].primaryConditionalProbability)<.16);
-  const pools=[1000,1250,1500,1750].map(water=>new Map(getOutcomePool({...input,water}).map(e=>[e.characterId,e.probability])));
+  const pools=[1000,1250].map(water=>new Map(getOutcomePool({...input,water}).map(e=>[e.characterId,e.probability])));
   for(let i=1;i<pools.length;i++){
     const ids=new Set([...pools[i-1].keys(),...pools[i].keys()]);
     const totalVariation=[...ids].reduce((sum,id)=>sum+Math.abs((pools[i].get(id)||0)-(pools[i-1].get(id)||0)),0)/2;
@@ -82,9 +82,9 @@ test("one slider step decays the ideal probability smoothly instead of removing 
 });
 
 test("colour is selected from the meal before drawing an identity and cannot be invented by a character",()=>{
-  const plain={foodIds:["rice"],drinkId:"water",water:1500,additives:[]};
+  const plain={foodIds:["rice"],drinkId:"water",water:1250,additives:[]};
   for(const id of ["red-dragon","milk-white","purple-berry","ink-black"])assert.equal(resolveColor(plain,characterById[id]),"classic");
-  const ink={...plain,foodIds:["squid-ink-pasta","pear"],drinkId:"prune-juice",water:2500};
+  const ink={...plain,foodIds:["squid-ink-pasta","pear"],drinkId:"prune-juice",water:1250};
   assert.equal(sourceColor(ink).id,"ink");
   assert.equal(resolveColor(ink,characterById["ink-fountain"]),"ink");
   const milk={...ink,foodIds:["rice"],drinkId:"milk"};assert.equal(sourceColor(milk).id,"milk");
@@ -114,7 +114,7 @@ test("every ideal meal has smooth adjacent intake distributions when physics and
   let checked=0;
   for(const recipe of stoolRecipes){
     let previous;
-    for(let water=250;water<=2500;water+=250){
+    for(let water=0;water<=1250;water+=250){
       const input=normalizeSelection({...inputFor(recipe),water}),state=physicalState(input),sources=mealSources(input);
       const legal=characters.filter(c=>c.rarity!=="special"&&c.homeType===state.type&&sourceAllowed(c,sources)).map(c=>c.id).sort().join(',');
       const pool=new Map(getOutcomePool(input).map(e=>[e.characterId,e.probability]));
@@ -126,12 +126,12 @@ test("every ideal meal has smooth adjacent intake distributions when physics and
       previous={type:state.type,legal,pool};
     }
   }
-  assert.ok(checked>=300);
+  assert.ok(checked>=stoolRecipes.length*2,`${checked} eligible adjacent pairs`);
 });
 
 test("porosity changes actual soft-shape probabilities without inventing a new source or changing type",()=>{
   const food=foodById['marshmallow-foam'],original=food.attributes.porosity;
-  const input={foodIds:['marshmallow-foam'],drinkId:'water',water:1500,digestionTime:'4',force:50,additives:[]};
+  const input={foodIds:['marshmallow-foam'],drinkId:'water',water:1250,digestionTime:'4',force:50,additives:[]};
   const probabilities=[];
   try{
     for(const porosity of [1,7]){

@@ -7,9 +7,8 @@ for(const [width,height]of [[320,640],[402,760]])test(`the player's free meal is
   await chooseMeal(page,['rice','pumpkin']);await chooseDrink(page,'grass-jelly');await setWater(page,1250);
   await page.locator('#choose-digestion').click();await page.locator('[data-digestion="2"]').click();await page.locator('[data-close="digestion-dialog"]').last().click();
   await chooseAdditives(page,['probiotic']);
-  await expect(page.locator('#action-title')).toHaveText('主结果 · 软软小枕头');
-  await expect(page.locator('.idle-hint')).toContainText('主结果 98%');
-  await expect(page.locator('.idle-hint')).toContainText('普通分支 100%');
+  await expect(page.locator('#action-title')).toHaveText('准备好，开始吧。');
+  await expect(page.locator('.action-area')).not.toContainText(/软软小枕头|主结果|普通分支|概率|[%％]/);
   for(const force of [14,39,88]){
     await startRound(page,force);await expect(page.locator('#result-dialog')).toBeVisible();
     await expect(page.locator('#result-name')).toHaveText('软软小枕头');
@@ -17,9 +16,9 @@ for(const [width,height]of [[320,640],[402,760]])test(`the player's free meal is
     const recorded=await page.evaluate(()=>JSON.parse(localStorage.getItem('lalala-dev')).individuals.at(-1));
     await page.reload();await expect(page.locator('#start-button')).toHaveAttribute('data-phase','idle');
     expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('lalala-dev')).individuals.at(-1))).toEqual(recorded);
-    await expect(page.locator('#action-title')).toHaveText('主结果 · 软软小枕头');
+    await expect(page.locator('#action-title')).toHaveText('准备好，开始吧。');
   }
-  await page.screenshot({path:`qa/生成机制重构-主结果-${width}.png`});
+  await page.screenshot({path:`qa/主界面保留惊喜-${width}.png`});
   await page.locator('#collection-button').click();await page.locator('#collection-preview-all').check();await chooseSpecimen(page,'corn-pebbles:5');
   await page.locator('[data-detail-panel="source"]').click();
   await expect(page.locator('[data-source-for="corn-pebbles"]')).toContainText('蒸玉米');
@@ -40,19 +39,17 @@ for(const [width,height]of [[320,640],[402,760]])test(`the player's free meal is
   expect(content.stools.find(s=>s.id==='corn-pebbles').generation.sources.foods).toEqual(['corn']);
 });
 
-test('aiming preview follows continuous force changes within the same zone',async({page})=>{
+test('aiming force changes never reveal the upcoming result or its probability',async({page})=>{
   await page.goto('/');await setWater(page,1250);await page.locator('#start-button').click();
-  const labels=[];
   for(const force of [35,60]){
-    const expected=await page.evaluate(async(force)=>{
+    await page.evaluate((force)=>{
       const save=JSON.parse(localStorage.getItem('lalala-dev'));
       Date.now=()=>save.session.startedAt+1500*force/100;
-      const {getRecipeForecast}=await import('/src/game/outcome-pool.js');
-      const forecast=getRecipeForecast({...save.session,force});
-      return `主结果 ${(forecast.primaryProbability*100).toFixed(1).replace(/\.0$/,'')}%`;
     },force);
     await expect(page.locator('#force-value')).toContainText(`${force} / 100`);
-    await expect(page.locator('.force-heading strong')).toHaveText(expected);labels.push(expected);
+    await expect(page.locator('.force-heading strong')).toHaveText('拉屎力度');
+    await expect(page.locator('#action-title')).toHaveText('放轻松，跟着感觉来。');
+    await expect(page.locator('.action-area')).not.toContainText(/主结果|目标|概率|命中|普通分支|稀有|预告|[%％]/);
   }
-  expect(labels[0]).not.toBe(labels[1]);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('lalala-dev')).session.outcome)).toBeNull();
 });

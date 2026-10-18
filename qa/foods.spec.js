@@ -12,12 +12,12 @@ test("food library shows locks, descriptions and category filters", async ({
   await expect(page.locator(".food-card.locked")).toHaveCount(18);
   await focusFood(page, "enoki");
   await expect(page.locator("#food-details")).toContainText("See you tomorrow");
-  await expect(page.locator("#add-food")).toBeEnabled();
+  await expect(page.locator('[data-add-food="enoki"]')).toBeEnabled();
   await focusFood(page, "hotpot");
   await expect(page.locator("#food-details")).toContainText(
     "完成 5 次游戏后解锁",
   );
-  await expect(page.locator("#add-food")).toBeDisabled();
+  await expect(page.locator('[data-add-food="hotpot"]')).toBeDisabled();
   await page.locator('[data-food-category="fruit"]').click();
   await expect(page.locator(".food-card")).toHaveCount(7);
   await page.locator('[data-food-category="all"]').click();
@@ -37,13 +37,13 @@ test("three slots enforce capacity and uniqueness, support replacement and save 
   await expect(page.locator("#meal-count")).toHaveText("已选 3 / 3");
   await page.locator("#choose-foods").click();
   await focusFood(page, "burger");
-  await expect(page.locator("#add-food")).toHaveText("已在餐盘");
+  await expect(page.locator('[data-add-food="burger"]')).toHaveText("✓");
   await focusFood(page, "banana");
-  await expect(page.locator("#add-food")).toHaveText("餐盘已满");
+  await expect(page.locator('[data-add-food="banana"]')).toBeDisabled();
   await page.locator('[data-slot-target="1"]').click();
   await focusFood(page, "banana");
-  await expect(page.locator("#add-food")).toHaveText("替换第 2 格");
-  await page.locator("#add-food").click();
+  await expect(page.locator('[data-add-food="banana"]')).toBeEnabled();
+  await page.locator('[data-add-food="banana"]').click();
   await page.locator("#confirm-foods").click();
   await page.reload();
   const selection = await page.evaluate(
@@ -64,7 +64,7 @@ test("three slots enforce capacity and uniqueness, support replacement and save 
   while (await page.locator("[data-remove-food]").count())
     await page.locator("[data-remove-food]").first().click();
   await expect(page.locator("#confirm-foods")).toBeDisabled();
-  await page.locator(".food-cancel").click();
+  await page.locator("#food-dialog .food-cancel").click();
   await expect(page.locator("#meal-count")).toHaveText("已选 3 / 3");
 });
 
@@ -138,7 +138,7 @@ test("mobile food picker keeps three slots and confirmation accessible without h
   await page.locator("#choose-foods").click();
   await focusFood(page, "burger");
   await expect(page.locator("#food-details")).toContainText("喷射战士");
-  await page.locator("#add-food").click();
+  await page.locator('[data-add-food="burger"]').click();
   await expect(page.locator("#food-slots .food-slot")).toHaveCount(3);
   await expect(page.locator("#confirm-foods")).toBeInViewport();
   expect(
@@ -152,7 +152,7 @@ test("mobile food picker keeps three slots and confirmation accessible without h
   });
   await page.setViewportSize({ width: 320, height: 640 });
   await focusFood(page, "enoki");
-  await page.locator("#add-food").click();
+  await page.locator('[data-add-food="enoki"]').click();
   await expect(page.locator("#confirm-foods")).toBeInViewport();
   expect(
     await page

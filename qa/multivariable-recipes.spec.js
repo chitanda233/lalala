@@ -9,14 +9,14 @@ for(const [width,height] of [[320,640],[402,760]])
     page.on('pageerror',error=>errors.push(error.message));
     await page.goto('/');
     await chooseAdditives(page,['probiotic']);
-    for(const [water,phase,type] of [[250,'8',2],[500,'4',3],[1500,'4',4],[2500,'2',6]]) {
+    for(const [water,phase,type] of [[0,'8',2],[500,'4',3],[1250,'4',4],[1250,'2',5]]) {
       await page.locator('#choose-drinks').click();
       await page.locator('#water').fill(String(water));
       await expect(page.locator('#water-value')).toHaveText(`${water.toLocaleString("en-US")} mL`);
       await expect(page.locator('#drink-volume, #total-liquid')).toHaveCount(0);
       await expect(page.locator('#water-section')).not.toContainText("额外清水");
       expect(await page.locator('#supply-dialog').evaluate(el=>el.scrollHeight<=el.clientHeight&&el.scrollWidth<=el.clientWidth)).toBe(true);
-      await page.locator('.supply-footer [data-close="supply-dialog"]').click();
+      await page.locator('#confirm-supply').click();
       await page.locator('#choose-digestion').click();
       await page.locator(`[data-digestion="${phase}"]`).click();
       await page.locator('[data-close="digestion-dialog"]').last().click();
@@ -31,13 +31,13 @@ for(const [width,height] of [[320,640],[402,760]])
     await page.locator('#choose-digestion').click();
     await page.locator('[data-digestion="random"]').click();
     await page.locator('[data-close="digestion-dialog"]').last().click();
-    await expect(page.locator('.idle-hint')).toContainText('三档等概率');
-    await expect(page.locator('#action-title')).toHaveText('随机阶段 · 综合预告');
+    await expect(page.locator('#action-title')).toHaveText('准备好，开始吧。');
+    await expect(page.locator('.action-area')).not.toContainText(/预告|概率|主结果|[%％]/);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.locator('#start-button').click();
     const aiming=await page.evaluate(()=>JSON.parse(localStorage.getItem('lalala-dev')).session);
     expect(aiming.digestionTime).toBe('4');
-    await expect(page.locator('#action-description')).toContainText('本局阶段 4');
+    await expect(page.locator('#action-description')).not.toContainText('本局阶段');
     await page.reload();
     expect((await page.evaluate(()=>JSON.parse(localStorage.getItem('lalala-dev')).session)).digestionTime).toBe('4');
     expect(errors).toEqual([]);
@@ -50,7 +50,7 @@ test('the catalogue and content studio expose complete volume and phase recipes'
   await page.locator('#collection-preview-all').check();
   await chooseSpecimen(page,'classic:4');
   await page.locator('[data-detail-panel="recipe"]').click();
-  await expect(page.locator('[data-recipe-for="classic"]')).toContainText('1500 mL');
+  await expect(page.locator('[data-recipe-for="classic"]')).toContainText('1250 mL');
   await expect(page.locator('[data-recipe-for="classic"]')).toContainText('消化阶段 4');
   expect(await page.locator('#collection-dialog').evaluate(el=>el.scrollHeight<=el.clientHeight)).toBe(true);
   await page.setViewportSize({width:1400,height:900});

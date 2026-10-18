@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { chooseAdditives, chooseSpecimen, showPageItem, startRound } from "./helpers.js";
+import { chooseAdditives, chooseSpecimen, showPageItem, startRound, setWater } from "./helpers.js";
 
 const readSave = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("lalala-dev")));
-const closeSupplies = (page) => page.locator('.supply-footer [data-close="supply-dialog"]').click();
+const closeSupplies = (page) => page.locator('#confirm-supply').click();
 
 async function prepare(page, viewport) {
   await page.setViewportSize(viewport);
@@ -14,13 +14,14 @@ async function prepare(page, viewport) {
     };
   });
   await page.goto("/");
+  await setWater(page, 1250);
   await expect(page.locator("#start-button")).toHaveAttribute("data-phase", "idle");
 }
 
-async function expectForecast(page, target, rare, conditional) {
-  await expect(page.locator("#action-title")).toHaveText("目标 · 顺畅小能手");
-  await expect(page.locator(".idle-hint")).toContainText(`命中 ${target}% · 稀有 ${rare}%`);
-  await expect(page.locator("#action-description")).toContainText(`配方命中率${conditional}%`);
+async function expectNoSpoilers(page) {
+  await expect(page.locator("#action-title")).toHaveText("准备好，开始吧。");
+  await expect(page.locator(".action-area")).not.toContainText(/主结果|目标|概率|命中|普通分支|稀有|预告|[%％]/);
+  await expect(page.locator("#action-description")).toHaveText("选好配方，点击开始，再点击停止锁定力度。");
 }
 
 for (const [width, height] of [[320, 640], [402, 760]])
@@ -30,12 +31,11 @@ for (const [width, height] of [[320, 640], [402, 760]])
     expect(initial.settings.foodIds).toEqual(["rice"]);
     expect(initial.settings.drinkId).toBe("water");
     expect(initial.settings.additives).toEqual([]);
-    await expectForecast(page, 78.4, 2, 80);
-    await expect(page.locator(".idle-hint")).toContainText("中等力度 34–66");
+    await expectNoSpoilers(page);
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
     await chooseAdditives(page, ["probiotic"]);
-    await expectForecast(page, 98, 2, 100);
+    await expectNoSpoilers(page);
     expect((await readSave(page)).settings.additives).toEqual(["probiotic"]);
     await page.locator("#choose-additives").click();
     await expect(page.locator(".additive-input:checked")).toHaveCount(1);
@@ -43,7 +43,7 @@ for (const [width, height] of [[320, 640], [402, 760]])
     await page.locator('.additive-input[value="probiotic"]').uncheck();
     await expect(page.locator(".additive-input:checked")).toHaveCount(0);
     await closeSupplies(page);
-    await expectForecast(page, 78.4, 2, 80);
+    await expectNoSpoilers(page);
     expect((await readSave(page)).settings.additives).toEqual([]);
 
     const now = new Date("2026-10-18T08:00:00Z");
@@ -54,8 +54,9 @@ for (const [width, height] of [[320, 640], [402, 760]])
     expect(locked.force).toBe(50);
     expect(locked.outcome.characterId).toBe("classic");
     expect(locked.outcome.special).toBe(false);
-    await expect(page.locator(".force-heading strong")).toHaveText("命中 78.4%");
-    await expect(page.locator("#keyboard-hint")).toHaveText("未中稀有后 80% · 稀有 2%");
+    await expect(page.locator(".force-heading strong")).toHaveText("拉屎力度");
+    await expect(page.locator(".action-area")).not.toContainText(/顺畅小能手|主结果|概率|命中|稀有|[%％]/);
+    await expect(page.locator("#result-dialog")).not.toBeVisible();
     await page.reload();
     await expect(page.locator("#start-button")).toHaveAttribute("data-phase", "running");
     expect((await readSave(page)).session).toEqual(locked);
@@ -94,7 +95,7 @@ test("single functional additives render glitter and give crystal a 5% rare pool
   await expect(page.locator('.additive-input[value="probiotic"]')).not.toBeChecked();
   await closeSupplies(page);
   expect((await readSave(page)).settings.additives).toEqual(["glitter"]);
-  await expectForecast(page, 78.4, 2, 80);
+  await expectNoSpoilers(page);
   await startRound(page, 50);
   await expect(page.locator("#result-dialog")).toBeVisible();
   await expect(page.locator("#result-name")).toHaveText("顺畅小能手");
@@ -106,7 +107,7 @@ test("single functional additives render glitter and give crystal a 5% rare pool
 
   await page.locator("#play-again").click();
   await chooseAdditives(page, ["crystal-seed"]);
-  await expectForecast(page, 76, 5, 80);
+  await expectNoSpoilers(page);
   expect((await readSave(page)).settings.additives).toEqual(["crystal-seed"]);
   const actual = await page.evaluate(async () => {
     const { getOutcomePool, getRecipeForecast } = await import("/src/game/outcome-pool.js");
@@ -126,6 +127,6 @@ test("single functional additives render glitter and give crystal a 5% rare pool
   await expect(page.locator("#result-name")).toHaveText("顺畅小能手");
   const final = await readSave(page);
   expect(final.total).toBe(2);
-  expect(final.individuals[1].recipe.additives).toEqual(["crystal-seed"]);
-  expect(final.individuals[1].characterId).toBe("classic");
+  expect(final.individuals.at(-1).recipe.additives).toEqual(["crystal-seed"]);
+  expect(final.individuals.at(-1).characterId).toBe("classic");
 });

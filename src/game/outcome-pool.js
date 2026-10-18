@@ -42,7 +42,7 @@ function identityDistance(recipe, selection, food) {
   const ideal = foodProfile(recipe.foodIds).shape;
   const traitDifference = ["softness", ...shapeKeys].reduce((sum, key) => sum + Math.abs(food[key] - ideal[key]), 0) / 30;
   const drink = drinkById[selection.drinkId], idealDrink = drinkById[recipe.drinkId];
-  const drinkDifference = recipe.drinkId === selection.drinkId ? 0 :
+  const drinkDifference = selection.water === 0 || recipe.drinkId === selection.drinkId ? 0 :
     .15 + Math.abs(drink.wetnessBias - idealDrink.wetnessBias) * .2 + Math.abs(drink.porosity - idealDrink.porosity) * .05;
   return (1 - shared / union) * 1.6 + traitDifference * .8 + drinkDifference +
     Math.abs(recipe.water - selection.water) / 1500 * .9 +

@@ -22,6 +22,7 @@ import {
 import { getRecipeForecast } from "/src/game/outcome-pool.js";
 import { specimenName } from "/src/game/specimen.js";
 import { recipeLiquidText } from "/src/content/recipe-labels.js";
+import { gameConfig } from "/src/config/game.js";
 
 const $ = (selector) => document.querySelector(selector);
 const escapeText = (value) =>
@@ -349,12 +350,12 @@ $("#preview-additive").innerHTML = optionList(additives, "", "无添加剂");
 $("#preview-digestion").innerHTML = optionList(digestionOptions, "4");
 $("#preview-toilet").innerHTML = optionList(toilets, "standard");
 $("#preview-water").innerHTML = Array.from(
-  { length: 10 },
-  (_, i) => (i + 1) * 250,
+  { length: (gameConfig.water.max - gameConfig.water.min) / gameConfig.water.step + 1 },
+  (_, i) => gameConfig.water.min + i * gameConfig.water.step,
 )
   .map(
     (amount) =>
-      `<option value="${amount}"${amount === 1500 ? " selected" : ""}>${amount} mL</option>`,
+      `<option value="${amount}"${amount === gameConfig.water.default ? " selected" : ""}>${amount} mL</option>`,
   )
   .join("");
 $("#food-list").addEventListener("click", (event) => {

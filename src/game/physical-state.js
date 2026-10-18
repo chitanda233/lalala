@@ -24,7 +24,7 @@ export function physicalState(input) {
   // The original slider is the entire intake of the selected drink.
   const waterBonus = clamp((selection.water - 1300) / 1000, -1.1, 1);
   const drinkScale = Math.min(selection.water / 1500, 5 / 3);
-  const drinkBonus = drinkById[selection.drinkId].wetnessBias * drinkScale;
+  const drinkBonus = selection.water > 0 ? drinkById[selection.drinkId].wetnessBias * drinkScale : 0;
   const timeBonus = timeWetness[selection.digestionTime];
   const additiveBonus = -(additiveById[selection.additives[0]]?.propertyChanges?.hardness || 0) * 0.5;
   const score = foodBase + waterBonus + drinkBonus + timeBonus + additiveBonus;

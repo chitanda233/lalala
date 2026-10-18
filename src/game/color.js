@@ -19,7 +19,7 @@ export function sourceColor(input, catalog = { foodById, drinkById, additiveById
   }).filter(source => source.id && source.strength > 1);
   const drink = catalog.drinkById[selection.drinkId];
   const pigment = pigmentFor(drink.tags);
-  if (pigment) {
+  if (pigment && selection.water > 0) {
     const strength = Math.min(7, 7 * Math.min(selection.water / 1500, 5 / 3));
     sources.push({ id: pigment, strength, weight: 7 * selection.water / 1500, source: `drink:${drink.id}` });
   }
