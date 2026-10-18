@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { characters } from "../src/content/specimens.js";
 import { stoolRecipes, stoolRecipeByCharacterId } from "../src/content/stool-recipes.js";
+import { mealSources, sourceAllowed } from "../src/game/source-conditions.js";
 import { foodById, drinkById, additiveById } from "../src/content/catalog.js";
 import { normalizeSelection } from "../src/game/selection.js";
 import { conditionalDropPool, getOutcomePool, getRecipeForecast } from "../src/game/outcome-pool.js";
@@ -66,9 +67,12 @@ test("46 ordinary species have unique complete intake/phase recipes and all 56 s
 test("every exact recipe gets 80% of the nonrare branch, or 100% with probiotic", () => {
   for (const recipe of stoolRecipes) {
     const cases = recipe.requiredAdditive ? [[[recipe.requiredAdditive], .8, recipe.requiredAdditive === "gold-leaf" ? .76 : .784]] : [[[], .8, .784], [["glitter"], .8, .784], [["probiotic"], 1, .98]];
-    for (const [additives, conditional, total] of cases) {
+    for (const [additives, plannedConditional, plannedTotal] of cases) {
       const input = inputFor(recipe, additives);
       const forecast = getRecipeForecast(input);
+      const legal = characters.filter(c => c.rarity !== "special" && c.homeType === forecast.physicalState.type && sourceAllowed(c, mealSources(input)));
+      const conditional = legal.length === 1 ? 1 : plannedConditional;
+      const total = legal.length === 1 ? 1 - forecast.rareProbability : plannedTotal;
       assert.equal(forecast.matchedRecipe.characterId, recipe.characterId);
       close(forecast.rareProbability, recipe.requiredAdditive === "gold-leaf" ? .05 : .02);
       close(forecast.recipeConditionalProbability, conditional);
@@ -166,8 +170,8 @@ test("an otherwise complete meal suggests its required force without granting an
   const forecast = getRecipeForecast({ ...inputFor(recipe), force: 0 });
   assert.equal(forecast.matchedRecipe, null);
   assert.equal(forecast.suggestedRecipe.characterId, "enoki-thread");
-  close(forecast.recipeConditionalProbability, 0);
-  close(forecast.recipeProbability, 0);
+  close(forecast.recipeConditionalProbability, .8);
+  close(forecast.recipeProbability, .784);
 });
 
 test("forecasts, type forecasts and conditional inspection project the exact same final pool", () => {
@@ -178,7 +182,7 @@ test("forecasts, type forecasts and conditional inspection project the exact sam
     if (forecast.matchedRecipe)
       close(forecast.recipeProbability, pool.find((entry) => entry.characterId === forecast.matchedRecipe.characterId).probability);
     else {
-      close(forecast.recipeProbability, 0);
+      close(forecast.primaryProbability, pool.find(entry => entry.characterId === forecast.primaryCharacterId).probability);
     }
     for (const value of Object.values(forecast.properties)) assert.ok(Number.isFinite(value) && value >= 1 && value <= 7);
     for (let type = 1; type <= 7; type++) {
@@ -194,15 +198,15 @@ test("forecasts, type forecasts and conditional inspection project the exact sam
   }
 });
 
-test("unmatched meals have legal probabilities and never inherit an exact recipe guarantee", () => {
+test("unmatched meals have legal main outcomes and probiotic stabilizes them", () => {
   for (const foodIds of [["banana"], ["rice", "egg"], ["hotpot", "kiwi", "apple"]]) {
     const input = { ...base, foodIds, drinkId: "milk", additives: ["probiotic"] };
     assert.equal(getRecipeForecast(input).matchedRecipe, null);
-    close(getRecipeForecast(input).recipeProbability, 0);
+    close(getRecipeForecast(input).recipeProbability, .98);
     const pool = getOutcomePool(input);
     validPool(pool);
     close(sum(rarityPool(pool)), 0.02);
-    assert.ok(pool.filter((entry) => !entry.special).length > 1);
+    assert.equal(pool.filter((entry) => !entry.special).length, 1);
   }
   for (const value of [-1, 1, NaN, Infinity]) assert.throws(() => rollOutcome(base, () => value), RangeError);
 });

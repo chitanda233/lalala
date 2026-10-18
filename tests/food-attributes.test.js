@@ -153,7 +153,8 @@ test("larger food hardness values increase the profile and recheck the fixed rec
         assert.ok(Math.abs(forecast.recipeProbability - 0.784) < 1e-12);
       } else {
         assert.equal(forecast.matchedRecipe, null);
-        assert.equal(forecast.recipeProbability, 0);
+        assert.ok(forecast.primaryProbability > 0);
+        assert.equal(characterById[forecast.primaryCharacterId].homeType, forecast.physicalState.type);
       }
     });
 });
@@ -305,7 +306,9 @@ test("a food pigment changes its matching collectible color gradually and a null
       0,
     );
   const outcomes = [1, 2, 7].map((strength) => result("garden", strength));
-  for (const outcome of outcomes) assert.equal(outcome.characterId, "garden");
+  assert.notEqual(outcomes[0].characterId, "garden");
+  assert.equal(outcomes[0].colorId, "classic");
+  for (const outcome of outcomes.slice(1)) assert.equal(outcome.colorId, "garden");
   const tints = outcomes.map(tint);
   assert.equal(tints[0], stoolColors.classic.color);
   assert.ok(distance(tints[2], stoolColors.garden.color) < distance(tints[1], stoolColors.garden.color));

@@ -1,4 +1,6 @@
 import { gameConfig } from "../src/config/game.js";
+import { mealSources, sourceAllowed } from "../src/game/source-conditions.js";
+import { stoolColors } from "../src/content/colors.js";
 import { contentValues } from "../src/content/managed-content.js";
 import { foods } from "../src/content/foods.js";
 import { stoolPropertyFields } from "../src/content/stool-properties.js";
@@ -8,6 +10,7 @@ const foodIds = new Set(foods.map((item) => item.id));
 const drinkIds = new Set(baseline.drinks.map((item) => item.id));
 const additiveIds = new Set(baseline.additives.map(item => item.id));
 const rareIds = new Set(baseline.stools.filter((item) => item.rarity === "special").map((item) => item.id));
+const sourceTags = new Set([...foods, ...baseline.drinks, ...baseline.additives].flatMap(item => item.tags));
 export const propertyLabels = Object.fromEntries(stoolPropertyFields.map((field) => [field.key, field.name]));
 export const decorationLabels = { "": "无装饰", glitter: "闪粉", "gold-flake": "金箔", silver: "银斑", petals: "花瓣", popping: "跳跳颗粒", charcoal: "炭粉" };
 export const shapeLabels = { seat: "经典坐便", royal: "皇冠", wood: "木纹", heated: "暖座", massage: "按摩", squat: "蹲坑", stones: "石头堆", vortex: "涡流", crystal: "水晶" };
@@ -44,6 +47,21 @@ function entries(value, key, idKey, validate) {
     try { return validate(item, original); } catch (error) { throw new TypeError(`${original.name || original[idKey]}：${error.message}`); }
   });
 }
+function sourceIds(value, allowed, label, max = 3) {
+  requireValue(Array.isArray(value) && value.length <= max && new Set(value).size === value.length && value.every(id => allowed.has(id)), `${label}包含未知或重复来源。`);
+  return [...value];
+}
+function generation(value) {
+  requireValue(value && typeof value === "object" && typeof value.identity === "string" && /^[a-z][a-z0-9-]{0,63}$/.test(value.identity), "请配置有效的生成身份分组。");
+  requireValue(typeof value.base === "boolean" && value.base === (value.identity === "base"), "基础造型必须使用 base 分组。");
+  requireValue(["low", "medium", "high"].includes(value.forceZone), "请选择造型偏好力度。");
+  const rule = value.sources;
+  requireValue(rule && typeof rule === "object" && Object.keys(rule).length === 4 && ["foods", "tags", "pigment", "additives"].every(key => Object.hasOwn(rule, key)), "来源条件需分别配置食物、标签、主色素和添加剂。");
+  requireValue(rule.pigment === null || Object.hasOwn(stoolColors, rule.pigment), "主色素来源无效。");
+  const sources = { foods: sourceIds(rule.foods, foodIds, "必需食物"), tags: sourceIds(rule.tags, sourceTags, "来源标签"), pigment: rule.pigment, additives: sourceIds(rule.additives, additiveIds, "必需添加剂", 1) };
+  requireValue(!value.base || (!sources.foods.length && !sources.tags.length && !sources.pigment && !sources.additives.length), "通用基础造型不能配置来源门槛。");
+  return { identity: value.identity, base: value.base, sources, forceZone: value.forceZone };
+}
 export function validateManagedContent(value) {
   requireValue(value && typeof value === "object" && !Array.isArray(value), "内容配置必须是对象。");
   requireValue(Object.keys(value).length === Object.keys(baseline).length && Object.keys(value).every((key) => Object.hasOwn(baseline, key)), "内容模块不完整或包含未知模块。");
@@ -58,6 +76,7 @@ export function validateManagedContent(value) {
       description: text(item.description, "描述"), rarity: original.rarity,
       material: text(item.material, "材质", 40),
       properties: Object.fromEntries(stoolPropertyFields.map(({ key, name }) => [key, number(item.properties?.[key], name, 1, 7, true)])),
+      ...(original.rarity !== "special" ? { generation: generation(item.generation) } : {}),
     };
   });
   result.recipes = entries(value.recipes, "recipes", "characterId", (item, original) => {
@@ -103,5 +122,17 @@ export function validateManagedContent(value) {
     requireValue(typeof item.path === "string" && (item.path === "" || /^\/assets\/stools\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(?:png|webp)$/.test(item.path)), "图片需选择项目 assets/stools 内的 PNG / WebP，或使用默认分层造型。");
     return { id: original.id, path: item.path };
   });
+  for (let type = 1; type <= 7; type++)
+    requireValue(result.stools.some(item => item.homeType === type && item.generation?.base), `第${type}型必须保留至少一个无来源门槛的基础造型。`);
+  const catalog = { foodById: Object.fromEntries(foods.map(food => [food.id, food])), drinkById: Object.fromEntries(result.drinks.map(item => [item.id, item])), additiveById: Object.fromEntries(result.additives.map(item => [item.id, item])) };
+  const anchors = new Map();
+  for (const recipe of result.recipes) {
+    const character = result.stools.find(item => item.id === recipe.characterId);
+    const sources = mealSources({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [] }, catalog);
+    requireValue(sourceAllowed(character, sources), `${character.name}的理想配方不满足其食材、主色素或添加剂来源。`);
+    const key = JSON.stringify([[...recipe.foodIds].sort(), recipe.drinkId, recipe.water, recipe.digestionTime]);
+    requireValue(!anchors.has(key) || anchors.get(key) === character.generation.identity, "不同来源身份不能仅靠力度区分，请调整食物、饮料、饮用量或阶段。");
+    anchors.set(key, character.generation.identity);
+  }
   return result;
 }

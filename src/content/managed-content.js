@@ -17,6 +17,17 @@ export const contentValues = {
         "elongation": 6,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -36,6 +47,17 @@ export const contentValues = {
         "elongation": 6,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "garden",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "garden",
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -55,6 +77,17 @@ export const contentValues = {
         "elongation": 6,
         "grain": 6,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -74,6 +107,17 @@ export const contentValues = {
         "elongation": 1,
         "grain": 2,
         "porosity": 5
+      },
+      "generation": {
+        "identity": "fire",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "fire",
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -93,6 +137,17 @@ export const contentValues = {
         "elongation": 2,
         "grain": 1,
         "porosity": 3
+      },
+      "generation": {
+        "identity": "coffee",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "coffee",
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -112,6 +167,17 @@ export const contentValues = {
         "elongation": 2,
         "grain": 1,
         "porosity": 7
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -131,6 +197,17 @@ export const contentValues = {
         "elongation": 1,
         "grain": 4,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -169,6 +246,17 @@ export const contentValues = {
         "elongation": 6,
         "grain": 2,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -188,6 +276,17 @@ export const contentValues = {
         "elongation": 1,
         "grain": 4,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -207,6 +306,17 @@ export const contentValues = {
         "elongation": 4,
         "grain": 4,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -226,6 +336,19 @@ export const contentValues = {
         "elongation": 2,
         "grain": 6,
         "porosity": 3
+      },
+      "generation": {
+        "identity": "corn",
+        "base": false,
+        "sources": {
+          "foods": [
+            "corn"
+          ],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -245,6 +368,19 @@ export const contentValues = {
         "elongation": 6,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "enoki",
+        "base": false,
+        "sources": {
+          "foods": [
+            "enoki"
+          ],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -264,6 +400,19 @@ export const contentValues = {
         "elongation": 6,
         "grain": 6,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "bran-log",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [
+            "wholegrain"
+          ],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -283,6 +432,17 @@ export const contentValues = {
         "elongation": 7,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -302,6 +462,17 @@ export const contentValues = {
         "elongation": 7,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -321,6 +492,17 @@ export const contentValues = {
         "elongation": 7,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -340,6 +522,17 @@ export const contentValues = {
         "elongation": 4,
         "grain": 4,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -359,17 +552,28 @@ export const contentValues = {
         "elongation": 2,
         "grain": 1,
         "porosity": 3
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
       "id": "mashed-potato",
-      "name": "土豆泥小堆",
+      "name": "绵软小泥堆",
       "homeType": 6,
       "category": "基础形态",
       "art": "mash",
       "color": "#baa581",
       "light": "#e2d0a8",
-      "description": "中间堆起一小团稠糊，底部向外塌落，边缘拖出低矮碎瓣。",
+      "description": "中间堆起一小团稠糊，底部向外塌落，边缘拖出低矮碎瓣。通用泥堆造型，不限定土豆食材。",
       "rarity": "common",
       "material": "普通",
       "properties": {
@@ -378,6 +582,17 @@ export const contentValues = {
         "elongation": 1,
         "grain": 2,
         "porosity": 5
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -397,6 +612,17 @@ export const contentValues = {
         "elongation": 1,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -416,6 +642,17 @@ export const contentValues = {
         "elongation": 1,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -435,6 +672,17 @@ export const contentValues = {
         "elongation": 7,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -454,6 +702,17 @@ export const contentValues = {
         "elongation": 1,
         "grain": 1,
         "porosity": 7
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -473,6 +732,17 @@ export const contentValues = {
         "elongation": 6,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "red-dragon",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "dragon",
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -492,6 +762,17 @@ export const contentValues = {
         "elongation": 6,
         "grain": 2,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "beet-red",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "beet",
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -511,6 +792,17 @@ export const contentValues = {
         "elongation": 2,
         "grain": 1,
         "porosity": 3
+      },
+      "generation": {
+        "identity": "purple-berry",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "berry",
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -530,6 +822,17 @@ export const contentValues = {
         "elongation": 1,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "ink",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "ink",
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -549,6 +852,17 @@ export const contentValues = {
         "elongation": 4,
         "grain": 4,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "cocoa-truffle",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "cocoa",
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -568,6 +882,17 @@ export const contentValues = {
         "elongation": 6,
         "grain": 2,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "amber-honey",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "honey",
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -587,6 +912,17 @@ export const contentValues = {
         "elongation": 2,
         "grain": 1,
         "porosity": 3
+      },
+      "generation": {
+        "identity": "milk-white",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "milk",
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -606,6 +942,19 @@ export const contentValues = {
         "elongation": 6,
         "grain": 6,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "oat-speckle",
+        "base": false,
+        "sources": {
+          "foods": [
+            "oatmeal"
+          ],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -625,6 +974,19 @@ export const contentValues = {
         "elongation": 6,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "glitter",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": [
+            "glitter"
+          ]
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -644,6 +1006,21 @@ export const contentValues = {
         "elongation": 6,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "gold-flake",
+        "base": false,
+        "sources": {
+          "foods": [
+            "black-sesame"
+          ],
+          "tags": [],
+          "pigment": null,
+          "additives": [
+            "gold-leaf"
+          ]
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -663,6 +1040,19 @@ export const contentValues = {
         "elongation": 6,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "silver-speckle",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": [
+            "silver-dust"
+          ]
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -682,6 +1072,19 @@ export const contentValues = {
         "elongation": 6,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "petal",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [
+            "petal"
+          ],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -701,6 +1104,19 @@ export const contentValues = {
         "elongation": 1,
         "grain": 6,
         "porosity": 5
+      },
+      "generation": {
+        "identity": "popping",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [
+            "popping"
+          ],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -720,6 +1136,19 @@ export const contentValues = {
         "elongation": 1,
         "grain": 6,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "sesame-charcoal",
+        "base": false,
+        "sources": {
+          "foods": [
+            "black-sesame"
+          ],
+          "tags": [],
+          "pigment": "ink",
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -739,6 +1168,17 @@ export const contentValues = {
         "elongation": 6,
         "grain": 2,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -758,6 +1198,17 @@ export const contentValues = {
         "elongation": 7,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -777,6 +1228,17 @@ export const contentValues = {
         "elongation": 4,
         "grain": 4,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -796,6 +1258,17 @@ export const contentValues = {
         "elongation": 4,
         "grain": 4,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "low"
       }
     },
     {
@@ -815,6 +1288,17 @@ export const contentValues = {
         "elongation": 7,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "base",
+        "base": true,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -967,6 +1451,19 @@ export const contentValues = {
         "elongation": 1,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "enoki",
+        "base": false,
+        "sources": {
+          "foods": [
+            "enoki"
+          ],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -986,6 +1483,19 @@ export const contentValues = {
         "elongation": 1,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "corn",
+        "base": false,
+        "sources": {
+          "foods": [
+            "corn"
+          ],
+          "tags": [],
+          "pigment": null,
+          "additives": []
+        },
+        "forceZone": "high"
       }
     },
     {
@@ -1043,6 +1553,19 @@ export const contentValues = {
         "elongation": 1,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "glitter-galaxy",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "ink",
+          "additives": [
+            "glitter"
+          ]
+        },
+        "forceZone": "medium"
       }
     },
     {
@@ -1062,6 +1585,17 @@ export const contentValues = {
         "elongation": 1,
         "grain": 1,
         "porosity": 1
+      },
+      "generation": {
+        "identity": "ink",
+        "base": false,
+        "sources": {
+          "foods": [],
+          "tags": [],
+          "pigment": "ink",
+          "additives": []
+        },
+        "forceZone": "high"
       }
     }
   ],
@@ -1131,11 +1665,11 @@ export const contentValues = {
       "characterId": "cocoa-truffle",
       "foodIds": [
         "toast",
-        "almonds"
+        "popping-chocolate"
       ],
       "drinkId": "coffee",
       "water": 250,
-      "digestionTime": "4",
+      "digestionTime": "8",
       "forceZone": "low",
       "requiredAdditive": null
     },
@@ -1216,7 +1750,7 @@ export const contentValues = {
     {
       "characterId": "amber-honey",
       "foodIds": [
-        "sweet-potato",
+        "pumpkin",
         "wholewheat"
       ],
       "drinkId": "water",
@@ -1856,8 +2390,8 @@ export const contentValues = {
       "name": "益生菌",
       "symbol": "✳",
       "color": "#a5b578",
-      "description": "稳定已经配好的目标。",
-      "effectLabel": "固定配方：未中稀有后，目标命中率由 80% 提高到 100%",
+      "description": "稳定当前配方的普通主结果，自由组合也能生效。",
+      "effectLabel": "未中稀有后，当前合法主结果稳定产出100%；自由组合也有效",
       "tags": [
         "probiotic"
       ],

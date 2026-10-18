@@ -412,6 +412,10 @@ test("content admin rejects conflicting recipes, invalid links, images and range
   const original = await readFile(contentFile, "utf8");
   const invalid = [
     (content) => { content.stools[0].properties.hardness = 8; },
+    (content) => { content.stools[0].generation.sources.foods = ["missing"]; },
+    (content) => { content.stools[0].generation.sources.pigment = "missing"; },
+    (content) => { content.stools[0].generation.forceZone = "missing"; },
+    (content) => { const mud = content.stools.find(item => item.id === "mashed-potato"); mud.generation.identity = "potato-only"; mud.generation.base = false; mud.generation.sources.foods = ["potato"]; },
     (content) => { content.stools[0].homeType = 7; },
     (content) => { content.stools[0].name = '<img src=x>'; },
     (content) => { content.recipes[1] = { ...content.recipes[0], characterId: content.recipes[1].characterId }; },
@@ -420,6 +424,8 @@ test("content admin rejects conflicting recipes, invalid links, images and range
     (content) => { content.recipes[0].water = 0; },
     (content) => { content.recipes[0].water = 300; },
     (content) => { content.recipes[0].water = 2750; },
+    (content) => { content.recipes.find(recipe => recipe.characterId === "enoki-thread").foodIds = ["rice"]; },
+    (content) => { content.recipes.find(recipe => recipe.characterId === "enoki-jet").foodIds = ["burger"]; },
     (content) => { content.additives[0].rareTargets = ["classic"]; },
     (content) => { content.toilets[0].unlock = { kind: "rounds", count: 2 }; },
     (content) => { content.drinks[0].wetnessBias = null; },

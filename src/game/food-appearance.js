@@ -44,7 +44,7 @@ export function normalizeAppearance(value) {
     value.enokiRetention >= 1 &&
     value.enokiRetention <= 7
       ? value.enokiRetention
-      : 7;
+      : 1;
   if (
     Number.isInteger(value.variationSeed) &&
     value.variationSeed >= 0 &&
@@ -64,7 +64,7 @@ export function foodAppearance(selection, effects, colorStrength) {
     cohesion: level(shape.cohesion + (effects.propertyChanges.cohesion || 0)),
     elongation: level(shape.elongation + (effects.propertyChanges.elongation || 0)),
     colorStrength,
-    residues: effects.food.residues,
+    residues: effects.food.residues.filter(residue => selection.foodIds.includes(residue.foodId)),
     enokiRetention: selection.foodIds.includes("enoki")
       ? Math.max(2, Math.min(7, foodById.enoki.attributes.retention + effects.retentionChange))
       : 1,

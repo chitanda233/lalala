@@ -13,6 +13,8 @@ import { forceZones } from "/src/content/force.js";
 import { characterSvg } from "/src/ui/artwork/stools.js";
 import { toiletSvg } from "/src/ui/artwork/toilets.js";
 import { getRecipeForecast } from "/src/game/outcome-pool.js";
+import { sourceRequirementText } from "/src/game/source-conditions.js";
+import { stoolColors } from "/src/content/colors.js";
 
 const $ = (selector) => document.querySelector(selector);
 const copy = (value) => structuredClone(value);
@@ -155,13 +157,23 @@ function renderForm() {
   if (active === "recipes") {
     const volumeOptions = values => values.map(value => ({ id: String(value), name: `${value} mL` }));
     fields = group("食物集合 · 1–3 种，不分顺序", [0, 1, 2].map((index) => select(`foodIds.${index}`, `食物 ${index + 1}${index === 0 ? " · 必选" : ""}`, foods, item.foodIds[index] || "", index ? "不添加" : undefined)).join("")) + group("液体、阶段与力度", select("drinkId", "饮料", drinks, item.drinkId) + select("water", "饮用量", volumeOptions(Array.from({ length: 10 }, (_, i) => (i + 1) * 250)), String(item.water)) + select("digestionTime", "消化阶段", ["2", "4", "8"].map(id => ({ id, name: `阶段 ${id}` })), item.digestionTime) + select("forceZone", "力度区间", forceZones.map((zone) => ({ id: zone.id, name: `${zone.name} ${zone.min}–${zone.max}` })), item.forceZone) + select("requiredAdditive", "必选添加剂", additives, item.requiredAdditive || "", "不限，益生菌可选"));
-    fields += '<p class="field-note">食物、饮料种类和饮用量、阶段、力度全部匹配并通过物态核验时，未中稀有后目标为 80%，益生菌提高至 100%。需装饰剂的款式无法同时选益生菌。</p>';
+    fields += '<p class="field-note">理想配方普通分支为 80%，只有一个合法候选时为 100%；偏离后平滑变化。益生菌也能稳定自由组合。必需来源始终要满足。</p>';
   } else {
     fields = group("基本资料", input("name", "名称", item.name, { maxLength: 60 }) + (item.category ? input("category", "分类", item.category, { maxLength: 40 }) : "") + area("description", "描述", item.description) + (item.effectLabel ? area("effectLabel", "效果说明", item.effectLabel) : ""));
     if (active === "stools") {
       fields += group("外观资料", input("material", "材质", item.material, { maxLength: 40 }) + input("color", "主体色", item.color, { type: "color" }) + input("light", "高光色", item.light, { type: "color" }));
       fields += group("五项物态属性 · 1–7", propertyInputs(item.properties, "properties"));
       fields += `<p class="field-note">固定分类：${item.homeType} 型 · ${rarityLabels[item.rarity]}。造型标识：${esc(item.art)}。属性用于自由组合候选匹配，图鉴分类保持固定。</p>`;
+      if (item.generation) {
+        const rule = item.generation.sources;
+        const identityLabels = { base: "通用基础造型", enoki: "金针菇身份", corn: "玉米身份", ink: "墨黑身份" };
+        const identities = [...new Set(draft.stools.flatMap(stool => stool.generation ? [stool.generation.identity] : []))].map(id => ({ id, name: identityLabels[id] || draft.stools.find(stool => stool.generation?.identity === id).name }));
+        const tagNames = { wholegrain: "全谷物来源", petal: "花瓣来源", popping: "跳跳颗粒来源" };
+        const sourceTags = [...new Set([...foods, ...drinks, ...additives].flatMap(source => source.tags))].sort().map(id => ({ id, name: tagNames[id] || id }));
+        fields += group("生成身份与造型偏好", select("generation.identity", "身份分组", identities, item.generation.identity) + select("generation.forceZone", "造型偏好力度", forceZones, item.generation.forceZone));
+        fields += group("必需来源 · 所有已选条件都要满足", [0,1,2].map(index => select(`generation.sources.foods.${index}`, `必需食物 ${index+1}`, foods, rule.foods[index] || "", "不限定食物")).join("") + [0,1,2].map(index => select(`generation.sources.tags.${index}`, `来源标签 ${index+1}`, sourceTags, rule.tags[index] || "", "不限定标签")).join("") + select("generation.sources.pigment", "实际主色素", Object.entries(stoolColors).map(([id,color])=>({id,name:color.name})), rule.pigment || "", "不限定主色") + select("generation.sources.additives.0", "必需添加剂", additives, rule.additives[0] || "", "不限定添加剂"));
+        fields += '<p class="field-note">来源条件独立于理想配方；基础造型不设来源门槛。每一型都必须保留基础候选。</p>';
+      }
     }
     if (active === "drinks") {
       fields += group("物态与评分", input("wetnessBias", "湿软偏置 · 正湿负干", item.wetnessBias, { type: "number", min: -2, max: 2, step: .01 }) + input("porosity", "蓬松修正", item.porosity, { type: "number", min: 0, max: 6 }) + input("effects.smoothnessBonus", "顺畅评分加成", item.effects.smoothnessBonus || 0, { type: "number", min: -10, max: 10, step: .1 }));
@@ -201,6 +213,7 @@ function renderInspector() {
       const stabilized = recipe.requiredAdditive ? "需装饰剂" : `${(getRecipeForecast({ ...selection, additives: ["probiotic"] }).recipeProbability * 100).toFixed(1)}%`;
       detail += `<div class="inspector-block"><h3>固定配方</h3><p>${esc(recipeText(recipe))}</p><p>湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型</p><div class="forecast-values"><span>整局目标概率<strong>${(forecast.recipeProbability * 100).toFixed(1)}%</strong></span><span>加益生菌后<strong>${stabilized}</strong></span></div><button class="button button-quiet" type="button" data-try-recipe="${esc(idOf(item))}">放进配方试验 ↗</button></div>`;
     } else detail += '<p class="field-note">稀有收藏不设固定配方；每局均有机会出现。</p>';
+    if (stool.generation) detail += `<div class="inspector-block"><h3>必需来源</h3><p>${esc(sourceRequirementText(stool))}</p><p>理想配方与必需来源分别配置。</p></div>`;
     detail += `<div class="inspector-block"><h3>物态属性</h3>${Object.entries(propertyLabels).map(([key, label]) => `<div class="property-meter"><span>${label}</span><meter min="1" max="7" value="${stool.properties[key]}"></meter><strong>${stool.properties[key]}</strong></div>`).join("")}</div><div class="inspector-links"><button class="text-button" type="button" data-art="${stool.id}">查看 / 调整大图 ↗</button>${active === "stools" && recipe ? `<button class="text-button" type="button" data-go="recipes" data-id="${stool.id}">编辑配方 ↗</button>` : `<button class="text-button" type="button" data-go="stools" data-id="${stool.id}">编辑大便资料 ↗</button>`}</div>`;
   }
   if (active === "drinks") {
@@ -238,12 +251,16 @@ $("#content-form").addEventListener("input", (event) => {
   if (control.dataset.rareTarget) item.rareTargets = [...$("#content-form").querySelectorAll("[data-rare-target]:checked")].map((input) => input.dataset.rareTarget);
   else if (control.dataset.path) {
     const path = control.dataset.path;
-    const value = path === "tags" ? [...new Set(control.value.split(/[,，]/).map((value) => value.trim()).filter(Boolean))] : control.type === "number" || path === "water" ? control.value === "" ? NaN : Number(control.value) : path === "requiredAdditive" ? control.value || null : control.value;
+    const value = path === "tags" ? [...new Set(control.value.split(/[,，]/).map((value) => value.trim()).filter(Boolean))] : control.type === "number" || path === "water" ? control.value === "" ? NaN : Number(control.value) : ["requiredAdditive", "generation.sources.pigment"].includes(path) ? control.value || null : control.value;
     if (path.startsWith("foodIds.")) {
       // Read all slots before compacting optional selections.
       item.foodIds = [...$("#content-form").querySelectorAll('[data-path^="foodIds."]')].map((input) => input.value).filter(Boolean);
+    } else if (/^generation\.sources\.(foods|tags|additives)\./.test(path)) {
+      const key = path.split(".")[2];
+      item.generation.sources[key] = [...$("#content-form").querySelectorAll(`[data-path^="generation.sources.${key}."]`)].map(control => control.value).filter(Boolean);
     } else if (path === "decoration" && !value) delete item.decoration;
     else setPath(item, path, value);
+    if (path === "generation.identity") item.generation.base = value === "base";
     if (path === "unlock.kind") {
       item.unlock = value === "open" ? { kind: "open" } : { kind: "rounds", count: Number($("#field-unlock-count").value) || 1 };
       item.starter = value === "open";

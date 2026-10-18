@@ -19,7 +19,7 @@ export function refreshCharacterMetadata() {
       types: [item.homeType],
       tag: rarityLabels[item.rarity] + " · " + item.category,
       hint: recipe
-        ? recipe.foodIds.map((id) => foodNames[id]).join("＋") + "＋" + drinkNames[recipe.drinkId] + "；" + recipeLiquidText(recipe) + "；" + force.name + " " + force.min + "–" + force.max + (recipe.requiredAdditive ? `；需${additives.find(item => item.id === recipe.requiredAdditive).name}，未中稀有后80%。` : "。未中稀有后80%，益生菌提高到100%。")
+        ? recipe.foodIds.map((id) => foodNames[id]).join("＋") + "＋" + drinkNames[recipe.drinkId] + "；" + recipeLiquidText(recipe) + "；" + force.name + " " + force.min + "–" + force.max + (recipe.requiredAdditive ? `；需${additives.find(item => item.id === recipe.requiredAdditive).name}，未中稀有后80%。` : "。理想配方普通分支80%（独候选为100%）；益生菌也能稳定自由组合。")
         : "每轮基础稀有合计2%，无需原料门槛；对应功能添加剂可以提高概率。",
     });
   }

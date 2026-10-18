@@ -9,6 +9,7 @@ import { rareThemeRecipeById } from "../content/rare-theme-recipes.js";
 import { stoolRecipeByCharacterId } from "../content/stool-recipes.js";
 import { forceZones } from "../content/force.js";
 import { getRecipeForecast } from "../game/outcome-pool.js";
+import { sourceRequirementText } from "../game/source-conditions.js";
 import { outcomeMarks } from "../content/marks.js";
 import { stoolColors } from "../content/colors.js";
 import { classifySpecimen } from "../game/specimen.js";
@@ -49,7 +50,12 @@ export function createCollectionView(getSave) {
     )
     .join("");
   function detailTabs() {
-    return `<div class="individual-nav" role="group" aria-label="详情内容"><button data-detail-panel="art" aria-pressed="${detailPanel === "art"}" ${detailPanel === "art" ? "disabled" : ""}>形态</button><button data-detail-panel="recipe" aria-pressed="${detailPanel === "recipe"}" ${detailPanel === "recipe" ? "disabled" : ""}>配方</button></div>`;
+    return `<div class="individual-nav" role="group" aria-label="详情内容">${[["art","形态"],["recipe","配方"],["source","来源"]].map(([id,label]) => `<button data-detail-panel="${id}" aria-pressed="${detailPanel === id}" ${detailPanel === id ? "disabled" : ""}>${label}</button>`).join("")}</div>`;
+  }
+  function sourceDetail(characterId) {
+    const character = characterById[characterId];
+    const zone = character.generation && forceZones.find(item => item.id === character.generation.forceZone);
+    return `<article class="individual-card" data-source-for="${characterId}"><div><h3>来源条件</h3><p>${sourceRequirementText(character)}</p>${zone ? `<p>普通物态：第${character.homeType}型</p><p>造型偏好：${zone.name}</p><p>力度只影响同身份内造型。</p><p>理想配方用于提高概率；必需来源始终要满足。</p>` : "<p>每轮独立抽稀有，不受普通物态或原料限制。</p>"}</div></article>`;
   }
   function recipeDetail(characterId) {
     const recipe = stoolRecipeByCharacterId[characterId];
@@ -62,10 +68,10 @@ export function createCollectionView(getSave) {
     const zone = forceZones.find((item) => item.id === recipe.forceZone);
     const forecast = getRecipeForecast({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], force: zone.min });
     const stabilized = getRecipeForecast({ ...recipe, additives: ["probiotic"], force: zone.min });
-    const additiveText = recipe.requiredAdditive ? `必选${additiveById[recipe.requiredAdditive].name}，不能再加益生菌。` : "添加剂可不加；选益生菌稳产。";
+    const additiveText = recipe.requiredAdditive ? `必选${additiveById[recipe.requiredAdditive].name}，不能再加益生菌。` : "益生菌也能稳定自由组合。";
     const probabilityText = recipe.requiredAdditive
       ? `未中稀有后 ${(forecast.recipeConditionalProbability * 100).toFixed(0)}% · 整局 ${(forecast.recipeProbability * 100).toFixed(1)}%`
-      : `未中稀有：基础 80% · 益生菌 100%<br>整局：基础 ${(forecast.recipeProbability * 100).toFixed(1)}% · 益生菌 ${(stabilized.recipeProbability * 100).toFixed(0)}%`;
+      : `未中稀有：基础 ${(forecast.recipeConditionalProbability * 100).toFixed(0)}% · 益生菌 100%<br>整局：基础 ${(forecast.recipeProbability * 100).toFixed(1)}% · 益生菌 ${(stabilized.recipeProbability * 100).toFixed(0)}%`;
     return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>固定配方</h3><p>${recipe.foodIds.map((id) => foodById[id].name).join("＋")}</p><p>${drinkById[recipe.drinkId].name} ${recipe.water} mL</p><p>消化阶段 ${recipe.digestionTime}</p><strong>${zone.name} · ${zone.min}–${zone.max}</strong><p>${additiveText}</p><br><p>${probabilityText}</p></div></article>`;
   }
   function renderDetail() {
@@ -88,7 +94,7 @@ export function createCollectionView(getSave) {
     if (previewAll) {
       const character = characterById[blueprint.characterId];
       $("#collection-detail").innerHTML =
-        `<h3>${blueprint.name}<small>第 ${type} 型 · 样式预览</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : `<article class="individual-card" data-style-preview="${blueprint.id}"><div class="individual-art">${characterSvg(character, false, type)}</div><p>${character.description}</p></article>`}`;
+        `<h3>${blueprint.name}<small>第 ${type} 型 · 样式预览</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-style-preview="${blueprint.id}"><div class="individual-art">${characterSvg(character, false, type)}</div><p>${character.description}</p></article>`}`;
       return;
     }
     const records = getSave()
@@ -108,7 +114,7 @@ export function createCollectionView(getSave) {
     const diagnosis = diagnoseOutcome(entry);
     const marks = entry.marks.map((mark) => outcomeMarks[mark].name).join("、");
     $("#collection-detail").innerHTML =
-      `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(entry.characterId) : `<article class="individual-card" data-individual="${entry.id}"><div class="individual-art">${artwork(entry)}</div><strong>个体 #${String(entry.sequence).padStart(3, "0")}</strong><p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article>`}<div class="individual-nav"><button data-individual-prev ${individualIndex === 0 ? "disabled" : ""} aria-label="上一个个体">‹</button><span>${individualIndex + 1} / ${records.length} 个独立个体</span><button data-individual-next ${individualIndex >= records.length - 1 ? "disabled" : ""} aria-label="下一个个体">›</button></div>`;
+      `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(entry.characterId) : detailPanel === "source" ? sourceDetail(entry.characterId) : `<article class="individual-card" data-individual="${entry.id}"><div class="individual-art">${artwork(entry)}</div><strong>个体 #${String(entry.sequence).padStart(3, "0")}</strong><p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article>`}<div class="individual-nav"><button data-individual-prev ${individualIndex === 0 ? "disabled" : ""} aria-label="上一个个体">‹</button><span>${individualIndex + 1} / ${records.length} 个独立个体</span><button data-individual-next ${individualIndex >= records.length - 1 ? "disabled" : ""} aria-label="下一个个体">›</button></div>`;
   }
   function render() {
     const save = getSave();

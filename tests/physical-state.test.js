@@ -68,6 +68,24 @@ test("decorated species require the same material in both the fixed target and t
   }
 });
 
+test("rice and pumpkin never produce an enoki species, including a watery high-intake meal", () => {
+  for (const water of [1500, 2500]) for (const digestionTime of ["2", "4", "8", "random"]) for (const force of [20, 59, 90]) {
+    const input = { foodIds: ["rice", "pumpkin"], drinkId: "grass-jelly", water, digestionTime, force, additives: ["gold-leaf"] };
+    const pool = getOutcomePool(input);
+    assert.ok(!pool.some(entry => ["enoki-thread", "enoki-jet"].includes(entry.characterId)), JSON.stringify(input));
+    close(pool.reduce((sum, entry) => sum + entry.probability, 0), 1);
+    close(pool.filter(entry => entry.special).reduce((sum, entry) => sum + entry.probability, 0), .05);
+    assert.equal(pool.filter(entry => entry.special).length, 10);
+  }
+});
+
+test("eating enoki permits its same-type free candidate while exact guarantees stay 80% and 100%", () => {
+  const input = inputFor(stoolRecipeByCharacterId["enoki-jet"]);
+  assert.ok(getOutcomePool({ ...input, force: 59 }).some(entry => entry.characterId === "enoki-jet" && entry.probability > 0));
+  for (const [additives, probability] of [[[], .784], [["probiotic"], .98]])
+    close(getOutcomePool({ ...input, additives }).find(entry => entry.characterId === "enoki-jet").probability, probability);
+});
+
 test("the sole drink amount scales moisture, beverage strength and bubbles while long digestion retains enoki", () => {
   const state=physicalState({...base,water:500});
   close(state.waterBonus,-.8);
