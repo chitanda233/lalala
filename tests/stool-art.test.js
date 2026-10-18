@@ -17,10 +17,22 @@ function assertPng(name) {
   assert.equal(bytes.readUInt32BE(20), 320);
   assert.ok(bytes.length > 300, `${name} is unexpectedly empty`);
 }
-test("all 50 collectible species and seven fallback illustrations have complete 3D sprite assets", () => {
+const waterAtlasIds = new Set([
+  "enoki-jet", "corn-cannon", "golden-juice",
+  "rainbow-falls", "glitter-galaxy", "ink-fountain",
+]);
+test("all 56 collectible species have dedicated artwork (50 PNG, six atlas crops)", () => {
+  const atlas = new URL("../assets/stools/water-type-seven-atlas.webp", import.meta.url);
+  assert.ok(existsSync(atlas), "water type-7 atlas is missing");
+  assert.equal(readFileSync(atlas).subarray(0, 4).toString("ascii"), "RIFF");
   let forms = 0;
   for (const item of characters)
     for (const type of item.types) {
+      if (waterAtlasIds.has(item.id)) {
+        assert.match(characterSvg(item, false, type), /water-type-seven-atlas\.jpg/);
+        forms++;
+        continue;
+      }
       assertPng(`${item.id}-${type}`);
       assertPng(`${item.id}-${type}-decor`);
       assertPng(`${item.id}-${type}-enoki`);
@@ -31,7 +43,7 @@ test("all 50 collectible species and seven fallback illustrations have complete 
       );
       forms++;
     }
-  assert.equal(forms, 50);
+  assert.equal(forms, 56);
   assert.equal(
     readdirSync(new URL("../assets/stools/", import.meta.url)).filter((name) =>
       name.endsWith(".png"),

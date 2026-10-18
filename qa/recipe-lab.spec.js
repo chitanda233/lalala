@@ -136,9 +136,9 @@ test("fifty collectibles have one home classification and ten toilets display di
     animations: "disabled",
   });
   await page.locator("#collection-button").click();
-  await expect(page.locator("[data-stool]")).toHaveCount(50);
+  await expect(page.locator("[data-stool]")).toHaveCount(56);
   await expect(page.locator(".rarity-special")).toHaveCount(0);
-  await expect(page.locator(".stool-card.uncollected")).toHaveCount(50);
+  await expect(page.locator(".stool-card.uncollected")).toHaveCount(56);
   for (const id of ["gold:4", "crystal:3", "rainbow:4", "jelly:5"])
     await expect(page.locator(`[data-stool="${id}"]`)).toHaveClass(
       /uncollected/,
@@ -164,8 +164,8 @@ test("fifty collectibles have one home classification and ten toilets display di
         .evaluateAll((items) => items.map((item) => item.dataset.stool))),
     );
   }
-  expect(new Set(seen).size).toBe(50);
-  expect(seen.length).toBe(50);
+  expect(new Set(seen).size).toBe(56);
+  expect(seen.length).toBe(56);
 });
 
 for (const [width, height] of [

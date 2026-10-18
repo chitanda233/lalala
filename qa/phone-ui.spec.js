@@ -122,7 +122,7 @@ test("food, drinks, additives, digestion, equipment and catalog use complete pag
       await page.locator("#collection-next").click();
     else break;
   }
-  expect(new Set(ids).size).toBe(50);
+  expect(new Set(ids).size).toBe(56);
   await noScroll(page, "#collection-dialog");
 });
 

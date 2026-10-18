@@ -29,6 +29,11 @@ const onlyMarks = process.argv.includes("--marks-only");
 const onlyType = Number(
   process.argv.find((arg) => arg.startsWith("--type="))?.split("=")[1],
 );
+// Six type-7 concepts are stored in a dedicated raster atlas, not renderer PNG triplets.
+const atlasArtIds = new Set([
+  "enoki-jet", "corn-cannon", "golden-juice",
+  "rainbow-falls", "glitter-galaxy", "ink-fountain",
+]);
 const chosen = prototype
   ? characters.filter((item) =>
       [
@@ -44,7 +49,7 @@ const chosen = prototype
         "rainbow",
       ].includes(item.id),
     )
-  : characters;
+  : characters.filter((item) => !atlasArtIds.has(item.id));
 let rendered = 0;
 for (const [index, item] of characters.entries()) {
   if (!chosen.includes(item)) continue;

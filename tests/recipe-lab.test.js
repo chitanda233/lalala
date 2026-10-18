@@ -41,6 +41,13 @@ const seeds = {
   cloud: { ...base, water: 2250, additives: ["probiotic"] },
   pebble: { ...base, water: 500 },
   pancake: { ...base, foodIds: ["burger"] },
+  // User-approved type-7 additions: valid recipes still need a probabilistic hit.
+  "enoki-jet": { ...base, foodIds: ["enoki", "burger", "hotpot"], additives: ["chili"], water: 2500, force: 90, digestionTime: "2" },
+  "corn-cannon": { ...base, foodIds: ["corn", "burger", "hotpot"], additives: ["chili"], water: 2500, force: 90, digestionTime: "2" },
+  "golden-juice": { ...base, foodIds: ["burger"], additives: ["gold-leaf", "chili"], water: 2500, force: 90, digestionTime: "2" },
+  "rainbow-falls": { ...base, foodIds: ["burger"], additives: ["rainbow-sugar", "chili"], water: 2500, force: 90, digestionTime: "2" },
+  "glitter-galaxy": { ...base, foodIds: ["burger"], drinkId: "ink-tonic", additives: ["glitter", "chili"], water: 2500, force: 90, digestionTime: "2" },
+  "ink-fountain": { ...base, foodIds: ["burger"], drinkId: "ink-tonic", additives: ["chili"], water: 2500, force: 90, digestionTime: "2" },
 };
 
 // A witness is a playable recipe and a possible actual type, not an injected outcome.
@@ -52,6 +59,7 @@ export function findWitness(item) {
     };
   const selection = { ...base, additives: [] };
   const conditions = item.drop.conditions;
+  if (conditions.additivesAll) selection.additives = [...conditions.additivesAll];
   if (conditions.foodIdsAny) selection.foodIds = [conditions.foodIdsAny[0]];
   if (conditions.toiletId) selection.toiletId = conditions.toiletId;
   if (conditions.forceZone)
@@ -84,9 +92,9 @@ export function findWitness(item) {
   return null;
 }
 
-test("catalog includes 50 classified, described, illustrated and reachable collectibles", () => {
-  assert.equal(characters.length, 50);
-  assert.equal(new Set(characters.map((item) => item.id)).size, 50);
+test("catalog includes 56 classified, described, illustrated and reachable collectibles", () => {
+  assert.equal(characters.length, 56);
+  assert.equal(new Set(characters.map((item) => item.id)).size, 56);
   assert.equal(drinks.length, 20);
   assert.equal(additives.length, 18);
   assert.equal(toilets.length, 10);
@@ -109,7 +117,7 @@ test("catalog includes 50 classified, described, illustrated and reachable colle
         .replace(/aria-label="[^"]*"/g, ""),
     );
   }
-  assert.equal(artwork.size, 50);
+  assert.equal(artwork.size, 56);
   for (const type of [1, 2, 3, 4, 5, 6, 7])
     assert.ok(characters.some((item) => item.homeType === type));
   assert.equal(new Set(toilets.map((item) => toiletSvg(item))).size, 10);

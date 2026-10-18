@@ -18,14 +18,14 @@ import { normalizeSave } from "../src/storage/model.js";
 import { characterSvg } from "../src/ui/artwork/stools.js";
 import { outcomeDraws } from "./outcome-helpers.js";
 
-test("exactly 50 species each have one catalog entry, physical structure and classification", () => {
-  assert.equal(specimenBlueprints.length, 50);
-  assert.equal(new Set(specimenBlueprints.map((entry) => entry.id)).size, 50);
+test("exactly 56 species each have one catalog entry, physical structure and classification", () => {
+  assert.equal(specimenBlueprints.length, 56);
+  assert.equal(new Set(specimenBlueprints.map((entry) => entry.id)).size, 56);
   assert.equal(
     new Set(specimenBlueprints.map((entry) => entry.characterId)).size,
-    50,
+    56,
   );
-  assert.equal(new Set(specimenBlueprints.map((entry) => entry.name)).size, 50);
+  assert.equal(new Set(specimenBlueprints.map((entry) => entry.name)).size, 56);
   for (const blueprint of specimenBlueprints) {
     const type = classifySpecimen(blueprint);
     assert.deepEqual(characterById[blueprint.characterId].types, [type]);

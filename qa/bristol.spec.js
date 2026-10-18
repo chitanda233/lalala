@@ -97,7 +97,7 @@ test("phone taxonomy filters are keyboard accessible and every unknown remains a
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto("/");
   await page.locator("#collection-button").click();
-  await expect(page.locator("[data-stool]")).toHaveCount(50);
+  await expect(page.locator("[data-stool]")).toHaveCount(56);
   await page.locator('[data-type-filter="all"]').focus();
   await page.keyboard.press("Tab");
   await expect(page.locator('[data-type-filter="1"]')).toBeFocused();
