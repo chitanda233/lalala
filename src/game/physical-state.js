@@ -24,9 +24,15 @@ export function physicalState(input) {
   // The original slider is the entire intake of the selected drink.
   const waterBonus = clamp((selection.water - 1300) / 1000, -1.1, 1);
   const drinkScale = Math.min(selection.water / 1500, 5 / 3);
-  const drinkBonus = selection.water > 0 ? drinkById[selection.drinkId].wetnessBias * drinkScale : 0;
+  const drink = drinkById[selection.drinkId];
+  const drinkBonus = selection.water > 0 ? drink.wetnessBias * drinkScale : 0;
   const timeBonus = timeWetness[selection.digestionTime];
   const additiveBonus = -(additiveById[selection.additives[0]]?.propertyChanges?.hardness || 0) * 0.5;
-  const score = foodBase + waterBonus + drinkBonus + timeBonus + additiveBonus;
-  return { score, type: typeFromWetness(score), foodBase, waterBonus, drinkBonus, timeBonus, additiveBonus, drinkScale };
+  // 仅短时、实饮乳糖饮料、辣酱与高致软主食组合触发；没有额外饮水和体质参数。
+  const rapidIrritant = selection.water > 0 && selection.digestionTime === "2" &&
+    drink.tags.includes("lactose") && selection.additives.includes("chili") &&
+    foods.some(food => food.category === "staple" &&
+      food.attributes.softness <= 2 && food.attributes.influence >= 5) ? 0.4 : 0;
+  const score = foodBase + waterBonus + drinkBonus + timeBonus + additiveBonus + rapidIrritant;
+  return { score, type: typeFromWetness(score), foodBase, waterBonus, drinkBonus, timeBonus, additiveBonus, rapidIrritant, drinkScale };
 }

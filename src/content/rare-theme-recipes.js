@@ -21,7 +21,7 @@ export const rareThemeRecipes = [
     "drinkId": "milk",
     "water": 750,
     "digestionTime": "8",
-    "forceZone": "low",
+    "forceZone": "high",
     "additiveId": "frost-salt"
   },
   {
@@ -45,7 +45,7 @@ export const rareThemeRecipes = [
     "drinkId": "bubble-tea",
     "water": 750,
     "digestionTime": "4",
-    "forceZone": "low",
+    "forceZone": "medium",
     "additiveId": "amber-resin"
   },
   {
@@ -106,7 +106,7 @@ export const rareThemeRecipes = [
     "drinkId": "prune-juice",
     "water": 1250,
     "digestionTime": "2",
-    "forceZone": "high",
+    "forceZone": "low",
     "additiveId": "gold-leaf"
   },
   {
