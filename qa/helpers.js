@@ -128,10 +128,24 @@ export async function setWater(page, value) {
   if (!wasOpen)
     await page.locator('.supply-footer [data-close="supply-dialog"]').click();
 }
+export async function setCompletedRounds(page, total) {
+  await page.evaluate((total) => {
+    const save = JSON.parse(localStorage.getItem("lalala-dev"));
+    save.total = total;
+    localStorage.setItem("lalala-dev", JSON.stringify(save));
+  }, total);
+  await page.reload();
+}
 export async function chooseToilet(page, id) {
   await page.locator("#choose-toilet").click();
-  await page.locator("#toilet-select").selectOption(id);
-  await page.locator('[data-close="equipment-dialog"]').first().click();
+  for (let index = 0; index < 10; index++) {
+    if ((await page.locator("#equipment-dialog").getAttribute("data-preview")) === id) break;
+    await page.locator("#toilet-next").click();
+  }
+  await expect(page.locator("#equipment-dialog")).toHaveAttribute("data-preview", id);
+  await page.locator("#confirm-toilet").click();
+  await expect(page.locator("#equipment-dialog")).not.toBeVisible();
+  await expect(page.locator("#bathroom-scene")).toHaveAttribute("data-toilet", id);
 }
 export async function chooseSpecimen(page, id) {
   if (await page.locator("#collection-back").isVisible())

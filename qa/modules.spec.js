@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
   setWater,
+  setCompletedRounds,
   chooseToilet,
   startRound,
   chooseMeal,
@@ -11,7 +12,7 @@ import {
 
 const storageKey = "lalala-dev";
 
-test("food, drinks and toilet equipment affect previews and survive a running-session reload", async ({
+test("food, drinks and toilet equipment survive a running-session reload", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -19,46 +20,26 @@ test("food, drinks and toilet equipment affect previews and survive a running-se
     Math.random = () => (++draw % 2 === 0 ? 0.999999 : 0.5);
   });
   await page.goto("/");
+  await setCompletedRounds(page, 40);
   await expect(page.locator("#meal-summary .meal-summary-slot")).toHaveCount(3);
   await expect(page.locator("[data-drink]")).toHaveCount(20);
   await expect(page.locator(".additive-input")).toHaveCount(18);
   await chooseMeal(page, ["rice"]);
   await setWater(page, "1250");
-  await expect(page.locator("#smooth-bars")).toHaveAttribute(
-    "aria-label",
-    "顺畅指数 4 / 5",
-  );
   await setWater(page, "1500");
-  const ordinaryChance = Number(
-    (await page.locator("#special-chance").textContent()).replace("%", ""),
-  );
   await chooseToilet(page, "comfort");
-  await expect(page.locator("#smooth-bars")).toHaveAttribute(
-    "aria-label",
-    "顺畅指数 5 / 5",
-  );
-  const comfortChance = Number(
-    (await page.locator("#special-chance").textContent()).replace("%", ""),
-  );
-  expect(comfortChance).toBeGreaterThan(ordinaryChance);
   await chooseToilet(page, "golden");
-  const goldenChance = Number(
-    (await page.locator("#special-chance").textContent()).replace("%", ""),
-  );
-  expect(goldenChance).toBeGreaterThan(comfortChance);
-  expect(goldenChance).toBeLessThanOrEqual(0.5);
   await expect(page.locator("#bathroom-scene")).toHaveAttribute(
     "data-toilet",
     "golden",
   );
   await chooseDrink(page, "coffee");
-  await expect(page.locator("#special-chance")).toHaveText("0%");
-  await expect(page.locator("#forecast-type")).toContainText("5 型");
+  await expect(page.locator('[data-drink="coffee"]')).toHaveAttribute("aria-pressed", "true");
   await chooseDrink(page, "water");
 
   await armSpecimen(page, "gold", 4);
   await startRound(page);
-  await expect(page.locator("#toilet-select")).toBeDisabled();
+  await expect(page.locator("#choose-toilet")).toBeDisabled();
   await expect(page.locator('[data-drink="coffee"]')).toBeDisabled();
   const session = await page.evaluate(
     (key) => JSON.parse(localStorage.getItem(key)).session,
@@ -66,8 +47,8 @@ test("food, drinks and toilet equipment affect previews and survive a running-se
   );
   expect(session.outcome.characterId).toBe("gold");
   await page.reload();
-  await expect(page.locator("#toilet-select")).toHaveValue("golden");
-  await expect(page.locator("#toilet-select")).toBeDisabled();
+  await expect(page.locator("#bathroom-scene")).toHaveAttribute("data-toilet", "golden");
+  await expect(page.locator("#choose-toilet")).toBeDisabled();
   expect(
     await page.evaluate(
       (key) => JSON.parse(localStorage.getItem(key)).session,
@@ -86,7 +67,7 @@ test("food, drinks and toilet equipment affect previews and survive a running-se
       (key) => JSON.parse(localStorage.getItem(key)).total,
       storageKey,
     ),
-  ).toBe(1);
+  ).toBe(41);
   await page.screenshot({ path: "qa/modules-desktop.png", fullPage: true });
 });
 
@@ -100,7 +81,7 @@ test("explicit coffee settings reload while mobile equipment stays usable", asyn
       localStorage.setItem(
         key,
         JSON.stringify({
-          total: 1,
+          total: 3,
           settings: {
             foodIds: ["toast"],
             drinkId: "coffee",
@@ -120,7 +101,7 @@ test("explicit coffee settings reload while mobile equipment stays usable", asyn
   await expect(page.locator("#meal-summary")).toContainText("白吐司");
   await chooseToilet(page, "comfort");
   await page.reload();
-  await expect(page.locator("#toilet-select")).toHaveValue("comfort");
+  await expect(page.locator("#bathroom-scene")).toHaveAttribute("data-toilet", "comfort");
   const saved = await page.evaluate(
     (key) => JSON.parse(localStorage.getItem(key)),
     storageKey,
@@ -176,11 +157,11 @@ test("a matching green recipe with the golden toilet still usually produces an o
     Math.random = () => 0.5;
   });
   await page.goto("/");
+  await setCompletedRounds(page, 40);
   await chooseMeal(page, ["broccoli"]);
   await setWater(page, "1750");
   await chooseAdditives(page, ["probiotic"]);
   await chooseToilet(page, "golden");
-  await expect(page.locator("#special-chance")).toHaveText("0.31%");
 
   await startRound(page);
   await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 4000 });

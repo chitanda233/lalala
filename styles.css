@@ -178,11 +178,6 @@ svg {
   letter-spacing: 0;
   margin: 0 0 4px;
 }
-.welcome p {
-  font-size: 14px;
-  color: #647258;
-  margin: 0;
-}
 .playground {
   position: absolute;
   inset: 0;
@@ -253,14 +248,7 @@ svg {
   height: 32%;
   display: grid;
   justify-items: center;
-  grid-template-rows: minmax(0, 1fr) 34px;
-}
-.scene-caption {
-  font-size: 6px;
-  letter-spacing: 1.3px;
-  color: #647258;
-  white-space: nowrap;
-  display: none;
+  grid-template-rows: minmax(0, 1fr);
 }
 .bathroom-illustration {
   width: 100%;
@@ -272,17 +260,30 @@ svg {
   transform-origin: 278px 350px;
 }
 .equipment-button {
-  font-size: 13px;
-  color: #647258;
-  background: #f4f5e8cc;
-  border: 1px solid #e6e8d8;
-  border-radius: 20px;
-  padding: 5px 10px;
-  min-height: 32px;
-  white-space: nowrap;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 34px;
+  justify-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border-radius: 24px;
+  background: transparent;
 }
-.equipment-button span {
-  margin-left: 5px;
+.equipment-button > span {
+  align-self: center;
+  max-width: 100%;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #f4f5e8cc;
+  font-size: 14px;
+  color: var(--muted);
+}
+.equipment-button:disabled {
+  opacity: 1;
+}
+.equipment-button:not(:disabled):hover .toilet-body {
+  filter: drop-shadow(0 7px 8px #8d9f6e65);
 }
 .action-area {
   position: absolute;
@@ -1082,76 +1083,120 @@ input[type="range"] {
   line-height: 1.5;
   color: #647258;
 }
-.select-label {
-  display: grid;
-  gap: 6px;
-  font-size: 15px;
-  color: #647258;
-}
-select {
-  width: 100%;
-  height: 44px;
-  padding: 9px;
-  border: 1px solid #d8e0c6;
-  border-radius: 10px;
-  background: #f4f6e7;
-  font-size: 16px;
-}
 .settings-dialog > p {
   font-size: 14px;
   line-height: 1.5;
   color: #647258;
 }
-#toilet-description {
-  font-size: 14px;
-  margin: 0;
+.equipment-dialog {
+  --dialog-height: min(
+    calc(
+      var(--screen-height) - max(12px, env(safe-area-inset-top)) -
+        max(12px, env(safe-area-inset-bottom))
+    ),
+    620px
+  );
 }
-.forecast-card {
-  border-radius: 16px;
-  background: #eff2e2;
-  padding: 12px;
-  font-size: 14px;
+.equipment-dialog[open] {
+  gap: 14px;
 }
-.forecast-card h3 {
-  font-size: 16px;
-  font-weight: 500;
-  margin: 0 0 8px;
+.equipment-dialog .dialog-heading {
+  min-height: 44px;
 }
-.forecast-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 14px;
-  color: #647258;
-  margin: 7px 0;
+.equipment-dialog h2 {
+  font-size: 22px;
+  line-height: 1.3;
 }
-.forecast-row strong {
-  font-size: 14px;
-  color: #647258;
-}
-.forecast-card p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #647258;
-  margin: 8px 0;
-}
-.forecast-card small {
-  font-size: 12px;
-  color: #647258;
-}
-.forecast-bars {
-  display: flex;
-  gap: 3px;
+.toilet-carousel {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  border-radius: 24px;
+  background: radial-gradient(ellipse, #e2ead3, #f1f3e5 70%);
 }
-.forecast-bars i {
-  width: 13px;
-  height: 5px;
-  background: #dfe7d2;
-  border-radius: 2px;
+.toilet-preview {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 0;
 }
-.forecast-bars i.active {
-  background: #a4b68a;
+.toilet-preview svg {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  filter: drop-shadow(0 12px 8px #8d9f6e30);
+}
+.toilet-arrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 48px;
+  background: #fbfaf0;
+  border: 1px solid #d5dec5;
+  border-radius: 16px;
+  color: var(--green);
+}
+.toilet-arrow:not(:disabled):active {
+  background: #dce8b5;
+}
+#toilet-description {
+  flex-shrink: 0;
+  min-height: 3em;
+  margin: 0;
+  padding: 0 12px;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink);
+}
+.toilet-page {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 12px;
+  text-align: center;
+  color: var(--muted);
+}
+.equipment-dialog[data-locked="true"] .toilet-preview {
+  opacity: 0.55;
+  filter: grayscale(0.85);
+}
+.toilet-actions {
+  display: grid;
+  gap: 8px;
+  flex-shrink: 0;
+}
+#toilet-availability {
+  display: grid;
+  align-items: center;
+  min-height: 2.8em;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--muted);
+}
+.toilet-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #c1cf9a;
+  border-radius: 14px;
+  background: #dce8b5;
+  font-size: 20px;
+  font-weight: 600;
+}
+.toilet-confirm.current,
+.toilet-confirm.locked {
+  background: #e8eadf;
+  border-color: #d5dacb;
+  color: var(--muted);
+  opacity: 1;
 }
 .help-steps {
   padding-left: 22px;
@@ -1361,7 +1406,7 @@ select {
   color: #647258;
 }
 .collection-detail {
-  min-height: 56px;
+  min-height: 64px;
   flex-shrink: 0;
   border: 1px solid #dfe7ce;
   background: #f1f5e6;
@@ -1373,7 +1418,7 @@ select {
   justify-content: center;
   font-size: 14px;
   color: #647258;
-  height: 56px;
+  height: 64px;
 }
 .collection-detail h3 {
   font-size: 22px;

@@ -4,6 +4,7 @@ import { stoolColors } from "../content/colors.js";
 import { normalizeMarks } from "../content/marks.js";
 import { normalizeAppearance } from "./food-appearance.js";
 import { recordMeal } from "../progression/foods.js";
+import { recordToiletUnlocks } from "../progression/toilets.js";
 import { recordDiscovery } from "../progression/collection.js";
 import { recordIndividual } from "../progression/individuals.js";
 import { specimenBlueprint } from "./specimen.js";
@@ -205,7 +206,8 @@ export function settleSession(save, now = Date.now()) {
   const individual = recordIndividual(save, session);
   save.total += 1;
   const unlockedFoods = recordMeal(save, session.foodIds);
+  const unlockedToilets = recordToiletUnlocks(save);
   save.lastSettledSessionId = session.id;
   save.session = null;
-  return { session, ...discovery, individual, unlockedFoods };
+  return { session, ...discovery, individual, unlockedFoods, unlockedToilets };
 }

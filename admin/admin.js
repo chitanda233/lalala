@@ -31,7 +31,7 @@ const copy = (value) => structuredClone(value);
 const categories = Object.fromEntries(
   foodCategories.map((item) => [item.id, item.name]),
 );
-let selectedId = "banana";
+let selectedId = foods[0].id;
 let saved = Object.fromEntries(
   foods.map((food) => [food.id, copy(food.attributes)]),
 );
@@ -77,7 +77,7 @@ function updateStatus(message = "") {
   $("#reset-food").disabled = !isDirty(selectedId) || saving;
   $("#selected-dirty-status").textContent = isDirty(selectedId)
     ? "这份食物有未保存的调整"
-    : "与已保存配置一致";
+    : "";
   for (const button of document.querySelectorAll("[data-food-id]")) {
     const existing = button.querySelector(".food-dirty");
     const dirty = isDirty(button.dataset.foodId);

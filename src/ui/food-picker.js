@@ -83,7 +83,7 @@ export function createFoodPicker({
     $("#food-grid").innerHTML = visibleFoods
       .map((food) => {
         const unlocked = unlockedIds.has(food.id);
-        return `<button class="food-card ${unlocked ? "unlocked" : "locked"} ${food.id === focusedId ? "focused" : ""}" data-food="${food.id}" aria-pressed="${food.id === focusedId}" aria-label="${food.name}${unlocked ? "" : "，尚未解锁"}">${foodArt(food.id)}<strong>${food.name}</strong><span>${!unlocked ? `未解锁 · ${food.unlockAt} 次` : draft.includes(food.id) ? "✓ 已加入" : "可选"}</span></button>`;
+        return `<button class="food-card ${unlocked ? "unlocked" : "locked"} ${food.id === focusedId ? "focused" : ""}" data-food="${food.id}" aria-pressed="${food.id === focusedId}" aria-label="${food.name}${unlocked ? "" : "，尚未解锁"}">${foodArt(food.id)}<strong>${food.name}</strong>${!unlocked ? `<span>${food.unlockAt} 次解锁</span>` : draft.includes(food.id) ? "<span>✓ 已加入</span>" : ""}</button>`;
       })
       .join("");
     $("#food-draft-count").textContent =

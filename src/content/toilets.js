@@ -1,3 +1,17 @@
+// Change each entry here when a toilet gets its final unlock condition.
+const toiletUnlocks = {
+  standard: { kind: "open" },
+  squat: { kind: "open" },
+  stone: { kind: "open" },
+  comfort: { kind: "rounds", count: 3 },
+  heated: { kind: "rounds", count: 5 },
+  massage: { kind: "rounds", count: 8 },
+  sandalwood: { kind: "rounds", count: 12 },
+  vortex: { kind: "rounds", count: 18 },
+  "crystal-seat": { kind: "rounds", count: 25 },
+  golden: { kind: "rounds", count: 40 },
+};
+
 const toilet = (
   id,
   name,
@@ -19,15 +33,15 @@ const toilet = (
   effectLabel,
   effects,
   tags,
-  starter: true,
-  unlock: { kind: "open" },
+  starter: toiletUnlocks[id].kind === "open",
+  unlock: toiletUnlocks[id],
   palette: {
     ceramic: colors,
     tank: [colors[0], colors[2]],
     bowl: [colors[2], colors[1]],
   },
 });
-// All ten are available for recipe prototyping; ownership remains separate from effects.
+// Browse every toilet; eligibility and equipped effects are handled separately.
 export const toilets = [
   toilet(
     "standard",

@@ -31,7 +31,7 @@ test("find banana, clay and twenty new foods through categories and pages", asyn
   });
 });
 
-test("new three-food meal affects preview and survives save, running reload and result", async ({
+test("new three-food meal survives save, running reload and result", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -40,7 +40,6 @@ test("new three-food meal affects preview and survives save, running reload and 
   await page.goto("/");
   await chooseMeal(page, ["guanyin-clay", "banana", "rose-cake"]);
   await expect(page.locator("#meal-summary")).toContainText("观音土");
-  await expect(page.locator("#forecast-type")).toContainText("4 型");
 
   await startRound(page);
   const before = await page.evaluate(

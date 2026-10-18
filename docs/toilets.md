@@ -4,9 +4,9 @@
 
 ## 需求与当前实现
 
-用户要求不同马桶影响顺畅度和特殊便便产出概率。当前实现补充了 10 款装备、各自材质造型、设备专属候选及具体数值；全部初始拥有、可立即更换，正式获得方式尚未制定。
+用户要求不同马桶影响顺畅度和特殊便便产出概率。当前实现补充了 10 款装备、各自材质造型、设备专属候选及具体数值；默认开放经典白瓷马桶、经典蹲坑和野趣石头堆，其余按累计完成次数解锁。次数暂定为薄荷 3、暖座 5、按摩 8、檀香 12、涡流 18、水晶 25、黄金 40，属于可调整的实现配置，后续条件集中修改 `src/content/toilets.js` 顶部的 `toiletUnlocks`。
 
-主界面点马桶下方的名称更换装备，单局中锁定。owned / equipped 与数值效果分离。当前没有独立的马桶编辑后台，Admin 中可以选择马桶做食物预览。
+主界面直接点击中央马桶打开切换面板。面板展示名称、大图与简短描述，左右箭头（也支持键盘方向键）只预览全部马桶。当前使用款按钮显示“正在使用”，其他已解锁款按钮显示“蹲它”，点击才会装备并保存；这两种状态不重复显示按钮上方的状态小字；关闭或取消不会应用预览。未解锁款保留带锁按钮，按钮上方直接显示解锁条件和当前次数。单局中锁定。owned / equipped 与数值效果分离。当前没有独立的马桶编辑后台，Admin 中可以选择马桶做食物预览。
 
 ## 完整清单
 
@@ -27,16 +27,16 @@
 
 | ID | 标签 | effects | 初始拥有 / 开放方式 |
 | --- | --- | --- | --- |
-| `standard` | 无 | 无 | 是 / open |
-| `comfort` | 无 | `{"smoothnessBonus":1,"specialWeightMultiplier":1.5}` | 是 / open |
-| `golden` | `gold-seat` | `{"smoothnessBonus":2,"specialWeightMultiplier":2,"dropWeightMultipliers":{"gold":1.25}}` | 是 / open |
-| `sandalwood` | `wood-seat` | `{"smoothnessBonus":0.6}` | 是 / open |
-| `heated` | `warm-seat` | `{"smoothnessBonus":0.8}` | 是 / open |
-| `massage` | `massage-seat` | `{"smoothnessBonus":1}` | 是 / open |
-| `squat` | `squat-seat` | `{"smoothnessBonus":1}` | 是 / open |
-| `stone` | `stone-seat` | `{"smoothnessBonus":-0.5,"typeShift":-0.3}` | 是 / open |
-| `vortex` | `vortex-seat` | `{"smoothnessBonus":1.2,"dropWeightMultipliers":{"spiral":2,"ribbon":2}}` | 是 / open |
-| `crystal-seat` | `crystal-seat` | `{"specialWeightMultiplier":1.5,"formationStability":0.08,"dropWeightMultipliers":{"crystal":2}}` | 是 / open |
+| `standard` | 无 | 无 | 是 / 初始开放 |
+| `comfort` | 无 | `{"smoothnessBonus":1,"specialWeightMultiplier":1.5}` | 否 / 完成 3 次 |
+| `golden` | `gold-seat` | `{"smoothnessBonus":2,"specialWeightMultiplier":2,"dropWeightMultipliers":{"gold":1.25}}` | 否 / 完成 40 次 |
+| `sandalwood` | `wood-seat` | `{"smoothnessBonus":0.6}` | 否 / 完成 12 次 |
+| `heated` | `warm-seat` | `{"smoothnessBonus":0.8}` | 否 / 完成 5 次 |
+| `massage` | `massage-seat` | `{"smoothnessBonus":1}` | 否 / 完成 8 次 |
+| `squat` | `squat-seat` | `{"smoothnessBonus":1}` | 是 / 初始开放 |
+| `stone` | `stone-seat` | `{"smoothnessBonus":-0.5,"typeShift":-0.3}` | 是 / 初始开放 |
+| `vortex` | `vortex-seat` | `{"smoothnessBonus":1.2,"dropWeightMultipliers":{"spiral":2,"ribbon":2}}` | 否 / 完成 18 次 |
+| `crystal-seat` | `crystal-seat` | `{"specialWeightMultiplier":1.5,"formationStability":0.08,"dropWeightMultipliers":{"crystal":2}}` | 否 / 完成 25 次 |
 
 ## 效果字段怎样读
 

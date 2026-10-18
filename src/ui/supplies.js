@@ -37,8 +37,8 @@ export function createSuppliesView({ getSelection, onChange }) {
       $("#water-section").hidden = kind !== "drink";
       $("#supply-intro").textContent =
         kind === "drink"
-          ? `${drinks.length} 种饮料 · 选一种，选择后自动保存`
-          : `${additives.length} 种添加剂 · 当前全部开放 · 最多 ${gameConfig.maxAdditives} 种，选择后自动保存`;
+          ? `${drinks.length} 种饮料 · 单选，即选即存`
+          : `${additives.length} 种添加剂 · 即选即存`;
       dialog.showModal();
       render();
     });
@@ -82,8 +82,8 @@ export function createSuppliesView({ getSelection, onChange }) {
       input.closest("label").classList.toggle("selected", input.checked);
     });
     $("#supply-count").textContent = $("#drink-library").hidden
-      ? `已加入 ${selection.additives.length} / ${gameConfig.maxAdditives} 种 · 取消勾选可移除`
-      : `${drink.name} · ${drink.description}`;
+      ? `已加入 ${selection.additives.length} / ${gameConfig.maxAdditives} 种`
+      : drink.description;
     page = renderPage(
       "supply",
       $$(kind === "drink" ? "#drink-options > *" : "#additive-options > *"),

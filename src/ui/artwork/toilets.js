@@ -26,5 +26,11 @@ export function toiletDrawing(toilet) {
   return `<g ${stroke}>${tank}<path d="M185 306c-4 60 24 97 63 108l-14 50q50 26 102 0l-10-65c43-18 62-52 62-93Z" fill="${color}"/><ellipse cx="278" cy="292" rx="125" ry="66" fill="${light}"/><ellipse cx="278" cy="294" rx="99" ry="45" fill="${dark}"/>${bowl}<path d="M171 289q100-68 217 0" fill="none" stroke="${light}" stroke-width="13" stroke-linecap="round"/>${detail}</g>`;
 }
 export function toiletSvg(toilet) {
-  return `<svg viewBox="130 40 310 460" role="img" aria-label="${toilet.name}">${toiletDrawing(toilet)}</svg>`;
+  const viewBox =
+    toilet.shape === "squat"
+      ? "130 250 310 210"
+      : toilet.shape === "stones"
+        ? "130 290 310 180"
+        : "130 40 310 460";
+  return `<svg viewBox="${viewBox}" role="img" aria-label="${toilet.name}">${toiletDrawing(toilet)}</svg>`;
 }

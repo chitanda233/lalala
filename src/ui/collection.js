@@ -39,15 +39,18 @@ export function createCollectionView(getSave) {
   ]
     .map(
       (type) =>
-        `<button data-type-filter="${type.id}" aria-label="${type.label} · ${type.description || type.name}" aria-pressed="${type.id === filter}">${type.label}<span>${type.name}</span></button>`,
+        `<button data-type-filter="${type.id}" aria-label="${type.label} · ${type.description || type.name}" aria-pressed="${type.id === filter}">${type.label}${type.id === "all" ? "" : `<span>${type.name}</span>`}</button>`,
     )
     .join("");
   function renderDetail() {
     $("#collection-dialog").classList.toggle("detail-open", detailOpen);
     $("#collection-back").hidden = !detailOpen;
     if (!detailOpen) {
-      $("#collection-detail").innerHTML =
-        "<p>点击已发现的便便查看个体。真实模样还藏在虚影里，发现后才会揭晓。</p>";
+      const blueprint = specimenBlueprintById[focusedId];
+      const type = blueprint ? bristolTypes[classifySpecimen(blueprint) - 1] : null;
+      $("#collection-detail").innerHTML = type
+        ? `<p>${type.id} 型建议：${type.hint}</p>`
+        : "<p>选择一个分类，查看更容易出现的搭配。</p>";
       return;
     }
     const blueprint = specimenBlueprintById[focusedId];
@@ -62,7 +65,7 @@ export function createCollectionView(getSave) {
       .reverse();
     if (!records.length) {
       $("#collection-detail").innerHTML =
-        `<h3>还藏在虚影里</h3><p>这是第 ${type} 型的未知收藏。真实模样还藏在虚影里，发现后才会揭晓。</p><small>换一份餐盘、调整消化时间或力度，试试新的组合。</small>`;
+        `<p>${type} 型建议：${bristolTypes[type - 1].hint}</p>`;
       return;
     }
     individualIndex = Math.max(
@@ -73,7 +76,7 @@ export function createCollectionView(getSave) {
     const diagnosis = diagnoseOutcome(entry);
     const marks = entry.marks.map((mark) => outcomeMarks[mark].name).join("、");
     $("#collection-detail").innerHTML =
-      `<h3>${blueprint.name} <small>固定归类 ${type} 型 · 已收集 ${records.length} 个体</small></h3><article class="individual-card" data-individual="${entry.id}"><div class="individual-art">${artwork(entry)}</div><strong>个体 #${String(entry.sequence).padStart(3, "0")}</strong><p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article><div class="individual-nav"><button data-individual-prev ${individualIndex === 0 ? "disabled" : ""} aria-label="上一个个体">‹</button><span>${individualIndex + 1} / ${records.length} 个独立个体</span><button data-individual-next ${individualIndex >= records.length - 1 ? "disabled" : ""} aria-label="下一个个体">›</button></div>`;
+      `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3><article class="individual-card" data-individual="${entry.id}"><div class="individual-art">${artwork(entry)}</div><strong>个体 #${String(entry.sequence).padStart(3, "0")}</strong><p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article><div class="individual-nav"><button data-individual-prev ${individualIndex === 0 ? "disabled" : ""} aria-label="上一个个体">‹</button><span>${individualIndex + 1} / ${records.length} 个独立个体</span><button data-individual-next ${individualIndex >= records.length - 1 ? "disabled" : ""} aria-label="下一个个体">›</button></div>`;
   }
   function render() {
     const save = getSave();
@@ -101,10 +104,10 @@ export function createCollectionView(getSave) {
         const recorded = individuals.findLast(
           (entry) => entry.specimenId === blueprint.id,
         );
-        return `<button class="stool-card ${recorded ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}" data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}"><span class="stool-art">${recorded ? artwork(recorded) : mysterySvg()}</span><span class="stool-title"><strong>${recorded ? blueprint.name : "未发现的便便"}</strong><span>第 ${classifySpecimen(blueprint)} 型${recorded ? " · 已收集" : " · 虚影"}</span></span></button>`;
+        return `<button class="stool-card ${recorded ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}" data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}"><span class="stool-art">${recorded ? artwork(recorded) : mysterySvg()}</span><span class="stool-title"><strong>${recorded ? blueprint.name : "未发现的便便"}</strong><span>第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
       })
       .join("");
-    renderDetail();
+    $("#collection-dialog").classList.toggle("detail-open", detailOpen);
     if (!detailOpen) {
       const cards = $$("#bristol-grid .stool-card");
       page = renderPage("collection", cards, page);
@@ -119,6 +122,7 @@ export function createCollectionView(getSave) {
       button.classList.toggle("focused", focused);
       button.setAttribute("aria-pressed", focused);
     });
+    renderDetail();
     $("#collection-summary").textContent =
       `畅快 ${save.total} 次 · ${discovered.size} / ${specimenBlueprints.length} 种便便 · ${individuals.length} 个独立个体`;
   }

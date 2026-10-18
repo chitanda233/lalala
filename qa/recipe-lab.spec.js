@@ -1,3 +1,5 @@
+import { setCompletedRounds } from "./helpers.js";
+import { toilets } from "../src/content/toilets.js";
 import { test, expect } from "@playwright/test";
 import {
   chooseSpecimen,
@@ -20,7 +22,9 @@ test("twenty drinks and eighteen open additives support persistent selection wit
   await expect(page.locator("[data-drink]")).toHaveCount(20);
   await showPageItem(page, '[data-drink="blueberry-juice"]');
   await page.locator('[data-drink="blueberry-juice"]').click();
-  await expect(page.locator("#supply-count")).toContainText("蓝莓浓浆");
+  await expect(page.locator('[data-drink="blueberry-juice"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#supply-count")).not.toBeEmpty();
+  await expect(page.locator("#supply-count")).not.toContainText("蓝莓浓浆");
   await page.screenshot({
     path: "qa/drinks-desktop.png",
     animations: "disabled",
@@ -58,6 +62,7 @@ test("a purple glitter result keeps its color and explanation across an active r
   page,
 }) => {
   await page.goto("/");
+  await setCompletedRounds(page, 5);
   await chooseDrink(page, "blueberry-juice");
   await chooseAdditives(page, ["glitter"]);
   await chooseToilet(page, "heated");
@@ -110,10 +115,9 @@ test("fifty collectibles have one home classification and ten toilets display di
   page,
 }) => {
   await page.goto("/");
+  await setCompletedRounds(page, 40);
   const drawings = new Set();
-  const ids = await page
-    .locator("#toilet-select option")
-    .evaluateAll((options) => options.map((option) => option.value));
+  const ids = toilets.map((toilet) => toilet.id);
   expect(ids).toHaveLength(10);
   for (const id of ids) {
     await chooseToilet(page, id);
@@ -141,7 +145,7 @@ test("fifty collectibles have one home classification and ten toilets display di
     );
   await chooseSpecimen(page, "spiral:4");
   await expect(page.locator("#collection-detail")).toContainText(
-    "真实模样还藏在虚影里",
+    "4 型建议：",
   );
   await expect(page.locator("#collection-detail")).not.toContainText("慢慢来");
   await page.screenshot({
@@ -190,7 +194,7 @@ for (const [width, height] of [
     await page.locator("#collection-button").click();
     await chooseSpecimen(page, "meteor:1");
     await expect(page.locator("#collection-detail")).toContainText(
-      "真实模样还藏在虚影里",
+      "1 型建议：",
     );
     expect(
       await page

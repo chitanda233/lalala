@@ -56,7 +56,7 @@ test("each meal saves an independent visible specimen under exactly one morpholo
   await page.locator("#collection-button").click();
   await chooseSpecimen(page, "glitter:4");
   await expect(page.locator("#collection-detail")).toContainText(
-    "已收集 2 个体",
+    "1 / 2 个独立个体",
   );
   await expect(page.locator("[data-individual]")).toHaveAttribute(
     "data-individual",

@@ -28,6 +28,10 @@ export const foodCategories = [
   },
 ];
 
+const categoryOrder = new Map(
+  foodCategories.map((category, index) => [category.id, index]),
+);
+
 export const foods = [
   {
     id: "burger",
@@ -573,4 +577,9 @@ export const foods = [
     effects: {},
   },
   ...expandedFoods,
-].map((food) => withFoodAttributes(food, foodAttributeValues[food.id]));
+]
+  .map((food) => withFoodAttributes(food, foodAttributeValues[food.id]))
+  .sort((a, b) =>
+    categoryOrder.get(a.category) - categoryOrder.get(b.category) ||
+    a.name.localeCompare(b.name, "zh-CN") || a.id.localeCompare(b.id),
+  );

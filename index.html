@@ -86,7 +86,6 @@
       <section class="welcome">
         <span class="eyebrow">A LITTLE DAILY HAPPINESS</span>
         <h1>今天，也要痛快一点。</h1>
-        <p id="room-status">经典白瓷马桶 · 空闲中</p>
       </section>
       <main class="playground" aria-label="卫生间">
         <nav class="side-tools left-tools" aria-label="添加配方">
@@ -160,61 +159,63 @@
           id="bathroom-scene"
           aria-label="中央马桶"
         >
-          <div class="scene-caption">YOUR LITTLE COMFORT ZONE</div>
-          <svg
-            class="bathroom-illustration"
-            viewBox="100 40 345 470"
-            role="img"
-            aria-label="经典白瓷马桶"
-          >
-            <defs>
-              <linearGradient id="room-glow" x2="0" y2="1">
-                <stop stop-color="#e4ecdf" />
-                <stop offset="1" stop-color="#f4f3df" />
-              </linearGradient>
-              <pattern
-                id="wall-tile"
-                width="60"
-                height="60"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M60 0H0v60"
-                  fill="none"
-                  stroke="#b9cbb6"
-                  stroke-opacity=".42"
-                />
-              </pattern>
-            </defs>
-            <path
-              d="M124 450V204a150 150 0 0 1 300 0v246Z"
-              fill="url(#room-glow)"
-            />
-            <path
-              d="M124 450V204a150 150 0 0 1 300 0v246Z"
-              fill="url(#wall-tile)"
-            />
-            <ellipse
-              cx="277"
-              cy="483"
-              rx="135"
-              ry="19"
-              fill="#dce3c8"
-              opacity=".55"
-            />
-            <g class="toilet-body"></g>
-            <g fill="#d4dcb5">
-              <path d="m151 128 3 9 9 3-9 3-3 9-3-9-9-3 9-3Z" />
-              <path d="m416 295 2 7 7 2-7 2-2 7-2-7-7-2 7-2Z" />
-            </g></svg
-          ><button
+          <button
             id="choose-toilet"
             class="equipment-button"
+            aria-label="更换马桶，当前：经典白瓷马桶"
             aria-haspopup="dialog"
             aria-controls="equipment-dialog"
           >
-            经典白瓷马桶 <span>⌄</span></button
-          ><span class="sr-only" id="floating-note"></span>
+            <svg
+              class="bathroom-illustration"
+              viewBox="100 40 345 470"
+              role="img"
+              aria-label="经典白瓷马桶"
+            >
+              <defs>
+                <linearGradient id="room-glow" x2="0" y2="1">
+                  <stop stop-color="#e4ecdf" />
+                  <stop offset="1" stop-color="#f4f3df" />
+                </linearGradient>
+                <pattern
+                  id="wall-tile"
+                  width="60"
+                  height="60"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M60 0H0v60"
+                    fill="none"
+                    stroke="#b9cbb6"
+                    stroke-opacity=".42"
+                  />
+                </pattern>
+              </defs>
+              <path
+                d="M124 450V204a150 150 0 0 1 300 0v246Z"
+                fill="url(#room-glow)"
+              />
+              <path
+                d="M124 450V204a150 150 0 0 1 300 0v246Z"
+                fill="url(#wall-tile)"
+              />
+              <ellipse
+                cx="277"
+                cy="483"
+                rx="135"
+                ry="19"
+                fill="#dce3c8"
+                opacity=".55"
+              />
+              <g class="toilet-body"></g>
+              <g fill="#d4dcb5">
+                <path d="m151 128 3 9 9 3-9 3-3 9-3-9-9-3 9-3Z" />
+                <path d="m416 295 2 7 7 2-7 2-2 7-2-7-7-2 7-2Z" />
+              </g></svg
+            >
+            <span id="toilet-name">经典白瓷马桶</span>
+          </button>
+          <span class="sr-only" id="floating-note"></span>
         </section>
         <nav class="side-tools right-tools" aria-label="消化时间">
           <button
@@ -443,50 +444,51 @@
     </dialog>
     <dialog
       id="equipment-dialog"
-      class="settings-dialog"
+      class="equipment-dialog"
       aria-labelledby="equipment-title"
     >
       <header class="dialog-heading">
-        <div>
-          <span class="eyebrow">YOUR COMFORT MATTERS</span>
-          <h2 id="equipment-title">今天坐哪一款</h2>
-        </div>
+        <h2 id="equipment-title">经典白瓷马桶</h2>
         <button
           class="close-button"
           data-close="equipment-dialog"
-          aria-label="关闭马桶设置"
+          aria-label="关闭马桶切换"
         >
           <svg class="icon"><use href="#i-close" /></svg>
         </button>
       </header>
-      <label class="select-label" for="toilet-select"
-        >马桶装备<select
-          id="toilet-select"
-          aria-describedby="toilet-description"
-        ></select
-      ></label>
+      <div class="toilet-carousel" role="group" aria-label="切换马桶">
+        <button id="toilet-prev" class="toilet-arrow" aria-label="上一款马桶">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m14 6-6 6 6 6" />
+          </svg>
+        </button>
+        <div id="toilet-preview" class="toilet-preview"></div>
+        <button id="toilet-next" class="toilet-arrow" aria-label="下一款马桶">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m10 6 6 6-6 6" />
+          </svg>
+        </button>
+      </div>
       <p id="toilet-description"></p>
-      <section class="forecast-card">
-        <h3>本餐小预告</h3>
-        <div class="forecast-row">
-          <span>顺畅指数</span>
-          <div id="smooth-bars" class="forecast-bars" aria-label="顺畅指数">
-            <i></i><i></i><i></i><i></i><i></i>
-          </div>
-        </div>
-        <div class="forecast-row">
-          <span>惊喜程度</span><strong id="surprise-value"></strong>
-        </div>
-        <div class="forecast-row">
-          <span>预计形态</span><strong id="forecast-type"></strong>
-        </div>
-        <div class="forecast-row">
-          <span>稀有款概率</span><strong id="special-chance"></strong>
-        </div>
-        <p id="forecast-description"></p>
-        <small>以中等力度参考，实际由停止时的力度决定。</small>
-      </section>
-      <button class="food-confirm" data-close="equipment-dialog">坐稳了</button>
+      <p
+        id="toilet-page"
+        class="toilet-page"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      ></p>
+      <footer class="toilet-actions">
+        <p id="toilet-availability" role="status" aria-live="polite"></p>
+        <button id="confirm-toilet" class="toilet-confirm">
+          <svg id="toilet-lock-icon" class="icon" viewBox="0 0 24 24" aria-hidden="true" hidden>
+            <path d="M7 10V7a5 5 0 0 1 10 0v3" />
+            <rect x="4" y="10" width="16" height="12" rx="3" />
+            <path d="M12 15v3" />
+          </svg>
+          <span id="confirm-toilet-label">蹲它</span>
+        </button>
+      </footer>
     </dialog>
     <dialog
       id="result-dialog"

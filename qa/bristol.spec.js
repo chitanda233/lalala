@@ -76,7 +76,7 @@ test("same collectible keeps independent records and paged individual identities
   await page.locator("#collection-button").click();
   await chooseSpecimen(page, "classic:4");
   await expect(page.locator("#collection-detail")).toContainText(
-    "已收集 2 个体",
+    "1 / 2 个独立个体",
   );
   const latest = await page
     .locator("[data-individual]")

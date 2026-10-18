@@ -44,6 +44,7 @@ test("admin edits nine intuitive attributes with an actual seven-type preview, t
   const submissions = await mockAdminApi(page);
   await page.goto("/admin/index.html");
   await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
+  await page.locator('[data-food-id="banana"]').click();
   await expect(page.locator(".food-item")).toHaveCount(51);
   await expect(page.locator("#food-influence input")).toHaveCount(1);
   await expect(page.locator("#main-attributes input")).toHaveCount(6);
@@ -165,6 +166,7 @@ test("food drafts survive category switching and selected reset leaves other dra
   const submissions = await mockAdminApi(page);
   await page.goto("/admin/index.html");
   await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
+  await page.locator('[data-food-id="banana"]').click();
   await setAttribute(page, "softness", 7);
   await setAttribute(page, "influence", 2);
   await page.locator("#food-category").selectOption("vegetable");

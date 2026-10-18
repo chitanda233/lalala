@@ -16,7 +16,7 @@ export function normalizeSave(value = {}) {
     foods.unlocked.includes(id),
   );
   if (!settings.foodIds.length) settings.foodIds = ["rice"];
-  const toilets = normalizeToilets(value.toilets);
+  const toilets = normalizeToilets(value.toilets, total);
   if (!value.toilets) equipToilet(toilets, settings.toiletId);
   settings.toiletId = toilets.equipped;
   return {

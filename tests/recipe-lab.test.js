@@ -93,7 +93,8 @@ test("catalog includes 50 classified, described, illustrated and reachable colle
   for (const catalog of [drinks, additives, toilets]) {
     assert.equal(new Set(catalog.map((item) => item.id)).size, catalog.length);
     for (const item of catalog) {
-      assert.equal(item.unlock.kind, "open");
+      assert.ok(["open", "rounds"].includes(item.unlock.kind));
+      if (item.unlock.kind === "rounds") assert.ok(item.unlock.count > 0);
       assert.ok(item.description && item.effectLabel);
     }
   }
@@ -308,7 +309,7 @@ test("loadouts and diagnoses use the current snapshot schema", () => {
     session,
   });
   assert.equal(save.version, 5);
-  assert.equal(save.toilets.owned.length, 10);
+  assert.equal(save.toilets.owned.length, 3);
   assert.equal(save.settings.additives.length, 3);
   assert.deepEqual(save.individuals, []);
   assert.equal(normalizeSelection({ force: "unknown" }).force, 50);

@@ -9,27 +9,10 @@ import {
   armSpecimen,
 } from "./helpers.js";
 import { bristolTypes } from "../src/content/stools.js";
-import { resolveBristolType } from "../src/game/stool-type.js";
 const key = "lalala-dev";
 
-test("food-specific effects appear in the picker and update the most likely form", async ({
-  page,
-}) => {
+test("food-specific effects appear in the picker", async ({ page }) => {
   await page.goto("/");
-  // The planner may have saved a custom recipe. UI previews and descriptions
-  // must follow the current project data instead of an obsolete initial value.
-  for (const id of ["banana", "burger"]) {
-    await chooseMeal(page, [id]);
-    await expect(page.locator("#forecast-type")).toContainText(
-      `${resolveBristolType({ foodIds: [id] })} 型`,
-    );
-    await expect(page.locator("#forecast-description")).toContainText(
-      bristolTypes[resolveBristolType({ foodIds: [id] }) - 1].assessment,
-    );
-    await expect(page.locator("#forecast-description")).not.toContainText(
-      /影响强度|软硬 \d|\/7|mL/,
-    );
-  }
   await page.locator("#choose-foods").click();
   await focusFood(page, "enoki");
   await expect(page.locator("#food-details")).toContainText("形态保留度 7/7");
@@ -47,7 +30,6 @@ test("three-food enoki signature survives a running reload, pigment, decoration 
   await chooseMeal(page, ["banana", "enoki", "burger"]);
   await chooseDrink(page, "blueberry-juice");
   await chooseAdditives(page, ["glitter"]);
-  await expect(page.locator("#forecast-description")).toHaveText(/^预计/);
 
   await startRound(page);
   const before = await page.evaluate(

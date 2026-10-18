@@ -612,12 +612,6 @@ h1 {
   background: #8ba37a;
   border-radius: 50%;
 }
-.preview-intro {
-  font-size: 10px;
-  line-height: 1.7;
-  color: #97a08b;
-  margin-bottom: 18px;
-}
 .preview-controls {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -872,9 +866,6 @@ h1 {
     padding-left: 25px;
     padding-right: 25px;
   }
-  .preview-intro {
-    margin-bottom: 14px;
-  }
   .preview-features {
     margin-top: 20px;
   }
@@ -1089,9 +1080,6 @@ h1 {
   .preview-controls input {
     font-size: 11px;
     padding: 9px 20px 9px 8px;
-  }
-  .preview-intro {
-    font-size: 10px;
   }
   .preview-note {
     font-size: 10px;

@@ -18,7 +18,7 @@ import { closeDialogs } from "./dialogs.js";
 import { createRareReveal } from "./rare-reveal.js";
 import { $ } from "./dom.js";
 
-export function createSessionView(getSelection) {
+export function createSessionView() {
   const resultDialog = $("#result-dialog");
   const rareReveal = createRareReveal(resultDialog);
   function renderForce(force, locked = false) {
@@ -35,8 +35,6 @@ export function createSessionView(getSelection) {
     if (resultDialog.open) resultDialog.close();
     rareReveal.clear();
     $("#bathroom-scene").classList.add("running");
-    $("#room-status").textContent =
-      `${toiletById[session.toiletId].name} · 使用中`;
     $("#ready-tag").innerHTML = "<span></span>嘘，正在认真办大事";
     $("#action-title").textContent = aiming
       ? "找准这一刻。"
@@ -60,8 +58,6 @@ export function createSessionView(getSelection) {
   }
   function showIdle() {
     $("#bathroom-scene").classList.remove("running");
-    $("#room-status").textContent =
-      `${toiletById[getSelection().toiletId].name} · 空闲中`;
     $("#ready-tag").innerHTML = "<span></span>一切就绪，等你落座";
     $("#action-title").textContent = "把烦恼，统统冲走。";
     $("#action-description").textContent = "选好今天的配方，剩下的交给时间。";
@@ -79,6 +75,7 @@ export function createSessionView(getSelection) {
     isNew,
     isNewType,
     unlockedFoods = [],
+    unlockedToilets = [],
     individual,
   }) {
     const { outcome } = session;
@@ -104,8 +101,8 @@ export function createSessionView(getSelection) {
         .join("")}`;
     $("#result-name").textContent = specimenName(outcome);
     $("#result-individual").textContent = individual
-      ? `个体 #${String(individual.sequence).padStart(3, "0")} · 独立保存`
-      : "本次独立标本";
+      ? `个体 #${String(individual.sequence).padStart(3, "0")}`
+      : "本次标本";
     $("#result-description").textContent = diagnosis.summary;
     $("#result-additives").textContent =
       `${session.additives.length ? session.additives.map((id) => additiveById[id].name).join("、") : "原味无添加"} · 消化 ${digestionById[session.digestionTime].label} · 力度 ${session.force}/100 · ${forceZone(session.force).name}`;
@@ -123,14 +120,15 @@ export function createSessionView(getSelection) {
     $("#result-toilet").textContent = toiletById[session.toiletId].name;
     $("#result-time").textContent = formatDuration(session.seconds);
     $("#result-score").textContent = `${outcome.score} 分`;
-    $("#result-new").textContent = isNewType
-      ? `✦ 新形态！${type.id} 型已收进图鉴${isNew ? "，还解锁了新便便" : ""}`
-      : isNew
-        ? "✦ 新便便！已收进你的图鉴"
-        : "✦ 新个体！本次形态与食材印记已单独保存";
+    const discoveries = [];
+    if (isNewType) discoveries.push("✦ 新形态已收进图鉴");
+    else if (isNew) discoveries.push("✦ 新便便已收进图鉴");
     if (unlockedFoods.length)
-      $("#result-new").textContent +=
-        ` · 解锁 ${unlockedFoods.length} 种新食物`;
+      discoveries.push(`解锁 ${unlockedFoods.length} 种新食物`);
+    if (unlockedToilets.length)
+      discoveries.push(`解锁 ${unlockedToilets.length} 款新马桶`);
+    $("#result-new").textContent = discoveries.join(" · ");
+    $("#result-new").hidden = discoveries.length === 0;
     closeDialogs();
     rareReveal.show(character);
     resultDialog.showModal();

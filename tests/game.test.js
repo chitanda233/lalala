@@ -24,7 +24,8 @@ import { createSaveStore } from "../src/storage/save.js";
 import {
   normalizeToilets,
   equipToilet,
-  unlockToilet,
+  recordToiletUnlocks,
+  toiletUnlockHint,
 } from "../src/progression/toilets.js";
 import { gameConfig } from "../src/config/game.js";
 import { foods } from "../src/content/foods.js";
@@ -289,19 +290,24 @@ test("locked rounds reveal after a fixed brief delay and validate actual elapsed
   assert.equal(restoreSession({ ...session, seconds: 8 }), null);
 });
 
-test("equipment ownership, unlocking and equipping are independent of session effects", () => {
-  const inventory = normalizeToilets({
-    owned: ["unknown"],
-    equipped: "unknown",
-  });
-  assert.equal(inventory.equipped, "standard");
-  assert.equal(inventory.owned.includes("unknown"), false);
-  const locked = { owned: ["standard"], equipped: "standard" };
-  assert.equal(equipToilet(locked, "golden"), false);
-  assert.equal(unlockToilet(locked, "golden"), true);
-  assert.equal(unlockToilet(locked, "golden"), false);
-  assert.equal(equipToilet(locked, "golden"), true);
-  assert.equal(locked.equipped, "golden");
+test("three starter toilets and round unlocks never equip a preview automatically", () => {
+  const initial = normalizeToilets({ owned: toilets.map((item) => item.id), equipped: "golden" });
+  assert.deepEqual(initial.owned, ["standard", "squat", "stone"]);
+  assert.equal(initial.equipped, "standard");
+  assert.equal(equipToilet(initial, "golden"), false);
+  for (const toilet of toilets.filter((item) => !item.starter)) {
+    assert.equal(normalizeToilets(null, toilet.unlock.count - 1).owned.includes(toilet.id), false);
+    assert.equal(normalizeToilets(null, toilet.unlock.count).owned.includes(toilet.id), true);
+    assert.match(toiletUnlockHint(toilet, 0), new RegExp(String(toilet.unlock.count)));
+  }
+  const save = { total: 2, toilets: normalizeToilets(null, 2) };
+  assert.equal(equipToilet(save.toilets, "squat"), true);
+  save.total = 3;
+  assert.deepEqual(recordToiletUnlocks(save), ["comfort"]);
+  assert.equal(save.toilets.equipped, "squat");
+  assert.deepEqual(recordToiletUnlocks(save), []);
+  assert.equal(equipToilet(save.toilets, "comfort"), true);
+  assert.equal(normalizeToilets(save.toilets, 3).equipped, "comfort");
 });
 
 test("save storage settles concurrent attempts once and works without localStorage", async () => {
