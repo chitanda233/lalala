@@ -1,6 +1,7 @@
 export const gameConfig = {
   storageKey: "lalala-dev",
-  saveVersion: 5,
+  saveVersion: 6,
+  maxIndividuals: 7,
   rulesVersion: 19,
   maxFoods: 3,
   maxAdditives: 1,

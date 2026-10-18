@@ -3,6 +3,7 @@ import { stoolColors } from "../content/colors.js";
 import { normalizeMarks } from "../content/marks.js";
 import { normalizeAppearance } from "../game/food-appearance.js";
 import { normalizeSelection } from "../game/selection.js";
+import { gameConfig } from "../config/game.js";
 
 function normalizeIndividual(value, sequence) {
   if (
@@ -73,12 +74,27 @@ export function normalizeIndividuals(value) {
   return individuals;
 }
 
+// Keep the newest birth of each species, ordered from oldest to newest.
+export function retainRecentIndividuals(individuals) {
+  const seen = new Set();
+  return [...individuals]
+    .sort((a, b) => a.sequence - b.sequence)
+    .reverse()
+    .filter((entry) => {
+      if (seen.has(entry.specimenId)) return false;
+      seen.add(entry.specimenId);
+      return true;
+    })
+    .slice(0, gameConfig.maxIndividuals)
+    .reverse();
+}
+
 export function recordIndividual(save, session) {
   save.individuals ??= [];
   const existing = save.individuals.find((entry) => entry.id === session.id);
   if (existing) return existing;
   const sequence =
-    save.individuals.reduce((max, entry) => Math.max(max, entry.sequence), 0) +
+    save.individuals.reduce((max, entry) => Math.max(max, entry.sequence), save.total || 0) +
     1;
   const individual = normalizeIndividual(
     {
@@ -91,6 +107,7 @@ export function recordIndividual(save, session) {
     },
     sequence,
   );
-  if (individual) save.individuals.push(individual);
+  if (individual)
+    save.individuals = retainRecentIndividuals([...save.individuals, individual]);
   return individual;
 }

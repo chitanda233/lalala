@@ -15,9 +15,9 @@ export function createSaveStore(getStorage = () => globalThis.localStorage) {
     return structuredClone(memory);
   }
   function write(save) {
-    memory = structuredClone(save);
+    memory = normalizeSave(save);
     try {
-      getStorage().setItem(gameConfig.storageKey, JSON.stringify(save));
+      getStorage().setItem(gameConfig.storageKey, JSON.stringify(memory));
     } catch {
       available = false;
     }

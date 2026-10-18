@@ -31,7 +31,6 @@ export function createCollectionView(getSave) {
   let filter = "all",
     page = 0,
     focusedId = null,
-    individualIndex = 0,
     detailOpen = false,
     detailPanel = "art",
     previewAll = false;
@@ -97,36 +96,29 @@ export function createCollectionView(getSave) {
         `<h3>${blueprint.name}<small>第 ${type} 型 · 样式预览</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-style-preview="${blueprint.id}"><div class="individual-art">${characterSvg(character, false, type)}</div><p>${character.description}</p></article>`}`;
       return;
     }
-    const records = getSave()
-      .individuals.filter((entry) => entry.specimenId === blueprint.id)
-      .slice()
-      .reverse();
-    if (!records.length) {
+    const entry = getSave().individuals.find(entry => entry.specimenId === blueprint.id);
+    if (!entry) {
+      const character = characterById[blueprint.characterId];
       $("#collection-detail").innerHTML =
-        `<p>${type} 型建议：${bristolTypes[type - 1].hint}</p>`;
+        `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-discovered="${blueprint.id}"><div class="individual-art">${characterSvg(character, false, type)}</div><p>${character.description}</p><p>暂无保留个体</p></article>`}`;
       return;
     }
-    individualIndex = Math.max(
-      0,
-      Math.min(individualIndex, records.length - 1),
-    );
-    const entry = records[individualIndex];
     const diagnosis = diagnoseOutcome(entry);
     const marks = entry.marks.map((mark) => outcomeMarks[mark].name).join("、");
     $("#collection-detail").innerHTML =
-      `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(entry.characterId) : detailPanel === "source" ? sourceDetail(entry.characterId) : `<article class="individual-card" data-individual="${entry.id}"><div class="individual-art">${artwork(entry)}</div><strong>个体 #${String(entry.sequence).padStart(3, "0")}</strong><p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article>`}<div class="individual-nav"><button data-individual-prev ${individualIndex === 0 ? "disabled" : ""} aria-label="上一个个体">‹</button><span>${individualIndex + 1} / ${records.length} 个独立个体</span><button data-individual-next ${individualIndex >= records.length - 1 ? "disabled" : ""} aria-label="下一个个体">›</button></div>`;
+      `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(entry.characterId) : detailPanel === "source" ? sourceDetail(entry.characterId) : `<article class="individual-card" data-individual="${entry.id}"><div class="individual-art">${artwork(entry)}</div><strong>个体 #${String(entry.sequence).padStart(3, "0")}</strong><p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article>`}`;
   }
   function render() {
     const save = getSave();
     const individuals = save.individuals;
-    const discoveredTypes = new Set(individuals.map(classifySpecimen));
-    const discovered = new Set(individuals.map((entry) => entry.specimenId));
+    const discovered = new Set(save.discoveredSpecimens);
+    const discoveredTypes = new Set([...discovered].map(id => classifySpecimen(specimenBlueprintById[id])));
     $("#collection-count").textContent = String(discoveredTypes.size).padStart(
       2,
       "0",
     );
     $("#collection-count").title =
-      `已发现 ${discoveredTypes.size} / 7 型 · ${discovered.size} 种便便 · ${individuals.length} 个独立个体`;
+      `已发现 ${discoveredTypes.size} / 7 型 · ${discovered.size} 种便便 · 保留 ${individuals.length} 个独立个体`;
     $("#collection-total").textContent = `${discoveredTypes.size} / 7 型`;
     $$("[data-type-filter]").forEach((button) => {
       const selected = button.dataset.typeFilter === filter;
@@ -142,7 +134,8 @@ export function createCollectionView(getSave) {
         const recorded = individuals.findLast(
           (entry) => entry.specimenId === blueprint.id,
         );
-        return `<button class="stool-card ${recorded ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}" data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}"><span class="stool-art">${previewAll ? characterSvg(characterById[blueprint.characterId], false, classifySpecimen(blueprint)) : recorded ? artwork(recorded) : mysterySvg()}</span><span class="stool-title"><strong>${previewAll || recorded ? blueprint.name : "未发现的便便"}</strong><span>第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
+        const known = discovered.has(blueprint.id);
+        return `<button class="stool-card ${known ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}" data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}"><span class="stool-art">${previewAll || (known && !recorded) ? characterSvg(characterById[blueprint.characterId], false, classifySpecimen(blueprint)) : recorded ? artwork(recorded) : mysterySvg()}</span><span class="stool-title"><strong>${previewAll || known ? blueprint.name : "未发现的便便"}</strong><span>第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
       })
       .join("");
     $("#collection-dialog").classList.toggle("detail-open", detailOpen);
@@ -152,7 +145,6 @@ export function createCollectionView(getSave) {
       const currentPage = cards.filter((card) => !card.hidden);
       if (!currentPage.some((card) => card.dataset.stool === focusedId)) {
         focusedId = currentPage[0]?.dataset.stool;
-        individualIndex = 0;
       }
     }
     $$("[data-stool]").forEach((button) => {
@@ -162,13 +154,12 @@ export function createCollectionView(getSave) {
     });
     renderDetail();
     $("#collection-summary").textContent =
-      `畅快 ${save.total} 次 · ${discovered.size} / ${specimenBlueprints.length} 种便便 · ${individuals.length} 个独立个体`;
+      `畅快 ${save.total} 次 · ${discovered.size} / ${specimenBlueprints.length} 种便便 · 保留 ${individuals.length} 个独立个体`;
   }
   $("#collection-preview-all").addEventListener("change", (event) => {
     previewAll = event.target.checked;
     if (detailOpen && !previewAll)
-      detailOpen = getSave().individuals.some(entry => entry.specimenId === focusedId);
-    individualIndex = 0;
+      detailOpen = getSave().discoveredSpecimens.includes(focusedId);
     detailPanel = "art";
     render();
   });
@@ -176,11 +167,8 @@ export function createCollectionView(getSave) {
     const button = event.target.closest("[data-stool]");
     if (!button) return;
     focusedId = button.dataset.stool;
-    individualIndex = 0;
     detailPanel = "art";
-    detailOpen = previewAll || getSave().individuals.some(
-      (entry) => entry.specimenId === focusedId,
-    );
+    detailOpen = previewAll || getSave().discoveredSpecimens.includes(focusedId);
     render();
     if (detailOpen) $("#collection-back").focus({ preventScroll: true });
   });
@@ -190,7 +178,6 @@ export function createCollectionView(getSave) {
     filter = button.dataset.typeFilter;
     page = 0;
     focusedId = null;
-    individualIndex = 0;
     render();
   });
   $("#collection-prev").addEventListener("click", () => {
@@ -203,10 +190,8 @@ export function createCollectionView(getSave) {
   });
   $("#collection-detail").addEventListener("click", (event) => {
     const tab = event.target.closest("[data-detail-panel]");
-    if (tab) detailPanel = tab.dataset.detailPanel;
-    else if (event.target.closest("[data-individual-prev]")) individualIndex--;
-    else if (event.target.closest("[data-individual-next]")) individualIndex++;
-    else return;
+    if (!tab) return;
+    detailPanel = tab.dataset.detailPanel;
     renderDetail();
   });
   $("#collection-back").addEventListener("click", () => {

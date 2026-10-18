@@ -197,6 +197,8 @@ export function settleSession(save, now = Date.now()) {
     return null;
   if (
     session.id === save.lastSettledSessionId ||
+    // Evicting a snapshot must not make an older completed round settle again.
+    (save.lastSettledAt != null && session.endsAt <= save.lastSettledAt) ||
     save.individuals?.some((entry) => entry.id === session.id)
   ) {
     save.session = null;
@@ -208,6 +210,7 @@ export function settleSession(save, now = Date.now()) {
   const unlockedFoods = recordMeal(save, session.foodIds);
   const unlockedToilets = recordToiletUnlocks(save);
   save.lastSettledSessionId = session.id;
+  save.lastSettledAt = session.endsAt;
   save.session = null;
   return { session, ...discovery, individual, unlockedFoods, unlockedToilets };
 }
