@@ -29,8 +29,9 @@ const onlyMarks = process.argv.includes("--marks-only");
 const onlyType = Number(
   process.argv.find((arg) => arg.startsWith("--type="))?.split("=")[1],
 );
-// Six type-7 concepts are stored in a dedicated raster atlas, not renderer PNG triplets.
-const atlasArtIds = new Set([
+// Six reference-led type-7 sprites have no generated PNG triplets.
+// The five other reference overrides keep their native layers as fallbacks.
+const referenceOnlyIds = new Set([
   "enoki-jet", "corn-cannon", "golden-juice",
   "rainbow-falls", "glitter-galaxy", "ink-fountain",
 ]);
@@ -49,7 +50,7 @@ const chosen = prototype
         "rainbow",
       ].includes(item.id),
     )
-  : characters.filter((item) => !atlasArtIds.has(item.id));
+  : characters.filter((item) => !referenceOnlyIds.has(item.id));
 let rendered = 0;
 for (const [index, item] of characters.entries()) {
   if (!chosen.includes(item)) continue;

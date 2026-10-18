@@ -17,13 +17,13 @@ const candidates = [
   ["glitter-galaxy", {...base,drinkId:"ink-tonic",additives:["glitter"]}],
   ["ink-fountain", {...base,drinkId:"ink-tonic"}],
 ];
-test("six new type-7 collectible definitions have fixed physical structure and dedicated atlas art", () => {
+test("six new type-7 collectible definitions have fixed physical structure and independent transparent sprites", () => {
   for (const [id] of candidates) {
     const character=characterById[id], bp=specimenBlueprintById[id+":7"];
     assert.ok(character && bp,id);
     assert.deepEqual(character.types,[7]);
     assert.equal(classifySpecimen(bp),7);
-    assert.match(characterSvg(character,false,7),/water-type-seven-atlas\.webp/);
+    assert.ok(characterSvg(character,false,7).includes(`/assets/stools/reference-v2/${id}.png`));
     assert.equal(characterSvg(character,true,7),mysterySvg());
   }
   assert.ok(rareRevealTheme(characterById["golden-juice"]));

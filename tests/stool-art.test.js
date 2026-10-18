@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { characters } from "../src/content/stools.js";
+import { referenceStoolAssets } from "../src/content/stool-art-assets.js";
 import {
   characterSvg,
   mysterySvg,
@@ -17,30 +18,32 @@ function assertPng(name) {
   assert.equal(bytes.readUInt32BE(20), 320);
   assert.ok(bytes.length > 300, `${name} is unexpectedly empty`);
 }
-const waterAtlasIds = new Set([
+const referenceOnlyIds = new Set([
   "enoki-jet", "corn-cannon", "golden-juice",
   "rainbow-falls", "glitter-galaxy", "ink-fountain",
 ]);
-test("all 56 collectible species have dedicated artwork (50 PNG, six atlas crops)", () => {
-  const atlas = new URL("../assets/stools/water-type-seven-atlas.webp", import.meta.url);
-  assert.ok(existsSync(atlas), "water type-7 atlas is missing");
-  assert.equal(readFileSync(atlas).subarray(0, 4).toString("ascii"), "RIFF");
+test("all 56 species resolve to local PNG artwork, with high-resolution alpha for reference sprites", () => {
   let forms = 0;
   for (const item of characters)
     for (const type of item.types) {
-      if (waterAtlasIds.has(item.id)) {
-        assert.match(characterSvg(item, false, type), /water-type-seven-atlas\.webp/);
-        forms++;
-        continue;
-      }
-      assertPng(`${item.id}-${type}`);
-      assertPng(`${item.id}-${type}-decor`);
-      assertPng(`${item.id}-${type}-enoki`);
       const markup = characterSvg(item, false, type);
-      assert.match(
-        markup,
-        new RegExp(`/assets/stools/${item.id}-${type}\\.png`),
-      );
+      const reference = referenceStoolAssets[item.id];
+      if (reference) {
+        const bytes = readFileSync(new URL(`..${reference}`, import.meta.url));
+        assert.equal(bytes.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+        assert.ok(bytes.readUInt32BE(16) >= 1024, item.id);
+        assert.ok(bytes.readUInt32BE(20) >= 1024, item.id);
+        assert.equal(bytes[25], 6, `${item.id} must have an alpha channel`);
+        assert.ok(markup.includes(reference), item.id);
+        assert.ok(!markup.includes("water-type-seven-atlas"));
+      }
+      if (!referenceOnlyIds.has(item.id)) {
+        assertPng(`${item.id}-${type}`);
+        assertPng(`${item.id}-${type}-decor`);
+        assertPng(`${item.id}-${type}-enoki`);
+        if (!reference)
+          assert.match(markup, new RegExp(`/assets/stools/${item.id}-${type}\\.png`));
+      }
       forms++;
     }
   assert.equal(forms, 56);
@@ -55,6 +58,18 @@ test("all 56 collectible species have dedicated artwork (50 PNG, six atlas crops
     assertPng(`type-${type}-enoki`);
     assert.match(bristolSvg(type), new RegExp(`type-${type}\\.png`));
   }
+});
+test("reference sprites retain clipped additive layers, drink tint and isolated mark masks", () => {
+  const spiral = characters.find(item => item.id === "spiral");
+  const appearance = { grain: 1, porosity: 1, cohesion: 4, elongation: 4, colorStrength: 7, decorations: ["glitter"] };
+  const first = characterSvg(spiral, false, 4, "berry", ["enoki"], appearance);
+  const second = characterSvg(spiral, false, 4, "berry", ["enoki"], appearance);
+  assert.match(first, /feColorMatrix type="saturate"/);
+  assert.match(first, /data-decoration="glitter"/);
+  assert.match(first, /type-4-enoki\.png/);
+  assert.match(first, /mask-type:alpha/);
+  const ids = markup => [...markup.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+  assert.ok(ids(first).every(id => !ids(second).includes(id)), "simultaneous cards must not share mask IDs");
 });
 test("locked art is one anonymous silhouette with no name, material, palette or asset references", () => {
   const locked = characters.map((item) => characterSvg(item, true));

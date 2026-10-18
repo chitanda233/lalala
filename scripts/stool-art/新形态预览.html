@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>新形态 · 图片校样</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:32px; background:#f5f2ea; color:#343b32; font:15px/1.5 system-ui,sans-serif; }
+  header, main { max-width:1060px; margin:auto; }
+  h1 { font-size:28px; margin:0 0 6px; letter-spacing:.02em; }
+  header p { margin:0 0 20px; color:#647060; }
+  nav { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:26px; }
+  button, select, a { font:inherit; color:inherit; }
+  button, select { border:1px solid #d6dccd; padding:9px 14px; border-radius:12px; background:#fffdf8; cursor:pointer; }
+  nav button[aria-pressed="true"] { background:#3e5844; border-color:#3e5844; color:white; }
+  nav label { margin-left:auto; }
+  .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+  article { background:#fffdf8; border:1px solid #e0e3d6; border-radius:20px; overflow:hidden; }
+  .art { display:block; width:100%; padding:12px; border:0; border-radius:0; background:var(--art-bg,#fffdf8); }
+  .art svg { display:block; width:100%; height:auto; aspect-ratio:1; }
+  .caption { padding:0 18px 18px; }
+  strong { display:block; font-size:18px; margin-bottom:6px; }
+  .type { font-size:12px; color:#687662; margin-bottom:5px; }
+  .note { font-size:14px; min-height:42px; color:#56604f; }
+  .recipe { border-top:1px solid #eeeadd; margin-top:12px; padding-top:10px; font-size:12px; color:#687662; }
+  .empty { grid-column:1/-1; }
+  dialog { border:1px solid #d6dccd; border-radius:22px; max-width:min(650px,94vw); padding:20px; background:#fffdf8; color:#343b32; }
+  dialog::backdrop { background:#1b251bb3; }
+  dialog .large { background:var(--art-bg,#fffdf8); border-radius:16px; }
+  dialog svg { width:100%; display:block; max-height:62vh; }
+  dialog h2 { margin:10px 0 8px; }
+  dialog p { margin:5px 0 14px; }
+  .dialog-actions { display:flex; justify-content:space-between; gap:8px; }
+  @media(max-width:700px) { body { padding:18px; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } nav label { margin-left:0; } .caption { padding:0 12px 14px; } strong { font-size:16px; } }
+</style>
+<header>
+  <h1>新形态 · 图片校样</h1>
+  <p id="intro">透明底、独立轮廓。点击图片放大，可切换背景检查边缘。</p>
+  <nav aria-label="预览分组">
+    <button data-group="water" aria-pressed="true">第 7 型重点款</button>
+    <button data-group="structure" aria-pressed="false">基础形态</button>
+    <button data-group="material" aria-pressed="false">特殊材质</button>
+    <button data-group="all" aria-pressed="false">全部 56 款</button>
+    <label for="background">底色</label><select id="background"><option value="#fffdf8">暖白</option><option value="#ffffff">纯白</option><option value="#303b40">深灰</option><option value="checker">透明格</option></select>
+  </nav>
+</header>
+<main class="grid"></main>
+<dialog aria-labelledby="detail-title"><div class="large"></div><h2 id="detail-title"></h2><p id="detail-note"></p><div class="dialog-actions"><button id="previous">上一张</button><button id="close">关闭大图</button><button id="next">下一张</button></div></dialog>
+<script type="module">
+  import { characters } from '../../src/content/specimens.js';
+  import { characterSvg } from '../../src/ui/artwork/stools.js';
+  import { referenceStoolAssets } from '../../src/content/stool-art-assets.js';
+  import { stoolRecipeByCharacterId } from '../../src/content/stool-recipes.js';
+  import { foods } from '../../src/content/foods.js';
+  import { drinks } from '../../src/content/drinks.js';
+  const groups = {
+    water:['corn-cannon','golden-juice','rainbow-falls','glitter-galaxy','ink-fountain','enoki-jet'],
+    structure:['pancake','bubbly','jet','classic','stacked-stones','cracked','soft-pillows','mashed-potato','spiral'],
+    material:['gold','jelly','meteor','stone-tower'],
+    all:characters.map(item=>item.id),
+  };
+  const notes = {
+    'corn-cannon':'薄液摊里嵌入黄色玉米粒，保留不规则液体边缘。',
+    'golden-juice':'整片液体变成黄金，卷起薄液片并向右拖出流动尾部。',
+    'rainbow-falls':'空心水冠和拉高的液指，虹彩沿曲面连续流动。',
+    'glitter-galaxy':'低矮深紫黑液面、折叠液片与细碎银紫闪光。',
+    'ink-fountain':'细长墨色主水柱、回落侧流和脱离主体的飞滴。',
+    'enoki-jet':'定向扇形液片，细白金针菇丝沿流动方向展开。',
+    pancake:'静止的一薄摊水样液体，周围分布独立溅滴。',
+    bubbly:'宽薄液裙、空心涟漪和中央悬空落滴。',
+    jet:'从一个出射点张开液片，拉伸液指与飞滴形成喷射压力感。',
+    classic:'连续成形的光滑弯条，粗细自然过渡。',
+    'stacked-stones':'不等大的结块连成短条，凹谷保留连接关系。',
+    cracked:'整体连续成条，浅裂纹形成表面结构。',
+    'soft-pillows':'四块完整闭合的小软块，块与块之间留白。',
+    'mashed-potato':'厚心塌落、薄边抹开，碎瓣相连成糊。',
+    spiral:'一条连续卷起的饱满螺旋，圈层清楚。',
+    gold:'完整实心金卷，以大块金属反射表现黄金。',
+    jelly:'分离的青柠果冻软块，内部散布细闪。',
+    meteor:'六颗独立不规则陨石，深色矿面与金银反光。',
+    'stone-tower':'六块不等大的深色岩石堆叠，保留平衡关系。',
+  };
+  const byId=Object.fromEntries(characters.map(item=>[item.id,item]));
+  const foodNames=Object.fromEntries(foods.map(item=>[item.id,item.name]));
+  const drinkNames=Object.fromEntries(drinks.map(item=>[item.id,item.name]));
+  const forceNames={low:'轻力度',medium:'中等力度',high:'强力度'};
+  const recipeText=id=>{
+    const recipe=stoolRecipeByCharacterId[id];
+    return recipe ? `${recipe.foodIds.map(id=>foodNames[id]).join('＋')} ＋ ${drinkNames[recipe.drinkId]} · ${forceNames[recipe.forceZone]}` : '稀有款 · 每轮均可进入稀有抽取';
+  };
+  let shown=groups.water, selected=0;
+  const dialog=document.querySelector('dialog');
+  function render(group) {
+    shown=groups[group];
+    document.querySelectorAll('[data-group]').forEach(button=>button.setAttribute('aria-pressed',button.dataset.group===group));
+    document.querySelector('main').innerHTML=shown.map(id=>{
+      const item=byId[id];
+      return `<article><button class="art" data-id="${id}" aria-label="放大${item.name}">${characterSvg(item)}</button><div class="caption"><div class="type">第 ${item.homeType} 型 · ${item.material}</div><strong>${item.name}</strong><div class="note">${notes[id]||item.description}</div><div class="recipe">${recipeText(id)}</div></div></article>`;
+    }).join('');
+    window.previewReady=true;
+  }
+  function openDetail(index) {
+    selected=(index+shown.length)%shown.length;
+    const id=shown[selected], item=byId[id];
+    dialog.querySelector('.large').innerHTML=characterSvg(item);
+    document.querySelector('#detail-title').textContent=`${item.name} · 第 ${item.homeType} 型`;
+    document.querySelector('#detail-note').textContent=notes[id]||item.description;
+    if(!dialog.open) dialog.showModal();
+  }
+  document.querySelectorAll('[data-group]').forEach(button=>button.addEventListener('click',()=>render(button.dataset.group)));
+  document.querySelector('main').addEventListener('click',event=>{
+    const button=event.target.closest('[data-id]');
+    if(button) openDetail(shown.indexOf(button.dataset.id));
+  });
+  document.querySelector('#previous').onclick=()=>openDetail(selected-1);
+  document.querySelector('#next').onclick=()=>openDetail(selected+1);
+  document.querySelector('#close').onclick=()=>dialog.close();
+  document.querySelector('#background').onchange=event=>{
+    document.documentElement.style.setProperty('--art-bg',event.target.value==='checker' ? 'repeating-conic-gradient(#f4f4f4 0 25%,#e1e3e0 0 50%) 0 0 / 20px 20px' : event.target.value);
+  };
+  document.querySelector('#intro').textContent=`${Object.keys(referenceStoolAssets).length} 张参考图处理，其他款统一光照与材质。点击图片放大，可切换背景检查透明边缘。`;
+  render('water');
+</script>
+</html>

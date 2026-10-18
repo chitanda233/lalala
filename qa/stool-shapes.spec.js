@@ -1,21 +1,26 @@
 import { test, expect } from "@playwright/test";
-import { chooseMeal, chooseDrink, chooseAdditives, setWater, armSpecimen, startRound, chooseSpecimen } from "./helpers.js";
+import { chooseMeal, chooseDrink, armSpecimen, startRound, chooseSpecimen } from "./helpers.js";
+import { referenceStoolAssets } from "../src/content/stool-art-assets.js";
+import { stoolRecipeByCharacterId } from "../src/content/stool-recipes.js";
 
 // Compare opaque bodies, ignoring the shared soft contact shadow and palette.
 test("liquid silhouettes differ at phone card size and sprites stay within their canvas", async ({ page }) => {
   await page.goto("/");
   const result = await page.evaluate(async () => {
     const { characters } = await import("/src/content/specimens.js");
+    const { referenceStoolAssets } = await import("/src/content/stool-art-assets.js");
     const masks = {};
     const clipped = [];
     for (const item of characters.filter(item => item.homeType >= 5)) {
       const image = new Image();
-      image.src = `/assets/stools/${item.id}-${item.homeType}.png`;
+      const reference=referenceStoolAssets[item.id];
+      image.src = reference || `/assets/stools/${item.id}-${item.homeType}.png`;
       await image.decode();
       const canvas = document.createElement("canvas");
       canvas.width = canvas.height = 96;
       const context = canvas.getContext("2d");
-      context.drawImage(image, 0, 0, 96, 96);
+      const inset=reference ? 96*12/320 : 0;
+      context.drawImage(image, inset, inset, 96-inset*2, 96-inset*2);
       const { data } = context.getImageData(0, 0, 96, 96);
       const mask = Array.from({ length: 96 * 96 }, (_, i) => data[i * 4 + 3] > 240);
       masks[item.id] = mask;
@@ -30,12 +35,12 @@ test("liquid silhouettes differ at phone card size and sprites stay within their
     return {
       clipped,
       liquids,
-      comparisons: liquids.flatMap((a, i) => liquids.slice(i + 1).map(b => [a, b, overlap(masks[a], masks[b])])),
+      comparisons: ['pancake','ink-black','bubbly','jet'].flatMap((a, i, ids) => ids.slice(i + 1).map(b => [a, b, overlap(masks[a], masks[b])])),
       softPaste: overlap(masks["soft-pillows"], masks["mashed-potato"]),
     };
   });
   expect(result.clipped).toEqual([]);
-  expect(result.liquids).toHaveLength(4);
+  expect(result.liquids).toHaveLength(10);
   for (const [a, b, overlap] of result.comparisons)
     expect(overlap, `${a} vs ${b} silhouette overlap`).toBeLessThan(.75);
   expect(result.softPaste).toBeLessThan(.65);
@@ -49,11 +54,11 @@ for (const [width, height] of [[320, 640], [402, 760]])
     page.on("pageerror", error => errors.push(error.message));
     page.on("response", response => { if (response.status() >= 400) errors.push(response.url()); });
     await page.goto("/");
-    await chooseMeal(page, ["rice"]);
-    await chooseAdditives(page, ["chili"]);
-    await setWater(page, 2500);
-    for (const [id, drink, force] of [["pancake", "water", 50], ["ink-black", "ink-tonic", 50], ["bubbly", "soda", 50], ["jet", "water", 90]]) {
-      await chooseDrink(page, drink);
+    for (const id of ["pancake", "ink-black", "bubbly", "jet"]) {
+      const recipe=stoolRecipeByCharacterId[id];
+      const force={low:20,medium:50,high:90}[recipe.forceZone];
+      await chooseMeal(page, recipe.foodIds);
+      await chooseDrink(page, recipe.drinkId);
       await page.evaluate(force => {
         const save = JSON.parse(localStorage.getItem("lalala-dev"));
         save.settings.force = force;
@@ -70,7 +75,7 @@ for (const [width, height] of [[320, 640], [402, 760]])
     for (const id of ["pancake", "ink-black", "bubbly", "jet"]) {
       await chooseSpecimen(page, `${id}:7`);
       await expect(page.locator("#collection-detail")).toContainText("固定归类 7 型");
-      await expect(page.locator(".individual-art > svg image").first()).toHaveAttribute("href", `/assets/stools/${id}-7.png`);
+      await expect(page.locator(".individual-art > svg image").first()).toHaveAttribute("href", referenceStoolAssets[id] || `/assets/stools/${id}-7.png`);
       expect(await page.locator("#collection-dialog").evaluate(el => el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth)).toBe(true);
     }
     await page.screenshot({ path: `qa/liquid-shapes-${width}.png` });

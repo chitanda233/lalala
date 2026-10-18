@@ -37,6 +37,11 @@ float primitive(vec3 p,vec4 a,vec4 b){
 }
 float scene(vec3 p){
  p.y/=vertical;
+ // Gentle organic contour changes keep particles and pillows from looking
+ // like perfect primitives, while preserving the gaps between soft pieces.
+ if(material==0 && (stoolType==1 || stoolType==2 || stoolType==5)){
+  p+=sin(p.yzx*15.+sin(p.zxy*7.)+seed)*.009;
+ }
  float d=10.;for(int i=0;i<128;i++){if(i>=count)break;d=smin(d,primitive(p,starts[i],ends[i]),blending);}
  if(pattern==8&&stoolType!=7){
    vec3 hole=vec3(.31,.34,.18);d=max(d,-(length(p-hole)-.105));
@@ -58,20 +63,26 @@ vec3 rainbow(float t){
 void main(){
  vec3 ro=vec3(2.9,2.5,3.6),target=vec3(0.,.43,0.);
  vec3 forward=normalize(target-ro),right=normalize(cross(forward,vec3(0.,1.,0.))),up=cross(right,forward);
- vec3 rd=normalize(forward*4.1+right*uv.x*1.04+up*uv.y*1.04);
+ vec3 rd=normalize(forward*5.0+right*uv.x*1.04+up*uv.y*1.04);
  float t=2.7,d=1.;bool hit=false;
  for(int i=0;i<220;i++){vec3 p=ro+rd*t;d=scene(p);if(d<.0012){hit=true;break;}t+=d*.82;if(t>7.)break;}
  if(!hit){
   if(pass==1){pixel=vec4(0.);return;}
   float ground=-ro.y/rd.y;vec3 p=ro+rd*ground;
-  float a=exp(-pow(p.x/.88,2.)-pow(p.z/.65,2.))*.18;
+  float a=exp(-pow(p.x/.88,2.)-pow(p.z/.65,2.))*.11;
   pixel=vec4(vec3(.26,.29,.24),a);return;
  }
  vec3 p=ro+rd*t,n=normalAt(p);float ao=occlusion(p,n),shade=shadowAt(p+n*.008);
  vec3 view=-rd,halfway=normalize(KEY+view);
- float diffuse=.34+.45*max(dot(n,KEY),0.)*shade+.12*max(dot(n,normalize(vec3(.6,.35,-.4))),0.)+.07*max(n.y,0.);
- float spec=pow(max(dot(n,halfway),0.),38.)*.14+pow(max(dot(n,halfway),0.),9.)*.035;
- float lum=clamp(diffuse*ao+spec,.12,1.);
+ float diffuse=.24+.49*max(dot(n,KEY),0.)*shade+.14*max(dot(n,normalize(vec3(.6,.35,-.4))),0.)+.06*max(n.y,0.);
+ float facing=max(dot(n,view),0.);
+ float sheen=stoolType==6?.35:stoolType==1?.60:1.;
+ float spec=(pow(max(dot(n,halfway),0.),72.)*.42+pow(max(dot(n,halfway),0.),15.)*.14)*sheen;
+ // Two broad studio reflections echo the reference images' polished resin.
+ vec3 reflected=reflect(rd,n);
+ float panel=exp(-pow((reflected.x+.38)*5.,2.)-pow((reflected.y-.55)*2.6,2.));
+ float rim=pow(1.-facing,3.)*.10;
+ float lum=clamp(diffuse*ao+spec+panel*.12*sheen+rim,.10,1.);
  vec3 color=vec3(lum);float alpha=1.;
  if(material==1){
    vec3 e=reflect(rd,n);float broad=pow(max(dot(e,normalize(vec3(-.3,.7,1.))),0.),5.);float line=exp(-pow((e.y-.24)*7.,2.));
@@ -103,8 +114,8 @@ void main(){
  }
  // Liquid gets a broad clean reflection; paste keeps a soft, subdued finish.
  if(stoolType==7&&material==0){
-   float wet=pow(max(dot(n,halfway),0.),64.)*.30;
-   color=vec3(lum*.91+wet+.035);
+   float wet=pow(max(dot(n,halfway),0.),96.)*.40;
+   color=vec3(lum*.90+wet+panel*.14+.015);
  }
  if(pattern==11||stoolType==3){float groove=pow(max(0.,cos(p.x*23.+sin(p.z*15.)*.7)),28.)*smoothstep(.08,.22,p.y);color*=1.-groove*.27;}
  if(pattern==6&&material==0){float wave=sin(p.x*25.+p.z*5.+sin(p.y*5.)*2.);color*=1.-smoothstep(.88,.97,wave)*.14;}

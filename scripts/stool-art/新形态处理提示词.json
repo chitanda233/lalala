@@ -1,0 +1,207 @@
+{
+  "tool": "image_gen.imagegen",
+  "mode": "built-in edit; transparent_background=true",
+  "date": "2026-10-18",
+  "items": [
+    {
+      "id": "corn-cannon",
+      "name": "玉米机关枪",
+      "source": "saved-image-file_00000000ca1c8206aa7a342d36b854a2.jpg",
+      "references": [
+        "saved-image-file_00000000ca1c8206aa7a342d36b854a2.jpg"
+      ],
+      "output": "assets/stools/reference-v2/corn-cannon.png",
+      "prompt": "Use case: background-extraction / precise-object-edit. Asset type: a single high-resolution transparent PNG sprite for a whimsical collectible stool game. The referenced image is the EDIT TARGET, not merely a style suggestion. Preserve the original object's exact broad, irregular flattened liquid-puddle silhouette, caramel reddish-brown color, five visibly yellow corn kernels, their positions, surface folds, lighting direction, and wet glossy material. Cleanly remove the white background and give actual alpha transparency. Improve clarity and simplify only the fine fingerprint-like noise into smooth premium 3D toy-resin surfaces while retaining the existing liquid folds and low flat profile. Keep the object in near top-down view with a small amount of thickness, centered at about 82% canvas coverage with comfortable padding, all edges intact. No pedestal, no toilet, no face, no labels, no watermark, no frame, no new spiral or vertical form. Do not reinterpret it as solid stool or a generic splash. Match the source faithfully. Deliver exactly one sprite."
+    },
+    {
+      "id": "golden-juice",
+      "name": "黄金汁",
+      "source": "saved-image-file_000000000198820690cf6e9f6c94ef34.jpg",
+      "references": [
+        "saved-image-file_000000000198820690cf6e9f6c94ef34.jpg"
+      ],
+      "output": "assets/stools/reference-v2/golden-juice.png",
+      "prompt": "Use case: background-extraction / precise-object-edit. Asset type: one high-resolution transparent PNG collectible game sprite. The referenced image is the EDIT TARGET; faithfully process that exact artwork. Preserve the exact low horizontal puddle, the flowing long right-hand tongue, the central upward golden liquid sheet and the few suspended gold droplets. Keep the entire object as polished liquid gold with rich reflected gold highlights, not brown liquid with gold flakes. Preserve all the beautiful broad reflections and recognizable silhouette. Do not turn it into a circular crown, spiral, tower or coins. Cleanly remove the white background with genuine alpha transparency. Keep the full object and every significant splash inside a square canvas, centred with about 8% clear padding around the outermost visible edges. Preserve the original high-quality stylized 3D product-render language; clean toy resin / liquid metal, smooth broad highlights, no grime or biological microtexture. No text, frame, label, watermark, face, extra objects, floor or background scene. Exactly one object, not a contact sheet."
+    },
+    {
+      "id": "rainbow-falls",
+      "name": "彩虹瀑布",
+      "source": "saved-image-file_0000000086488206b52b6ecdf6d15032.jpg",
+      "references": [
+        "saved-image-file_0000000086488206b52b6ecdf6d15032.jpg"
+      ],
+      "output": "assets/stools/reference-v2/rainbow-falls.png",
+      "prompt": "Use case: background-extraction / precise-object-edit. Asset type: one high-resolution transparent PNG collectible game sprite. The referenced image is the EDIT TARGET; faithfully process that exact artwork. Preserve the exact single hollow liquid crown, tall central-back tapered splash, surrounding fingers with rounded droplets, and connected low oval puddle. Preserve the continuous pearlescent rainbow reflections (cyan, pink, lilac, pale yellow) on the curved liquid sheet. Keep it as flowing liquid, not an opaque solid crown or a spiral. Keep the source proportions and open concave centre. Cleanly remove the white background with genuine alpha transparency. Keep the full object and every significant splash inside a square canvas, centred with about 8% clear padding around the outermost visible edges. Preserve the original high-quality stylized 3D product-render language; clean toy resin / liquid metal, smooth broad highlights, no grime or biological microtexture. No text, frame, label, watermark, face, extra objects, floor or background scene. Exactly one object, not a contact sheet."
+    },
+    {
+      "id": "glitter-galaxy",
+      "name": "闪粉银河",
+      "source": "saved-image-file_00000000dd708206873433f4c7b4a3c8.jpg",
+      "references": [
+        "saved-image-file_00000000dd708206873433f4c7b4a3c8.jpg"
+      ],
+      "output": "assets/stools/reference-v2/glitter-galaxy.png",
+      "prompt": "Use case: background-extraction / precise-object-edit. Asset type: one high-resolution transparent PNG collectible game sprite. The referenced image is the EDIT TARGET; faithfully process that exact artwork. Preserve the exact broad low asymmetrical black liquid sheet, its folded flowing contours, the one slender upward liquid finger near the back centre and the purple glass-like highlights. Add only a restrained scattering of tiny embedded silver and pale lilac glitter specks so it reads as a miniature galaxy within a dark liquid surface. Keep the predominantly black interior and clear violet rim reflections, not a bright purple mound, starry sky scene, galaxy disk or spiral. Cleanly remove the white background with genuine alpha transparency. Keep the full object and every significant splash inside a square canvas, centred with about 8% clear padding around the outermost visible edges. Preserve the original high-quality stylized 3D product-render language; clean toy resin / liquid metal, smooth broad highlights, no grime or biological microtexture. No text, frame, label, watermark, face, extra objects, floor or background scene. Exactly one object, not a contact sheet."
+    },
+    {
+      "id": "ink-fountain",
+      "name": "墨汁喷泉",
+      "source": "saved-image-file_0000000037808206b2a9a463c8898718.jpg",
+      "references": [
+        "saved-image-file_0000000037808206b2a9a463c8898718.jpg"
+      ],
+      "output": "assets/stools/reference-v2/ink-fountain.png",
+      "prompt": "Use case: background-extraction / precise-object-edit. Asset type: one high-resolution transparent PNG collectible game sprite. The referenced image is the EDIT TARGET; faithfully process that exact artwork. Preserve the reference's vertical black liquid fountain, high flowing central spout, curved side streams and many detached falling ink droplets. Make the central column visibly fluid, softly curving and glossy rather than a rigid metal pole. Replace the small ground cracks / hard mounting at the very bottom with a shallow connected irregular black liquid puddle. Retain the overall fountain silhouette and dark ink material. No mechanical support, pedestal, pipe, hard rock, human or toilet. Cleanly remove the white background with genuine alpha transparency. Keep the full object and every significant splash inside a square canvas, centred with about 8% clear padding around the outermost visible edges. Preserve the original high-quality stylized 3D product-render language; clean toy resin / liquid metal, smooth broad highlights, no grime or biological microtexture. No text, frame, label, watermark, face, extra objects, floor or background scene. Exactly one object, not a contact sheet."
+    },
+    {
+      "id": "enoki-jet",
+      "name": "明天见喷射",
+      "source": "assets/stools/reference-v2/corn-cannon.png",
+      "references": [
+        "assets/stools/reference-v2/corn-cannon.png"
+      ],
+      "output": "assets/stools/reference-v2/enoki-jet.png",
+      "prompt": "Use case: style-transfer / precise-object-edit. Use the reference as the liquid material and clean stylized 3D direction. Create one companion costume of a low caramel-brown liquid spray with an asymmetric directional fan silhouette and fine ivory enoki mushroom strands following its flow. Replace all yellow corn kernels with several thin, curved pale ivory strands and a few tiny rounded mushroom caps embedded in the liquid, readable at phone size. One side of the liquid sheet is narrow and trailing; the other fans out into two or three rounded thin liquid fingers and separated droplets. It must be clearly liquid and low, not solid rope, not an upright mushroom bouquet and not a fountain. Preserve the reference's rich warm brown and broad clean glossy highlights. Asset type: ONE standalone high-resolution 3D game sprite, no labels or watermark. Square canvas with genuine transparent alpha background. Centre the full subject, leave about 8% padding around all outer edges, nothing cropped. No solid backdrop, no checkerboard painted into the image, no floor, no frame, no text."
+    },
+    {
+      "id": "spiral",
+      "name": "一气呵成螺旋",
+      "source": "新形态/saved-image-file_00000000ad28820688a52abcd3725f0b.jpg",
+      "references": [
+        "新形态/saved-image-file_00000000ad28820688a52abcd3725f0b.jpg"
+      ],
+      "output": "assets/stools/reference-v2/spiral.png",
+      "prompt": "Use case: background-extraction / style-transfer. The reference is the exact edit target. Preserve its single compact continuous four-turn brown spiral and smoothly tapered tip, broad weighted base, no separate rings. Enlarge the subject within the canvas and remove all white background. Refine it as a premium clean stylized 3D toy-resin collectible, warm caramel / cocoa brown, satin-gloss broad studio highlights and a soft natural self-shadow. Match the polished family language of a collectible liquid-resin sprite, while keeping this one solid, smooth and fully formed. No eyes, no face, no glistening bodily microtexture, no dirt. Asset type: ONE standalone high-resolution 3D game sprite, no labels or watermark. Square canvas with genuine transparent alpha background. Centre the full subject, leave about 8% padding around all outer edges, nothing cropped. No solid backdrop, no checkerboard painted into the image, no floor, no frame, no text."
+    },
+    {
+      "id": "gold",
+      "name": "黄金传说",
+      "source": "新形态/saved-image-file_0000000098b08206b7c79fc81e7ab5e5.jpg",
+      "references": [
+        "新形态/saved-image-file_0000000098b08206b7c79fc81e7ab5e5.jpg"
+      ],
+      "output": "assets/stools/reference-v2/gold.png",
+      "prompt": "Use case: background-extraction / precise-object-edit. This reference is the exact edit target. Preserve its solid polished gold spiral made from one thick continuous tapered tube, all four visible sweeping coil layers, slightly leaning pointed tip and heavy broad base. Cleanly remove the white background and floor. Keep the beautiful liquid-gold-like broad reflections and recognizable coil silhouette. One rich reflective gold collectible, no glitter flakes, no jewels, no crown, no new ornamentation, no eyes or face. Asset type: ONE standalone high-resolution 3D game sprite, no labels or watermark. Square canvas with genuine transparent alpha background. Centre the full subject, leave about 8% padding around all outer edges, nothing cropped. No solid backdrop, no checkerboard painted into the image, no floor, no frame, no text."
+    },
+    {
+      "id": "stone-tower",
+      "name": "荒野平衡石塔",
+      "source": "新形态/Magnetic Rock Stack in a Sparkling Basin.png",
+      "references": [
+        "新形态/Magnetic Rock Stack in a Sparkling Basin.png"
+      ],
+      "output": "assets/stools/reference-v2/stone-tower.png",
+      "prompt": "Use case: background-extraction / precise-object-edit. Extract and polish just the six stacked faceted meteorite rocks and a small number of the existing orbiting rock chips / gold glints. Remove the basin, all water, bathroom, walls, and background completely. Complete the bottom rock into a visible gently flattened base now that the basin is removed. Preserve the six uneven large angular dark grey stones, warm silver-gold mineral highlights and the tall compact silhouette. Use rounded stylized rock facets, high-quality premium game collectible 3D material, a restrained orbit of very fine light, no dense star field. Keep the individual stacked rocks readable, not a smooth poop coil. Asset type: ONE standalone high-resolution 3D game sprite, no labels or watermark. Square canvas with genuine transparent alpha background. Centre the full subject, leave about 8% padding around all outer edges, nothing cropped. No solid backdrop, no checkerboard painted into the image, no floor, no frame, no text."
+    },
+    {
+      "id": "jelly",
+      "name": "Q 弹果冻",
+      "source": "新形态/saved-image-file_00000000fe408206a53f615c666f3b0f.jpg",
+      "references": [
+        "assets/stools/jelly-5.png",
+        "新形态/saved-image-file_00000000fe408206a53f615c666f3b0f.jpg"
+      ],
+      "output": "assets/stools/reference-v2/jelly.png",
+      "prompt": "Use case: style transfer / precise object edit. First reference specifies the arrangement and physical type: THREE SEPARATE soft round pillow-like blobs in a loose triangle with visible empty space between them, one rear blob and two front blobs. Keep this detached type-5 structure; enlarge the group to fill about 80% of the square. Second reference specifies MATERIAL ONLY: fresh lime-green translucent jelly resin with delicate white and pale green fine glitter suspended inside, broad glossy studio reflections, some internal translucency. Make each blob organically slightly flattened and wobbly, not perfect spheres, and not a spiral, no stacking, no liquid puddle. Premium stylized 3D game collectible, clean detailed material, readable at small phone size. One standalone sprite containing the three blobs, true transparent alpha background, no ground, no painted checkerboard, no frame, no text or watermark, no face. Leave about 8% padding around outer silhouette, nothing cropped."
+    },
+    {
+      "id": "meteor",
+      "name": "星尘小陨石",
+      "source": "新形态/Magnetic Meteorite Block Pile.png",
+      "references": [
+        "assets/stools/meteor-1.png",
+        "新形态/Magnetic Meteorite Block Pile.png"
+      ],
+      "output": "assets/stools/reference-v2/meteor.png",
+      "prompt": "Use case: style transfer / precise object edit. First reference specifies the geometry: SIX SEPARATE small hard pebbles loosely scattered, clearly detached with visible empty gaps. Preserve this type-1 particle structure, enlarge the pebble group to occupy about 80% of canvas. Second reference specifies MATERIAL ONLY: irregular angular charcoal meteorite rocks with dark silver mineral facets, warm gold glints in tiny fissures and restrained cool silver highlights. Give each pebble a distinct uneven faceted surface, a few small pits and nuanced rocky material. Add just a few tiny nearby chips and two or three discreet star glints. Do not turn the six pebbles into a stack, tower, pile, spiral or continuous log. No broad luminous orbit, no environment. Match a premium polished stylized 3D game collectible, compact and readable at phone size. One standalone sprite containing six separate pebbles, true transparent alpha background, no ground, no painted checkerboard, no frame, no text or watermark, no face. Leave about 8% padding around outer silhouette, nothing cropped."
+    },
+    {
+      "id": "stacked-stones",
+      "name": "香肠石块串",
+      "source": "新形态/saved-image-file_0000000004e482069f40ed9d23ba3945.jpg",
+      "references": [
+        "新形态/saved-image-file_0000000004e482069f40ed9d23ba3945.jpg",
+        "assets/stools/reference-v2/spiral.png"
+      ],
+      "output": "assets/stools/reference-v2/stacked-stones.png",
+      "prompt": "Use case: style-transfer. First image is the silhouette reference, second is material and lighting reference. Reinterpret the first image's one short horizontal lumpy sausage as a polished stylized resin collectible. Keep 8-10 unequal rounded nodules merged into one continuous oblong cluster, with clear shallow valleys between them, broad uneven knobbly surface. No disconnected pebbles, no spiral, no stacked tower. Remove the photo texture and white background. Premium clean stylized 3D game collectible with rich cocoa/caramel brown, broad soft studio highlights and soft self-shadow, matching the polished brown spiral in the reference family. Not photorealistic excrement: no bodily microtexture, dirt, face or eyes. Square standalone sprite, true transparent alpha background, no ground or solid background, no painted checkerboard, no text, watermark or frame. Centre full object with 8% clear padding, nothing cropped."
+    },
+    {
+      "id": "cracked",
+      "name": "旱地裂纹条",
+      "source": "assets/stools/cracked-3.png",
+      "references": [
+        "assets/stools/cracked-3.png",
+        "assets/stools/reference-v2/spiral.png"
+      ],
+      "output": "assets/stools/reference-v2/cracked.png",
+      "prompt": "Use case: style-transfer. First image is exact silhouette guide: one thick slightly curved horizontal log with rounded ends and 5-6 shallow irregular transverse grooves, continuous body. Second image is rich brown color and resin lighting reference. Enlarge and improve the log into a premium collectible with a coherent gently irregular shallow crack network instead of perfectly parallel stripes. Keep the cracks restrained and clean, slightly satin finish. No chunks, coil, corn or other additions. Premium clean stylized 3D game collectible with rich cocoa/caramel brown, broad soft studio highlights and soft self-shadow, matching the polished brown spiral in the reference family. Not photorealistic excrement: no bodily microtexture, dirt, face or eyes. Square standalone sprite, true transparent alpha background, no ground or solid background, no painted checkerboard, no text, watermark or frame. Centre full object with 8% clear padding, nothing cropped."
+    },
+    {
+      "id": "classic",
+      "name": "顺畅小能手",
+      "source": "新形态/saved-image-file_00000000796c820685b12e4311d232f9.jpg",
+      "references": [
+        "新形态/saved-image-file_00000000796c820685b12e4311d232f9.jpg",
+        "assets/stools/reference-v2/spiral.png"
+      ],
+      "output": "assets/stools/reference-v2/classic.png",
+      "prompt": "Use case: style-transfer / precise-object-edit. First image is curved shape inspiration only, second is material and studio-lighting guide. Make ONE continuous smooth thick cocoa-brown S-curved log with two rounded tapered ends. Similar flowing S outline to first reference, but REMOVE all blue water, all white mushroom strands, all seed particles and colored outline. It is solid, smooth and fully formed, with a soft warm clean resin surface and broad luxurious reflections. Show in a gentle three-quarter view with broad oval tube cross section. No separate objects, no spiral stack or food details. Premium clean stylized 3D game collectible with rich cocoa/caramel brown, broad soft studio highlights and soft self-shadow, matching the polished brown spiral in the reference family. Not photorealistic excrement: no bodily microtexture, dirt, face or eyes. Square standalone sprite, true transparent alpha background, no ground or solid background, no painted checkerboard, no text, watermark or frame. Centre full object with 8% clear padding, nothing cropped."
+    },
+    {
+      "id": "soft-pillows",
+      "name": "软软小枕头",
+      "source": "assets/stools/soft-pillows-5.png",
+      "references": [
+        "assets/stools/soft-pillows-5.png",
+        "assets/stools/reference-v2/spiral.png"
+      ],
+      "output": "assets/stools/reference-v2/soft-pillows.png",
+      "prompt": "Use case: style-transfer. First reference specifies FOUR separate soft pillow lumps in a loose diamond arrangement. Keep visible empty gaps around every piece. Each piece is a gently flattened oval cushion with a fully rounded clean edge, subtly uneven organic outline and smooth intact surface. Second reference specifies polished warm cocoa-brown resin and broad clean studio lighting. Enlarge group to fill around 80% of canvas. No connected base, smears, ragged edges, spiral or liquid, no perfect spheres. Premium clean stylized 3D game collectible with rich cocoa/caramel brown, broad soft studio highlights and soft self-shadow, matching the polished brown spiral in the reference family. Not photorealistic excrement: no bodily microtexture, dirt, face or eyes. Square standalone sprite, true transparent alpha background, no ground or solid background, no painted checkerboard, no text, watermark or frame. Centre full object with 8% clear padding, nothing cropped."
+    },
+    {
+      "id": "mashed-potato",
+      "name": "土豆泥小堆",
+      "source": "assets/stools/mashed-potato-6.png",
+      "references": [
+        "assets/stools/mashed-potato-6.png",
+        "assets/stools/reference-v2/spiral.png"
+      ],
+      "output": "assets/stools/reference-v2/mashed-potato.png",
+      "prompt": "Use case: style-transfer. First reference specifies low collapsed paste silhouette: ONE connected thick soft mound with broad irregular thin spread-out skirt. Improve its sculpted shape: low thick folded centre, soft spatula-like ridges slumping into broad shallow lobes, several torn feathered smears around the irregular perimeter. Clearly soft thick paste, no separate pillow balls, no perfect smooth ellipse, no tall spiral or pointed tip, no splashing droplets. Second reference supplies family-level premium studio resin shading, but this paste should be lighter warm caramel/tan and SATIN instead of wet high gloss. Premium clean stylized 3D game collectible with rich cocoa/caramel brown, broad soft studio highlights and soft self-shadow, matching the polished brown spiral in the reference family. Not photorealistic excrement: no bodily microtexture, dirt, face or eyes. Square standalone sprite, true transparent alpha background, no ground or solid background, no painted checkerboard, no text, watermark or frame. Centre full object with 8% clear padding, nothing cropped."
+    },
+    {
+      "id": "pancake",
+      "name": "摊平小煎饼",
+      "source": "assets/stools/pancake-7.png",
+      "references": [
+        "assets/stools/pancake-7.png",
+        "assets/stools/reference-v2/corn-cannon.png"
+      ],
+      "output": "assets/stools/reference-v2/pancake.png",
+      "prompt": "Use case: style-transfer. First reference is a shape guide only: ONE paper-thin quiet irregular watery puddle, seen from a slightly elevated three-quarter angle, with 6-8 small detached satellite liquid drops around it. Second reference supplies glossy caramel-brown liquid material and studio reflections ONLY. No corn kernels or other solids. The puddle is asymmetrical and nearly flat, has a thin scalloped fluid rim, broad flat reflective surface and two subtle shallow ripple arcs. Entirely liquid with NO central mound, NO coil, no solid chunks, no upright crown. Low horizontal wide silhouette, real liquid meniscus, fine highlights. Premium clean stylized 3D game collectible with rich cocoa/caramel brown, broad soft studio highlights and soft self-shadow, matching the polished brown spiral in the reference family. Not photorealistic excrement: no bodily microtexture, dirt, face or eyes. Square standalone sprite, true transparent alpha background, no ground or solid background, no painted checkerboard, no text, watermark or frame. Centre full object with 8% clear padding, nothing cropped."
+    },
+    {
+      "id": "jet",
+      "name": "喷射战士出击",
+      "source": "assets/stools/jet-7.png",
+      "references": [
+        "assets/stools/jet-7.png",
+        "assets/stools/reference-v2/enoki-jet.png"
+      ],
+      "output": "assets/stools/reference-v2/jet.png",
+      "prompt": "Use case: style-transfer. First reference specifies a high pressure asymmetric directional fan splash, second supplies glossy caramel-brown liquid rendering. One narrow low origin at lower left violently widens into a THIN fluid sheet toward upper right, the far rim curling into 5 tapered liquid fingers. 8-12 separated elongated droplets align outward along the same blast direction, tapering smaller with distance. Give the fluid sheet a few thin open holes, stretched curved edge filaments and 2 lifted curling fluid ribbons so it feels driven by pressure, not a pile or spider. REMOVE all mushroom strands and all kernels from reference 2. No solid chunks, no thick log fingers, no static circular crown, no tall vertical fountain. Entirely liquid with a clean polished surface. Premium clean stylized 3D game collectible with rich cocoa/caramel brown, broad soft studio highlights and soft self-shadow, matching the polished brown spiral in the reference family. Not photorealistic excrement: no bodily microtexture, dirt, face or eyes. Square standalone sprite, true transparent alpha background, no ground or solid background, no painted checkerboard, no text, watermark or frame. Centre full object with 8% clear padding, nothing cropped."
+    },
+    {
+      "id": "bubbly",
+      "name": "咕噜落滴滩",
+      "source": "新形态/saved-image-file_00000000931482069e0b328890584e2b.jpg",
+      "references": [
+        "新形态/saved-image-file_00000000931482069e0b328890584e2b.jpg",
+        "assets/stools/reference-v2/corn-cannon.png"
+      ],
+      "output": "assets/stools/reference-v2/bubbly.png",
+      "prompt": "Use case: style-transfer. First reference is exact structural guide: low brown fluid puddle with a shallow concentric hollow ripple / ring around a depression and ONE suspended teardrop directly above the centre. A few detached tiny drops surround the irregular thin edge. Translate from the drawn original into polished stylized 3D liquid matching second reference's rich glossy caramel-brown shading. No corn kernels, no food solids, no multi-tier mound or spiral, no solid ball in the centre. Keep ripple thin and hollow, liquid skirt broad and flat, central drop separated from surface. Clear fluid reflections and meniscus. Premium clean stylized 3D game collectible with rich cocoa/caramel brown, broad soft studio highlights and soft self-shadow, matching the polished brown spiral in the reference family. Not photorealistic excrement: no bodily microtexture, dirt, face or eyes. Square standalone sprite, true transparent alpha background, no ground or solid background, no painted checkerboard, no text, watermark or frame. Centre full object with 8% clear padding, nothing cropped."
+    }
+  ]
+}
