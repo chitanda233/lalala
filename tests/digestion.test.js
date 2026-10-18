@@ -7,11 +7,11 @@ import { normalizeSelection } from "../src/game/selection.js";
 
 const meal = { foodIds: ["rice", "enoki"], force: 50 };
 
-test("digestion time is saved but does not override an exact food, drink and force recipe", () => {
-  const expected = getOutcomePool({ ...meal, digestionTime: "4" });
-  for (const digestionTime of ["2", "8", "random"])
-    assert.deepEqual(getOutcomePool({ ...meal, digestionTime }), expected);
-  assert.equal(normalizeSelection({ digestionTime: "unknown" }).digestionTime, "4");
+test("digestion changes ordinary physical types and keeps the rare budget fixed", () => {
+  const pools=["2","4","8"].map(digestionTime=>getOutcomePool({...meal,digestionTime}));
+  assert.notDeepEqual(pools[0],pools[2]);
+  for(const pool of pools) assert.ok(Math.abs(pool.filter(e=>e.special).reduce((sum,e)=>sum+e.probability,0)-.02)<1e-12);
+  assert.equal(normalizeSelection({digestionTime:"unknown"}).digestionTime,"4");
 });
 
 test("random preview is the exact equal mixture of all three digestion pools", () => {

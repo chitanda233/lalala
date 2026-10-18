@@ -181,7 +181,7 @@ test("all foods remain reachable without search and follow the available phone h
       await page.locator("#food-next").click();
     else break;
   }
-  expect(new Set(ids).size).toBe(51);
+  expect(new Set(ids).size).toBe(53);
   await page.evaluate(() => {
     Object.assign(window.visualViewport, { height: 650, offsetTop: 24 });
     window.visualViewport.dispatchEvent(new Event("resize"));

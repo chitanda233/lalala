@@ -72,8 +72,8 @@ function markup(outcome) {
     .replaceAll(/<(title|desc)>[\s\S]*?<\/\1>/g, "");
 }
 
-test("all 51 foods expose a complete, validated and editable parameter set", () => {
-  assert.equal(foods.length, 51);
+test("all 53 foods expose a complete, validated and editable parameter set", () => {
+  assert.equal(foods.length, 53);
   assert.equal(foodAttributeFields.length, numericKeys.length);
   assert.deepEqual(
     foodAttributeFields.map((field) => field.key).sort(),
@@ -140,7 +140,7 @@ test("attribute validation rejects incomplete, nonnumeric, out-of-range and unsa
     assert.throws(() => validateFoodAttributes({ ...baseline, pigmentId }));
 });
 
-test("larger food hardness values increase the five-property profile while preserving an exact recipe", () => {
+test("larger food hardness values increase the profile and recheck the fixed recipe physical type", () => {
   let previous = 0;
   for (let softness = 1; softness <= 7; softness++)
     withAttributes({ rice: { softness } }, () => {
@@ -148,8 +148,13 @@ test("larger food hardness values increase the five-property profile while prese
       assert.ok(hardness > previous);
       previous = hardness;
       const forecast = getRecipeForecast(meal);
-      assert.equal(forecast.matchedRecipe.characterId, "classic");
-      assert.ok(Math.abs(forecast.recipeProbability - 0.784) < 1e-12);
+      if (forecast.physicalState.type === 4) {
+        assert.equal(forecast.matchedRecipe.characterId, "classic");
+        assert.ok(Math.abs(forecast.recipeProbability - 0.784) < 1e-12);
+      } else {
+        assert.equal(forecast.matchedRecipe, null);
+        assert.equal(forecast.recipeProbability, 0);
+      }
     });
 });
 
@@ -268,9 +273,9 @@ test("color strength visibly changes a chosen pigment while rare materials retai
       [],
       saturated.appearance,
     );
-    assert.match(paintedGold, /\/assets\/stools\/gold-4\.png/);
-    assert.ok(!/gold-4\.png[^>]*filter=/.test(paintedGold));
-    assert.ok(!/gold-4\.png[^>]*filter=/.test(unpainted));
+    assert.match(paintedGold, /\/assets\/stools\/reference-v2\/gold\.png/);
+    assert.ok(!/gold\.png[^>]*filter=/.test(paintedGold));
+    assert.ok(!/gold\.png[^>]*filter=/.test(unpainted));
   });
 });
 
@@ -303,7 +308,7 @@ test("a food pigment changes its matching collectible color gradually and a null
   for (const outcome of outcomes) assert.equal(outcome.characterId, "garden");
   const tints = outcomes.map(tint);
   assert.equal(tints[0], stoolColors.classic.color);
-  assert.equal(tints[2], stoolColors.garden.color);
+  assert.ok(distance(tints[2], stoolColors.garden.color) < distance(tints[1], stoolColors.garden.color));
   assert.ok(distance(tints[0], tints[2]) > distance(tints[1], tints[2]));
   assert.ok(distance(tints[1], tints[2]) > 0);
   assert.notEqual(markup(outcomes[0]), markup(outcomes[1]));

@@ -17,9 +17,9 @@ const rarityPool = (pool) => pool.filter((entry) => entry.special);
 const rareCharacters = characters.filter((item) => item.rarity === "special");
 const forceFor = { low: 20, medium: 50, high: 90 };
 const inputFor = (recipe, additives = []) => ({
-  foodIds: [...recipe.foodIds], drinkId: recipe.drinkId,
+  ...recipe, foodIds: [...recipe.foodIds], drinkId: recipe.drinkId,
   force: forceFor[recipe.forceZone], additives,
-  water: 1500, digestionTime: "4", toiletId: "standard",
+  toiletId: "standard",
 });
 const base = inputFor(stoolRecipeByCharacterId.classic);
 
@@ -37,7 +37,7 @@ function validPool(pool) {
   }
 }
 
-test("46 ordinary species have unique food/drink/force recipes and all 56 species expose five attributes", () => {
+test("46 ordinary species have unique complete intake/phase recipes and all 56 species expose five attributes", () => {
   const ordinary = characters.filter((item) => item.rarity !== "special");
   assert.equal(ordinary.length, 46);
   assert.equal(rareCharacters.length, 10);
@@ -45,14 +45,14 @@ test("46 ordinary species have unique food/drink/force recipes and all 56 specie
   assert.deepEqual(new Set(stoolRecipes.map((item) => item.characterId)), new Set(ordinary.map((item) => item.id)));
   const combinations = new Set();
   for (const recipe of stoolRecipes) {
-    assert.deepEqual(Object.keys(recipe).sort(), ["characterId", "drinkId", "foodIds", "forceZone"]);
+    assert.deepEqual(Object.keys(recipe).sort(), ["characterId", "digestionTime", "drinkId", "foodIds", "forceZone", "requiredAdditive", "water"]);
     assert.equal(stoolRecipeByCharacterId[recipe.characterId], recipe);
     assert.ok(recipe.foodIds.length >= 1 && recipe.foodIds.length <= 3);
     assert.equal(new Set(recipe.foodIds).size, recipe.foodIds.length);
     assert.ok(recipe.foodIds.every((id) => Object.hasOwn(foodById, id)));
     assert.ok(Object.hasOwn(drinkById, recipe.drinkId));
     assert.ok(Object.hasOwn(forceFor, recipe.forceZone));
-    const key = JSON.stringify([[...recipe.foodIds].sort(), recipe.drinkId, recipe.forceZone]);
+    const key = JSON.stringify([[...recipe.foodIds].sort(), recipe.drinkId, recipe.water, recipe.digestionTime, recipe.forceZone]);
     assert.ok(!combinations.has(key), recipe.characterId);
     combinations.add(key);
   }
@@ -65,23 +65,24 @@ test("46 ordinary species have unique food/drink/force recipes and all 56 specie
 
 test("every exact recipe gets 80% of the nonrare branch, or 100% with probiotic", () => {
   for (const recipe of stoolRecipes) {
-    for (const [additives, conditional, total] of [[[], 0.8, 0.784], [["glitter"], 0.8, 0.784], [["probiotic"], 1, 0.98]]) {
+    const cases = recipe.requiredAdditive ? [[[recipe.requiredAdditive], .8, recipe.requiredAdditive === "gold-leaf" ? .76 : .784]] : [[[], .8, .784], [["glitter"], .8, .784], [["probiotic"], 1, .98]];
+    for (const [additives, conditional, total] of cases) {
       const input = inputFor(recipe, additives);
       const forecast = getRecipeForecast(input);
       assert.equal(forecast.matchedRecipe.characterId, recipe.characterId);
-      close(forecast.rareProbability, 0.02);
+      close(forecast.rareProbability, recipe.requiredAdditive === "gold-leaf" ? .05 : .02);
       close(forecast.recipeConditionalProbability, conditional);
       close(forecast.recipeProbability, total);
       const pool = getOutcomePool(input);
       validPool(pool);
-      close(sum(rarityPool(pool)), 0.02);
+      close(sum(rarityPool(pool)), recipe.requiredAdditive === "gold-leaf" ? .05 : .02);
       const targets = pool.filter((entry) => entry.characterId === recipe.characterId);
       assert.equal(targets.length, 1, "fallback must exclude the fixed target");
       close(targets[0].probability, total, recipe.characterId);
       assert.equal(pool[rareCharacters.length].characterId, recipe.characterId);
       assert.ok(pool.slice(0, rareCharacters.length).every((entry) => entry.special));
       if (conditional === 1) assert.equal(pool.length, rareCharacters.length + 1);
-      else close(sum(pool.slice(rareCharacters.length + 1)), 0.196);
+      else close(sum(pool.slice(rareCharacters.length + 1)), 1 - forecast.rareProbability - total);
     }
   }
 });
@@ -89,7 +90,7 @@ test("every exact recipe gets 80% of the nonrare branch, or 100% with probiotic"
 test("food sets ignore order and duplicates while force endpoints use the three exact zones", () => {
   const endpoints = { low: [0, 33], medium: [34, 66], high: [67, 100] };
   for (const recipe of stoolRecipes) {
-    const input = inputFor(recipe);
+    const input = inputFor(recipe, recipe.requiredAdditive ? [recipe.requiredAdditive] : []);
     const reversed = { ...input, foodIds: [...input.foodIds].reverse() };
     assert.deepEqual(getOutcomePool(input), getOutcomePool(reversed));
     assert.deepEqual(getRecipeForecast(input), getRecipeForecast(reversed));
@@ -147,15 +148,16 @@ test("additives are optional and strictly single select, so probiotic and a boos
   }
 });
 
-test("water, digestion and toilets cannot alter an exact recipe or its rare and target probabilities", () => {
-  const expected = getRecipeForecast(base);
-  for (const change of [{ water: 250 }, { water: 2500 }, { digestionTime: "2" }, { digestionTime: "8" }, { digestionTime: "random" }, { toiletId: "golden" }, { toiletId: "squat" }]) {
-    const forecast = getRecipeForecast({ ...base, ...change });
-    assert.equal(forecast.matchedRecipe.characterId, expected.matchedRecipe.characterId);
-    close(forecast.rareProbability, expected.rareProbability);
-    close(forecast.recipeConditionalProbability, expected.recipeConditionalProbability);
-    close(forecast.recipeProbability, expected.recipeProbability);
-    close(getOutcomePool({ ...base, ...change }).find((entry) => entry.characterId === "classic").probability, expected.recipeProbability);
+test("Drink intake and digestion enter the exact key while toilets do not", () => {
+  for (const change of [{water:250}, {digestionTime:"2"}, {digestionTime:"8"}, {digestionTime:"random"}]) {
+    const forecast=getRecipeForecast({...base,...change});
+    assert.equal(forecast.matchedRecipe,null);
+    close(forecast.rareProbability,.02);
+  }
+  for(const toiletId of ["standard","golden","squat"]) {
+    const forecast=getRecipeForecast({...base,toiletId});
+    assert.equal(forecast.matchedRecipe.characterId,"classic");
+    close(forecast.recipeProbability,.784);
   }
 });
 

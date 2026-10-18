@@ -11,6 +11,8 @@ export function collectEffects(input) {
   const drink = drinkById[selection.drinkId];
   const additive = additiveById[selection.additives[0]];
   const toilet = toiletById[selection.toiletId];
+  const retentionChange = selection.digestionTime === "2" ? 1 : selection.digestionTime === "8" ? -2 : 0;
+  food.residues = food.residues.map(residue => ({ ...residue, retention: Math.max(1, Math.min(7, residue.retention + retentionChange)) })).filter(residue => residue.retention > 1);
   return {
     food,
     tags: [...new Set([...meal.flatMap(item => item.tags), ...drink.tags, ...(additive?.tags || [])])],
@@ -19,5 +21,8 @@ export function collectEffects(input) {
       (toilet.effects.smoothnessBonus || 0),
     outcomeMarks: normalizeMarks(meal.some(item => item.id === "enoki" && item.attributes.retention > 1) ? ["enoki"] : []),
     decorations: additive?.decoration ? [additive.decoration] : [],
+    retentionChange,
+    drinkPorosity: (drink.porosity || 0) * Math.min(selection.water / 1500, 5 / 3),
+    propertyChanges: additive?.propertyChanges || {},
   };
 }

@@ -4,7 +4,8 @@ import {
   specimenBlueprints,
   specimenBlueprintById,
 } from "../content/specimen-blueprints.js";
-import { characterById, foodById, drinkById } from "../content/catalog.js";
+import { characterById, foodById, drinkById, additiveById } from "../content/catalog.js";
+import { rareThemeRecipeById } from "../content/rare-theme-recipes.js";
 import { stoolRecipeByCharacterId } from "../content/stool-recipes.js";
 import { forceZones } from "../content/force.js";
 import { getRecipeForecast } from "../game/outcome-pool.js";
@@ -54,12 +55,18 @@ export function createCollectionView(getSave) {
     const recipe = stoolRecipeByCharacterId[characterId];
     if (!recipe) {
       const forecast = getRecipeForecast({ additives: [] });
-      return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>稀有形态</h3><p>每局先进行稀有抽签。</p><p>所有稀有款合计基础概率 ${(forecast.rareProbability * 100).toFixed(0)}%，命中后抽取其中一种。</p><br><p>稀有添加剂可以提高对应稀有款的机会。</p><p>食物、饮料和力度没有稀有入场门槛。</p></div></article>`;
+      const theme = rareThemeRecipeById[characterId];
+      const themed = theme ? `<p>${theme.foodIds.map(id => foodById[id].name).join("＋")}</p><p>${drinkById[theme.drinkId].name} ${theme.water} mL</p><p>阶段 ${theme.digestionTime} · ${forceZones.find(zone => zone.id === theme.forceZone).name}</p><p>主题添加剂：${additiveById[theme.additiveId].name}</p><br>` : "";
+      return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>稀有主题搭配</h3>${themed}<p>每局先抽稀有，基础合计 ${(forecast.rareProbability * 100).toFixed(0)}%，各款 0.2%。</p><p>主题食物、水量和阶段不是出现门槛；对应稀有添加剂才提高概率。</p></div></article>`;
     }
     const zone = forceZones.find((item) => item.id === recipe.forceZone);
-    const forecast = getRecipeForecast({ ...recipe, additives: [], force: zone.min });
+    const forecast = getRecipeForecast({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], force: zone.min });
     const stabilized = getRecipeForecast({ ...recipe, additives: ["probiotic"], force: zone.min });
-    return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>固定配方</h3><p>${recipe.foodIds.map((id) => foodById[id].name).join(" + ")}</p><p>+ ${drinkById[recipe.drinkId].name}</p><br><strong>${zone.name} · ${zone.min}–${zone.max}</strong><p>未中稀有时：基础 ${(forecast.recipeConditionalProbability * 100).toFixed(0)}% · 益生菌 ${(stabilized.recipeConditionalProbability * 100).toFixed(0)}%<br>整局：无添加剂 ${(forecast.recipeProbability * 100).toFixed(1)}% · 益生菌 ${(stabilized.recipeProbability * 100).toFixed(0)}%</p><br><p>食物种类需完全一致；添加剂可选。饮用量、消化档位和马桶不影响固定配方。</p></div></article>`;
+    const additiveText = recipe.requiredAdditive ? `必选${additiveById[recipe.requiredAdditive].name}，不能再加益生菌。` : "添加剂可不加；选益生菌稳产。";
+    const probabilityText = recipe.requiredAdditive
+      ? `未中稀有后 ${(forecast.recipeConditionalProbability * 100).toFixed(0)}% · 整局 ${(forecast.recipeProbability * 100).toFixed(1)}%`
+      : `未中稀有：基础 80% · 益生菌 100%<br>整局：基础 ${(forecast.recipeProbability * 100).toFixed(1)}% · 益生菌 ${(stabilized.recipeProbability * 100).toFixed(0)}%`;
+    return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>固定配方</h3><p>${recipe.foodIds.map((id) => foodById[id].name).join("＋")}</p><p>${drinkById[recipe.drinkId].name} ${recipe.water} mL</p><p>消化阶段 ${recipe.digestionTime}</p><strong>${zone.name} · ${zone.min}–${zone.max}</strong><p>${additiveText}</p><br><p>${probabilityText}</p></div></article>`;
   }
   function renderDetail() {
     $("#collection-dialog").classList.toggle("detail-open", detailOpen);

@@ -80,8 +80,8 @@ for (const [width, height] of [[320, 640], [402, 760]])
     await expect(recipe).toContainText("清水");
     await expect(recipe).toContainText("中等力度 · 34–66");
     await expect(recipe).toContainText("基础 80% · 益生菌 100%");
-    await expect(recipe).toContainText("无添加剂 78.4% · 益生菌 98%");
-    await expect(recipe.locator("p").filter({ hasText: "未中稀有时" })).toBeInViewport();
+    await expect(recipe).toContainText("基础 78.4% · 益生菌 98%");
+    await expect(recipe.locator("p").filter({ hasText: "未中稀有：" })).toBeInViewport();
   });
 
 test("single functional additives render glitter and give crystal a 5% rare pool with a 76% fixed target", async ({ page }) => {

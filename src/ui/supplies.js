@@ -57,6 +57,7 @@ export function createSuppliesView({ getSelection, onChange }) {
     const selection = getSelection();
     const drink = drinkById[selection.drinkId];
     $("#drink-summary").textContent = drink.name;
+    $("#choose-drinks").setAttribute("aria-label", `${drink.name} ${selection.water} mL`);
     $("#drink-effect").textContent = drink.effectLabel;
     $("#additive-summary").textContent = selection.additives.length
       ? selection.additives

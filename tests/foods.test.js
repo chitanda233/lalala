@@ -19,10 +19,10 @@ const meal = {
   toiletId: "standard",
 };
 
-test("the food catalog has 51 distinct entries, 33 starters and complete game traits", () => {
-  assert.equal(foods.length, 51);
-  assert.equal(new Set(foods.map((food) => food.id)).size, 51);
-  assert.equal(normalizeFoods().unlocked.length, 33);
+test("the food catalog has 53 distinct entries, 35 starters and complete game traits", () => {
+  assert.equal(foods.length, 53);
+  assert.equal(new Set(foods.map((food) => food.id)).size, 53);
+  assert.equal(normalizeFoods().unlocked.length, 35);
   for (const food of foods) {
     assert.ok(food.description && food.art && Number.isInteger(food.unlockAt));
     for (const level of Object.values(food.traits))
@@ -112,7 +112,7 @@ test("completed meals unlock foods once and record every selected food", () => {
     "wholewheat",
   ]);
   assert.deepEqual(save.foods.tasted, ["rice", "egg", "apple"]);
-  assert.equal(save.foods.unlocked.length, 35);
+  assert.equal(save.foods.unlocked.length, 37);
   assert.equal(settleSession(save, 4000), null);
   assert.deepEqual(restoreSession(pending), pending);
 });

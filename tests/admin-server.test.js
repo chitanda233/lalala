@@ -19,6 +19,7 @@ import { createGameServer } from "../server.mjs";
 import { buildRelease } from "../scripts/build.mjs";
 import { foods } from "../src/content/foods.js";
 import { foodAttributeValues } from "../src/content/food-attribute-values.js";
+import { contentValues } from "../src/content/managed-content.js";
 
 const execFile = promisify(execFileCallback);
 
@@ -30,6 +31,14 @@ async function fixture(t, options = {}) {
     dataFile,
     `export const foodAttributeValues = ${JSON.stringify(foodAttributeValues)};\n`,
   );
+  const contentFile = path.join(directory, "src/content/managed-content.js");
+  await mkdir(path.dirname(contentFile), { recursive: true });
+  await writeFile(contentFile, `export const contentValues = ${JSON.stringify(contentValues)};\n`);
+  for (const item of contentValues.artwork.filter((item) => item.path)) {
+    const asset = path.join(directory, item.path.slice(1));
+    await mkdir(path.dirname(asset), { recursive: true });
+    await writeFile(asset, "fixture image");
+  }
   await mkdir(path.join(directory, "admin"));
   await writeFile(path.join(directory, "index.html"), "game");
   await writeFile(
@@ -39,6 +48,7 @@ async function fixture(t, options = {}) {
   const server = await createGameServer({
     root: directory,
     dataFile,
+    contentFile,
     ...options,
   });
   server.listen(0, "127.0.0.1");
@@ -53,6 +63,7 @@ async function fixture(t, options = {}) {
   return {
     directory,
     dataFile,
+    contentFile,
     origin,
     get: () => fetch(`${origin}/api/admin/foods`),
     put: (body, headers = {}) =>
@@ -212,6 +223,7 @@ test("release contains only playable runtime files and preview exposes no admin 
     "/admin/",
     "/admin/index.html",
     "/api/admin/foods",
+    "/api/admin/content",
     "/api/admin/other",
   ])
     assert.equal((await fetch(`${origin}${route}`)).status, 404);
@@ -263,7 +275,7 @@ async function readFreshGame(directory) {
     const { resolveBristolType, typeDistribution } = await import(${JSON.stringify(typeUrl)});
     const { rollOutcome } = await import(${JSON.stringify(dropsUrl)});
     const recipe = { foodIds: ["banana"], water: 1500, drinkId: "water", additives: [], toiletId: "standard", force: 50, };
-    console.log(JSON.stringify({ attributes: foodById.banana.attributes, type: resolveBristolType(recipe), distribution: typeDistribution(recipe), outcome: rollOutcome(recipe, () => 0) }));
+    console.log(JSON.stringify({ attributes: foodById.banana.attributes, type: resolveBristolType(recipe), distribution: typeDistribution(recipe), outcome: rollOutcome(recipe, () => 0.5) }));
   `;
   const { stdout } = await execFile(process.execPath, [
     "--input-type=module",
@@ -351,4 +363,100 @@ test("release rejects hidden dynamic module paths and references back into the a
     buildRelease(path.join(isolated, "dist"), { sourceRoot: isolated }),
     /后台资源/,
   );
+});
+
+
+async function contentFixture(t, options) {
+  const base = await fixture(t, options);
+  return {
+    ...base,
+    get: () => fetch(`${base.origin}/api/admin/content`),
+    put: (body, headers = {}) => fetch(`${base.origin}/api/admin/content`, {
+      method: "PUT", headers: { "Content-Type": "application/json", Origin: base.origin, ...headers },
+      body: JSON.stringify(body),
+    }),
+  };
+}
+
+test("content admin saves every module, serializes edits, and preserves food tuning", async (t) => {
+  const { get, put, contentFile, dataFile } = await contentFixture(t);
+  const originalFood = await readFile(dataFile, "utf8");
+  const current = await (await get()).json();
+  assert.equal(current.content.stools.length, 56);
+  assert.equal(current.content.recipes.length, 46);
+  assert.ok(current.assets.includes("/assets/stools/reference-v2/classic.png"));
+  const edited = structuredClone(current);
+  edited.content.stools[0].name = "策划测试收藏";
+  edited.content.stools[0].properties.grain = 5;
+  edited.content.recipes.find(item => item.characterId === "classic").foodIds = ["rice", "egg", "spinach"];
+  edited.content.drinks[0].wetnessBias = .6;
+  edited.content.additives[0].rareTargets = ["gold"];
+  edited.content.toilets.find((item) => item.id === "comfort").unlock.count = 9;
+  edited.content.artwork[0].path = "/assets/stools/reference-v2/jet.png";
+  const results = await Promise.all([put(edited), put(edited)]);
+  assert.deepEqual(results.map((result) => result.status).sort(), [200, 409]);
+  const saved = await (await get()).json();
+  assert.equal(saved.content.stools[0].name, "策划测试收藏");
+  assert.equal(saved.content.drinks[0].wetnessBias, .6);
+  assert.deepEqual(saved.content.additives[0].rareTargets, ["gold"]);
+  assert.equal(saved.content.toilets.find((item) => item.id === "comfort").unlock.count, 9);
+  assert.equal(saved.content.artwork[0].path, "/assets/stools/reference-v2/jet.png");
+  assert.deepEqual((await import(pathToFileURL(contentFile).href)).contentValues, saved.content);
+  assert.equal(await readFile(dataFile, "utf8"), originalFood);
+  assert.equal((await put(current)).status, 409);
+});
+
+test("content admin rejects conflicting recipes, invalid links, images and ranges without writing", async (t) => {
+  const { get, put, contentFile } = await contentFixture(t);
+  const current = await (await get()).json();
+  const original = await readFile(contentFile, "utf8");
+  const invalid = [
+    (content) => { content.stools[0].properties.hardness = 8; },
+    (content) => { content.stools[0].homeType = 7; },
+    (content) => { content.stools[0].name = '<img src=x>'; },
+    (content) => { content.recipes[1] = { ...content.recipes[0], characterId: content.recipes[1].characterId }; },
+    (content) => { content.recipes[0].foodIds = ["rice", "rice"]; },
+    (content) => { content.recipes[0].drinkId = "missing"; },
+    (content) => { content.recipes[0].water = 0; },
+    (content) => { content.recipes[0].water = 300; },
+    (content) => { content.recipes[0].water = 2750; },
+    (content) => { content.additives[0].rareTargets = ["classic"]; },
+    (content) => { content.toilets[0].unlock = { kind: "rounds", count: 2 }; },
+    (content) => { content.drinks[0].wetnessBias = null; },
+    (content) => { content.artwork[0].path = "/assets/stools/../outside.png"; },
+    (content) => { content.artwork[0].path = "/assets/stools/missing.png"; },
+    (content) => { content.toilets.pop(); },
+  ];
+  for (const change of invalid) {
+    const edited = structuredClone(current); change(edited.content);
+    const response = await put(edited);
+    assert.equal(response.status, 400, await response.text());
+  }
+  assert.equal((await put(current, { Origin: "https://example.com" })).status, 403);
+  assert.equal(await readFile(contentFile, "utf8"), original);
+});
+
+test("managed content is used by fresh game imports and survives release packaging", async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "lalala-content-game-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const isolated = await buildRelease(path.join(directory, "project"));
+  await writeFile(path.join(isolated, "package.json"), '{"type":"module"}\n');
+  const { get, put } = await contentFixture(t, { root: isolated, contentFile: path.join(isolated, "src/content/managed-content.js") });
+  const edited = await (await get()).json();
+  edited.content.stools[0].name = "项目配置测试";
+  edited.content.recipes.find(item => item.characterId === "classic").foodIds = ["rice", "egg", "spinach"];
+  edited.content.drinks[0].wetnessBias = .2;
+  edited.content.additives[0].rareTargets = ["gold"];
+  edited.content.toilets.find((item) => item.id === "comfort").unlock.count = 19;
+  edited.content.artwork[0].path = "/assets/stools/reference-v2/jet.png";
+  assert.equal((await put(edited)).status, 200);
+  const released = await buildRelease(path.join(isolated, "dist"), { sourceRoot: isolated });
+  const script = `
+    import { characterById, drinkById, additiveById, toiletById } from ${JSON.stringify(pathToFileURL(path.join(released, "src/content/catalog.js")).href)};
+    import { getRecipeForecast } from ${JSON.stringify(pathToFileURL(path.join(released, "src/game/outcome-pool.js")).href)};
+    import { referenceStoolAssets } from ${JSON.stringify(pathToFileURL(path.join(released, "src/content/stool-art-assets.js")).href)};
+    console.log(JSON.stringify({ name: characterById.classic.name, wetnessBias: drinkById.water.wetnessBias, rareTargets: additiveById.probiotic.rareTargets, unlock: toiletById.comfort.unlock.count, image: referenceStoolAssets.classic, forecast: getRecipeForecast({ foodIds: ["rice", "egg", "spinach"], drinkId: "water", force: 50 }).matchedRecipe?.characterId }));
+  `;
+  const { stdout } = await execFile(process.execPath, ["--input-type=module", "--eval", script]);
+  assert.deepEqual(JSON.parse(stdout), { name: "项目配置测试", wetnessBias: .2, rareTargets: ["gold"], unlock: 19, image: "/assets/stools/reference-v2/jet.png", forecast: "classic" });
 });

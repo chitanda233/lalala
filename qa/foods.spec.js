@@ -7,7 +7,7 @@ test("food library shows locks, descriptions and category filters", async ({
 }) => {
   await page.goto("/");
   await page.locator("#choose-foods").click();
-  await expect(page.locator(".food-card")).toHaveCount(51);
+  await expect(page.locator(".food-card")).toHaveCount(53);
   await expect(page.locator(".food-card.unlocked")).toHaveCount(33);
   await expect(page.locator(".food-card.locked")).toHaveCount(18);
   await focusFood(page, "enoki");
@@ -21,7 +21,7 @@ test("food library shows locks, descriptions and category filters", async ({
   await page.locator('[data-food-category="fruit"]').click();
   await expect(page.locator(".food-card")).toHaveCount(7);
   await page.locator('[data-food-category="all"]').click();
-  await expect(page.locator(".food-card")).toHaveCount(51);
+  await expect(page.locator(".food-card")).toHaveCount(53);
   await focusFood(page, "burger");
   await page.screenshot({
     path: "qa/foods-desktop.png",

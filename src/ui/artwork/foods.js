@@ -12,6 +12,10 @@ const seeds = (color) =>
 const leaves = `<path d="M39 59V26M39 43C14 43 12 20 22 15c17 1 19 17 17 28ZM40 47c21-2 31-22 22-32-16 0-22 17-22 32Z" fill="#9dbb7e"/>`;
 function illustration(art) {
   switch (art) {
+    case "potato":
+      return `<ellipse cx="40" cy="38" rx="29" ry="20" transform="rotate(-18 40 38)" fill="#d5b77e"/><path d="m25 31 3 1m15-7 3 1m8 17 3-1m-23 8 3 1" stroke="#a88e60" stroke-width="3" stroke-linecap="round"/>`;
+    case "beetroot":
+      return `<path d="M40 29Q18 0 28 6q13 2 13 23Q44 2 56 8q2 14-16 21" fill="#89a86f"/><path d="M16 38c0-21 48-21 48 0 0 20-21 28-24 33-4-8-24-14-24-33Z" fill="#b96e80"/><path d="M24 36q2-9 10-8" stroke="#e3a4b1" stroke-width="4" fill="none"/>`;
     case "burger":
       return `<path d="M12 26C14 6 66 6 68 26Z" fill="#e9b475"/><path d="M11 32l12-4 13 5 12-5 20 4" fill="none" stroke="#89a76c" stroke-width="7"/><rect x="12" y="38" width="56" height="9" rx="4" fill="#9e7055"/><path d="m15 47 20 9 13-9" fill="#f4d17d"/><path d="M13 51h54v4c0 14-54 14-54 0Z" fill="#e9b475"/><path d="m25 18 3 1m11-5 2 2m12 1 3 1" stroke="#fff3c9" stroke-width="3"/>`;
     case "mushroom":

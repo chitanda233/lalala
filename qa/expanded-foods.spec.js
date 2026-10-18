@@ -7,7 +7,7 @@ test("find banana, clay and twenty new foods through categories and pages", asyn
 }) => {
   await page.goto("/");
   await page.locator("#choose-foods").click();
-  await expect(page.locator(".food-card")).toHaveCount(51);
+  await expect(page.locator(".food-card")).toHaveCount(53);
   await expect(page.locator(".food-card.unlocked")).toHaveCount(33);
   await focusFood(page, "banana");
   await expect(page.locator(".food-card")).toHaveCount(7);
@@ -23,7 +23,7 @@ test("find banana, clay and twenty new foods through categories and pages", asyn
     "aria-pressed",
     "true",
   );
-  await expect(page.locator(".food-card")).toHaveCount(51);
+  await expect(page.locator(".food-card")).toHaveCount(53);
   await expect(page.locator('input[type="search"]')).toHaveCount(0);
   await page.screenshot({
     path: "qa/food-categories.png",

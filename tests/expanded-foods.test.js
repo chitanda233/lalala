@@ -21,13 +21,13 @@ const meal = {
 };
 
 test("existing banana and twenty-one new foods have unique illustrated playable definitions", () => {
-  assert.equal(foods.length, 51);
+  assert.equal(foods.length, 53);
   assert.equal(expandedFoods.length, 21);
   assert.equal(foods.filter((food) => food.id === "banana").length, 1);
   assert.equal(foodById.banana.unlockAt, 0);
   assert.equal(new Set(expandedFoods.map((food) => food.id)).size, 21);
   assert.equal(new Set(expandedFoods.map((food) => foodArt(food.id))).size, 21);
-  assert.equal(normalizeSave().foods.unlocked.length, 33);
+  assert.equal(normalizeSave().foods.unlocked.length, 35);
   for (const food of expandedFoods) {
     assert.equal(food.unlockAt, 0);
     assert.ok(

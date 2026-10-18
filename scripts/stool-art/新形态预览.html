@@ -86,7 +86,7 @@
   const forceNames={low:'轻力度',medium:'中等力度',high:'强力度'};
   const recipeText=id=>{
     const recipe=stoolRecipeByCharacterId[id];
-    return recipe ? `${recipe.foodIds.map(id=>foodNames[id]).join('＋')} ＋ ${drinkNames[recipe.drinkId]} · ${forceNames[recipe.forceZone]}` : '稀有款 · 每轮均可进入稀有抽取';
+    return recipe ? `${recipe.foodIds.map(id=>foodNames[id]).join('＋')} ＋ ${drinkNames[recipe.drinkId]} ${recipe.water} mL · 阶段 ${recipe.digestionTime} · ${forceNames[recipe.forceZone]}` : '稀有款 · 每轮均可进入稀有抽取';
   };
   let shown=groups.water, selected=0;
   const dialog=document.querySelector('dialog');

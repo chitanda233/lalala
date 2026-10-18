@@ -107,7 +107,7 @@ export function createSelectionView({
     const selection = getSelection();
     const digestion = digestionById[selection.digestionTime];
     $("#digestion-summary").textContent =
-      `${digestion.label} · ${selection.digestionTime === "random" ? "随缘" : selection.digestionTime === "2" ? "短时" : selection.digestionTime === "8" ? "较久" : "适中"}`;
+      selection.digestionTime === "random" ? "随机" : `${digestion.label} · ${selection.digestionTime === "2" ? "偏湿" : selection.digestionTime === "8" ? "偏干" : "适中"}`;
     $$("[data-digestion]").forEach((button) => {
       const selected = button.dataset.digestion === selection.digestionTime;
       button.classList.toggle("selected", selected);

@@ -21,6 +21,7 @@ import {
 } from "/src/game/drops.js";
 import { getRecipeForecast } from "/src/game/outcome-pool.js";
 import { specimenName } from "/src/game/specimen.js";
+import { recipeLiquidText } from "/src/content/recipe-labels.js";
 
 const $ = (selector) => document.querySelector(selector);
 const escapeText = (value) =>
@@ -43,6 +44,7 @@ let loading = true;
 let saving = false;
 let previewFrame = null;
 let errorMessage = "";
+let withSavedContent = (callback) => callback();
 
 function isDirty(id) {
   return JSON.stringify(saved[id]) !== JSON.stringify(foodById[id].attributes);
@@ -50,32 +52,12 @@ function isDirty(id) {
 function dirtyIds() {
   return foods.filter((food) => isDirty(food.id)).map((food) => food.id);
 }
-function updateStatus(message = "") {
-  const count = dirtyIds().length;
-  const status = $("#save-status");
-  status.textContent =
-    message ||
-    errorMessage ||
-    (saving
-      ? "正在保存到项目…"
-      : !loaded
-        ? "正在读取食物配置…"
-        : count
-          ? `${count} 份食物有未保存的调整`
-          : "所有调整已保存到项目");
-  status.classList.toggle("is-dirty", !errorMessage && count > 0);
-  status.classList.toggle("is-error", !!errorMessage);
-  $("#save-foods").disabled = !loaded || loading || saving || count === 0;
-  $("#save-foods").textContent = saving
-    ? "保存中…"
-    : count
-      ? `保存到项目 · ${count}`
-      : "保存到项目";
-  $("#reload-data").disabled = loading || saving;
+function updateStatus() {
+  window.dispatchEvent(new CustomEvent("food-admin-change"));
   for (const control of document.querySelectorAll(
     ".editor input, .editor select",
   ))
-    control.disabled = loading || !loaded;
+    control.disabled = loading || saving || !loaded;
   $("#reset-food").disabled = !isDirty(selectedId) || saving;
   $("#selected-dirty-status").textContent = isDirty(selectedId)
     ? "这份食物有未保存的调整"
@@ -189,18 +171,23 @@ function calculatePreview(selection) {
         !best || entry.probability > best.probability ? entry : best,
       null,
     );
-  const index = pool.indexOf(representative);
+  const previewSelection = selection.digestionTime === "random"
+    ? ["2", "4", "8"].map(digestionTime => ({ ...selection, digestionTime }))
+      .sort((a, b) => (getOutcomePool(b).find(entry => entry.characterId === representative.characterId)?.probability || 0) - (getOutcomePool(a).find(entry => entry.characterId === representative.characterId)?.probability || 0))[0]
+    : selection;
+  const previewPool = getOutcomePool(previewSelection);
+  const index = previewPool.findIndex(entry => entry.characterId === representative.characterId);
   // Preview the most likely ordinary individual from the production pool.
   const draws = [
-    pool
+    previewPool
       .slice(0, index)
       .reduce((total, entry) => total + entry.probability, 0) +
-      representative.probability / 2,
+      previewPool[index].probability / 2,
     0.5,
   ];
   return {
     distribution,
-    outcome: rollOutcome(selection, () => draws.shift() ?? 0),
+    outcome: rollOutcome(previewSelection, () => draws.shift() ?? 0),
     forecast: getRecipeForecast(selection),
     pool,
   };
@@ -216,13 +203,14 @@ function specimenCard(label, data, after = false) {
 function recipeForecast(data) {
   const { forecast, pool } = data;
   const recipe = forecast.matchedRecipe || forecast.suggestedRecipe;
-  if (!recipe) return "<p>按食物主体与饮料物态生成普通形态。</p>";
+  if (!recipe) return `<p>${forecast.physicalState ? `湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型` : `随机三档综合：${forecast.phaseForecasts.map(phase=>`${phase.digestionTime}→${phase.physicalState.type}型`).join("、")}`}</p><p>按当前物态、力度与配方距离生成普通形态。</p>`;
   const target = characterById[recipe.characterId];
   const zone = forceZones.find((item) => item.id === recipe.forceZone);
   const actualProbability = pool
     .filter((entry) => entry.characterId === recipe.characterId)
     .reduce((sum, entry) => sum + entry.probability, 0);
-  return `<strong>${forecast.matchedRecipe ? "固定配方已匹配" : "建议固定配方"} · ${escapeText(target.name)}</strong><p>${recipe.foodIds.map((id) => escapeText(foodById[id].name)).join(" + ")} + ${escapeText(drinks.find((item) => item.id === recipe.drinkId).name)} · ${zone.name} ${zone.min}–${zone.max}</p><div class="forecast-values"><span>目标实际概率<strong>${formatPercent(actualProbability)}</strong></span><span>稀有合计<strong>${formatPercent(forecast.rareProbability)}</strong></span></div><p>${forecast.matchedRecipe ? `未中稀有后，固定配方命中 ${formatPercent(forecast.recipeConditionalProbability)}；整局命中 ${formatPercent(forecast.recipeProbability)}。` : "当前搭配尚未完全符合这条配方，目标概率按属性候选计算。"}</p>`;
+  const stateText = forecast.physicalState ? `湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型` : `随机阶段综合：${forecast.phaseForecasts.map(phase => `${phase.digestionTime}→${phase.physicalState.type}型`).join("、")}`;
+  return `<strong>${forecast.matchedRecipe ? "固定配方已匹配" : "建议固定配方"} · ${escapeText(target.name)}</strong><p>${recipe.foodIds.map((id) => escapeText(foodById[id].name)).join(" + ")} + ${escapeText(drinks.find((item) => item.id === recipe.drinkId).name)} · ${zone.name} ${zone.min}–${zone.max}</p><p>${recipeLiquidText(recipe)}${recipe.requiredAdditive ? ` · 需${escapeText(additives.find(item => item.id === recipe.requiredAdditive).name)}` : ""}</p><p>${stateText}</p><div class="forecast-values"><span>目标实际概率<strong>${formatPercent(actualProbability)}</strong></span><span>稀有合计<strong>${formatPercent(forecast.rareProbability)}</strong></span></div><p>${forecast.matchedRecipe ? `未中稀有后，固定配方命中 ${formatPercent(forecast.recipeConditionalProbability)}；整局命中 ${formatPercent(forecast.recipeProbability)}。` : "当前按物态与配方距离生成；随机阶段按三档等概率混合。"}</p>`;
 }
 function renderPreview() {
   previewFrame = null;
@@ -232,7 +220,7 @@ function renderPreview() {
     let before;
     try {
       for (const [food] of drafts) food.attributes = saved[food.id];
-      before = calculatePreview(selection);
+      before = withSavedContent(() => calculatePreview(selection));
     } finally {
       for (const [food, attributes] of drafts) food.attributes = attributes;
     }
@@ -240,7 +228,8 @@ function renderPreview() {
     $("#preview-recipe").textContent = selection.foodIds
       .map((id) => foodById[id].name)
       .concat(
-        drinks.find((item) => item.id === selection.drinkId).name,
+        `${drinks.find((item) => item.id === selection.drinkId).name} ${selection.water} mL`,
+        `阶段 ${selection.digestionTime}`,
         selection.additives.length
           ? additives.find((item) => item.id === selection.additives[0]).name
           : "无添加剂",
@@ -248,7 +237,7 @@ function renderPreview() {
       .join(" ＋ ");
     $("#preview-forecast").innerHTML = recipeForecast(after);
     $("#specimen-preview").innerHTML =
-      specimenCard("已保存", before) + specimenCard("当前草稿", after, true);
+      withSavedContent(() => specimenCard("已保存", before)) + specimenCard("当前草稿", after, true);
     const probabilities = (distribution) =>
       Object.fromEntries(
         distribution.map((item) => [item.type, item.probability]),
@@ -293,7 +282,7 @@ async function readResponse(response) {
 async function loadData() {
   loading = true;
   errorMessage = "";
-  updateStatus("正在读取磁盘配置…");
+  updateStatus();
   try {
     const data = await readResponse(
       await fetch("/api/admin/foods", { cache: "no-store" }),
@@ -305,10 +294,12 @@ async function loadData() {
     loading = false;
     renderFoodList();
     renderEditor();
+    return true;
   } catch (error) {
     loading = false;
     errorMessage = `读取失败：${error.message} 请使用项目开发服务器打开此页面。`;
     updateStatus();
+    return false;
   }
 }
 async function saveData() {
@@ -331,8 +322,10 @@ async function saveData() {
     saved = copy(data.foods);
     revision = data.revision;
     schedulePreview();
+    return true;
   } catch (error) {
     errorMessage = `保存失败：${error.message}`;
+    return false;
   } finally {
     saving = false;
     updateStatus();
@@ -361,7 +354,7 @@ $("#preview-water").innerHTML = Array.from(
 )
   .map(
     (amount) =>
-      `<option value="${amount}"${amount === 1500 ? " selected" : ""}>${amount} ml</option>`,
+      `<option value="${amount}"${amount === 1500 ? " selected" : ""}>${amount} mL</option>`,
   )
   .join("");
 $("#food-list").addEventListener("click", (event) => {
@@ -398,15 +391,6 @@ $("#reset-food").addEventListener("click", () => {
   foodById[selectedId].attributes = copy(saved[selectedId]);
   renderEditor();
 });
-$("#reload-data").addEventListener("click", () => {
-  if (
-    dirtyIds().length &&
-    !window.confirm("重新读取会放弃所有未保存的食物调整，继续吗？")
-  )
-    return;
-  loadData();
-});
-$("#save-foods").addEventListener("click", saveData);
 $("#preview-force").addEventListener("input", schedulePreview);
 for (const element of document.querySelectorAll(".preview-controls select"))
   element.addEventListener("change", () => {
@@ -421,3 +405,34 @@ window.addEventListener("beforeunload", (event) => {
 renderFoodList();
 renderEditor();
 loadData();
+
+export const foodAdmin = {
+  get state() { return { loaded, loading, saving, error: errorMessage, count: dirtyIds().length }; },
+  load: loadData,
+  save: saveData,
+  setPreviewContext(callback) { withSavedContent = callback; schedulePreview(); },
+  refreshContent() {
+    for (const [id, items] of [["preview-drink", drinks], ["preview-additive", additives], ["preview-toilet", toilets]]) {
+      const control = $("#" + id), value = control.value;
+      control.innerHTML = optionList(items, value, id === "preview-additive" ? "无添加剂" : "");
+    }
+    schedulePreview();
+  },
+  tryRecipe(recipe, additiveId = "") {
+    selectedId = recipe.foodIds[0];
+    $("#food-category").value = "all";
+    $("#companion-1").value = "";
+    $("#companion-2").value = "";
+    renderFoodList(); renderEditor();
+    $("#companion-1").value = recipe.foodIds[1] || "";
+    updateCompanions();
+    $("#companion-2").value = recipe.foodIds[2] || "";
+    $("#preview-drink").value = recipe.drinkId;
+    $("#preview-additive").value = recipe.requiredAdditive || additiveId;
+    $("#preview-water").value = recipe.water;
+    $("#preview-digestion").value = recipe.digestionTime;
+    const zone = forceZones.find((item) => item.id === recipe.forceZone);
+    $("#preview-force").value = Math.round((zone.min + zone.max) / 2);
+    schedulePreview();
+  },
+};

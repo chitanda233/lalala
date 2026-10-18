@@ -577,8 +577,24 @@ export const foods = [
     effects: {},
   },
   ...expandedFoods,
+  {
+    id: "beetroot", name: "熟甜菜根", category: "vegetable", art: "beetroot", unlockAt: 0,
+    description: "柔软的砖红色根菜，负责甜菜条的颜色。",
+    tags: ["vegetable", "beet-pigment"],
+    traits: { fiber: 2, fat: 0, spice: 0, moisture: 1, fermented: 0 },
+    appearanceId: "classic", effects: {},
+    recipeAttributes: { softness: 4, cohesion: 5, elongation: 4, grain: 1, retention: 2, colorStrength: 7, porosity: 1, lubricity: 4, influence: 4, pigmentId: "beet" },
+  },
+  {
+    id: "potato", name: "蒸土豆", category: "staple", art: "potato", unlockAt: 0,
+    description: "蒸熟后粉糯绵软，适合和南瓜做成厚心薄边的糊团。",
+    tags: ["tuber"],
+    traits: { fiber: 1, fat: 0, spice: 0, moisture: 1, fermented: 0 },
+    appearanceId: "classic", effects: {},
+    recipeAttributes: { softness: 3, cohesion: 3, elongation: 2, grain: 1, retention: 1, colorStrength: 2, porosity: 1, lubricity: 4, influence: 4, pigmentId: "bread" },
+  },
 ]
-  .map((food) => withFoodAttributes(food, foodAttributeValues[food.id]))
+  .map((food) => withFoodAttributes(food, foodAttributeValues[food.id] || food.recipeAttributes))
   .sort((a, b) =>
     categoryOrder.get(a.category) - categoryOrder.get(b.category) ||
     a.name.localeCompare(b.name, "zh-CN") || a.id.localeCompare(b.id),

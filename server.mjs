@@ -19,10 +19,15 @@ export async function createGameServer({
   adminEnabled = true,
   dataFile = process.env.LALALA_ADMIN_DATA_FILE ||
     path.join(projectRoot, "src/content/food-attribute-values.js"),
+  contentFile = process.env.LALALA_ADMIN_CONTENT_FILE ||
+    path.join(root, "src/content/managed-content.js"),
 } = {}) {
   // Preview loads no development API modules or writable source data.
   const adminApi = adminEnabled
     ? (await import("./scripts/admin-api.mjs")).createAdminApi(dataFile)
+    : null;
+  const contentApi = adminEnabled
+    ? (await import("./scripts/admin-api.mjs")).createContentAdminApi(contentFile, root)
     : null;
   return http.createServer(async (request, response) => {
     try {
@@ -44,6 +49,8 @@ export async function createGameServer({
       if (pathname.startsWith("/api/admin")) {
         if (adminApi && pathname === "/api/admin/foods")
           await adminApi(request, response);
+        else if (contentApi && pathname === "/api/admin/content")
+          await contentApi(request, response);
         else response.writeHead(404).end("Not found");
         return;
       }

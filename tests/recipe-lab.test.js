@@ -20,7 +20,7 @@ const base = { foodIds: ["rice"], drinkId: "water", additives: [], toiletId: "st
 export function findWitness(item) {
   const recipe = stoolRecipeByCharacterId[item.id];
   return {
-    selection: recipe ? { ...base, ...recipe, force: { low: 20, medium: 50, high: 90 }[recipe.forceZone] } : base,
+    selection: recipe ? { ...base, ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], force: { low: 20, medium: 50, high: 90 }[recipe.forceZone] } : base,
     type: item.homeType,
   };
 }

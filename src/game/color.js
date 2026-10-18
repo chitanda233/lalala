@@ -44,13 +44,15 @@ export function resolveColor(input, character) {
 }
 
 export function resolveColorStrength(input, character) {
-  if (character.rarity === "special" || fixed[character.id]) return 7;
+  if (character.rarity === "special") return 7;
   const selection = normalizeSelection(input);
   const otherTags = [
     ...drinkById[selection.drinkId].tags,
     ...selection.additives.flatMap((id) => additiveById[id].tags),
   ];
-  if (pigments.some(([tag]) => otherTags.includes(tag))) return 7;
   const food = collectEffects(selection).food;
-  return food.hasPigment ? food.colorStrength : 7;
+  const drinkPigment = pigments.some(([tag]) => drinkById[selection.drinkId].tags.includes(tag));
+  const source = fixed[character.id] || pigments.some(([tag]) => otherTags.includes(tag)) ? 7 : food.hasPigment ? food.colorStrength : 7;
+  const scale = drinkPigment ? Math.min(selection.water / 1500, 5 / 3) : 1;
+  return Math.max(1, Math.min(7, source * scale));
 }

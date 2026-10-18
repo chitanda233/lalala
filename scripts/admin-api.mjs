@@ -1,8 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
-import { readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { foods } from "../src/content/foods.js";
 import { validateFoodAttributes } from "../src/content/food-attributes.js";
+import { validateManagedContent } from "../admin/content-schema.js";
 
 const knownFoodIds = foods.map((food) => food.id).sort();
 const maxBodyBytes = 256 * 1024;
@@ -38,14 +39,12 @@ function revision(source) {
   return createHash("sha256").update(source).digest("hex");
 }
 
-function parseValues(source) {
-  const match = source.match(
-    /^\s*export\s+const\s+foodAttributeValues\s*=\s*([\s\S]*?);?\s*$/,
-  );
-  if (!match) throw new Error("食物参数文件格式不正确，请恢复 JSON 数据模块。");
+function parseValues(source, exportName, validate) {
+  const match = source.match(new RegExp(`^\\s*export\\s+const\\s+${exportName}\\s*=\\s*([\\s\\S]*?);?\\s*$`));
+  if (!match) throw new Error("配置文件格式不正确，请恢复 JSON 数据模块。");
   // The writable module is deliberately restricted to one JSON literal.
   // Never evaluate source supplied through the development API.
-  return validateValues(JSON.parse(match[1]));
+  return validate(JSON.parse(match[1]));
 }
 
 function isSameLocalOrigin(request) {
@@ -91,13 +90,52 @@ function json(response, status, value, headers = {}) {
 }
 
 export function createAdminApi(dataFile) {
+  return createModuleApi({ dataFile, exportName: "foodAttributeValues", field: "foods", validate: validateValues,
+    // New foods receive their in-code defaults when an existing parameter file
+    // has not been saved again yet. Existing entries remain byte-for-byte intact.
+    readValidate: value => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return validateValues(value);
+      return validateValues({ ...Object.fromEntries(foods.filter(food => food.recipeAttributes).map(food => [food.id, food.attributes])), ...value });
+    },
+  });
+}
+
+export function createContentAdminApi(dataFile, root) {
+  const assetRoot = path.join(root, "assets/stools");
+  async function assets(directory = assetRoot) {
+    const result = [];
+    for (const entry of await readdir(directory, { withFileTypes: true }).catch(() => [])) {
+      const file = path.join(directory, entry.name);
+      if (entry.isDirectory()) result.push(...await assets(file));
+      else if (entry.isFile() && /\.(?:png|webp)$/.test(entry.name)) result.push("/" + path.relative(root, file).split(path.sep).join("/"));
+    }
+    return result.sort();
+  }
+  return createModuleApi({
+    dataFile, exportName: "contentValues", field: "content",
+    validate: (value) => {
+      try { return validateManagedContent(value); }
+      catch (error) { throw new AdminError(400, error.message); }
+    },
+    extras: async () => ({ assets: await assets() }),
+    beforeSave: async (value) => {
+      for (const item of value.artwork) {
+        if (item.path && !(await stat(path.join(root, item.path.slice(1))).catch(() => null))?.isFile())
+          throw new AdminError(400, `图片不存在：${item.path}`);
+      }
+    },
+  });
+}
+
+function createModuleApi({ dataFile, exportName, field, validate, readValidate = validate, extras = async () => ({}), beforeSave = async () => {} }) {
   let queue = Promise.resolve();
   const readCurrent = async () => {
     const source = await readFile(dataFile, "utf8");
     return {
       version: 1,
       revision: revision(source),
-      foods: parseValues(source),
+      [field]: parseValues(source, exportName, readValidate),
+      ...await extras(),
     };
   };
 
@@ -112,7 +150,7 @@ export function createAdminApi(dataFile) {
         json(
           response,
           405,
-          { error: "只支持读取和保存食物参数。" },
+          { error: "只支持读取和保存项目配置。" },
           {
             Allow: "GET, PUT",
           },
@@ -137,7 +175,8 @@ export function createAdminApi(dataFile) {
         !/^[a-f0-9]{64}$/.test(body.revision)
       )
         throw new AdminError(400, "参数版本不正确，请重新载入后保存。");
-      const values = validateValues(body.foods);
+      const values = validate(body[field]);
+      await beforeSave(values);
       const save = queue.then(async () => {
         const current = await readCurrent();
         if (current.revision !== body.revision)
@@ -145,7 +184,7 @@ export function createAdminApi(dataFile) {
             409,
             "参数已被其他窗口或开发者修改，请重新载入后再编辑。",
           );
-        const source = `export const foodAttributeValues = ${JSON.stringify(values, null, 2)};\n`;
+        const source = `export const ${exportName} = ${JSON.stringify(values, null, 2)};\n`;
         const temporary = path.join(
           path.dirname(dataFile),
           `.${path.basename(dataFile)}.${randomUUID()}.tmp`,
@@ -156,7 +195,7 @@ export function createAdminApi(dataFile) {
         } finally {
           await unlink(temporary).catch(() => {});
         }
-        return { version: 1, revision: revision(source), foods: values };
+        return { version: 1, revision: revision(source), [field]: values, ...await extras() };
       });
       // A rejected save must not poison the queue for later valid edits.
       queue = save.catch(() => {});

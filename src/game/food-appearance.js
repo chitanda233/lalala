@@ -56,16 +56,17 @@ export function normalizeAppearance(value) {
 
 export function foodAppearance(selection, effects, colorStrength) {
   const shape = effects.food.shape;
+  const level = value => Math.max(1, Math.min(7, value));
   return normalizeAppearance({
     decorations: effects.decorations,
     grain: shape.grain,
-    porosity: shape.porosity,
-    cohesion: shape.cohesion,
-    elongation: shape.elongation,
+    porosity: level(shape.porosity + effects.drinkPorosity + (effects.propertyChanges.porosity || 0)),
+    cohesion: level(shape.cohesion + (effects.propertyChanges.cohesion || 0)),
+    elongation: level(shape.elongation + (effects.propertyChanges.elongation || 0)),
     colorStrength,
     residues: effects.food.residues,
     enokiRetention: selection.foodIds.includes("enoki")
-      ? foodById.enoki.attributes.retention
+      ? Math.max(2, Math.min(7, foodById.enoki.attributes.retention + effects.retentionChange))
       : 1,
   });
 }

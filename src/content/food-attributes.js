@@ -67,7 +67,7 @@ export const foodAttributeFields = [
     low: "轻微点缀",
     high: "主导混搭",
     description:
-      "自由组合中整份食物的属性权重，主食额外乘2；固定配方的80%/益生菌100%不受此值影响。",
+      "整份食物的属性权重，主食额外乘2；会影响湿软指数与物态核验。",
     group: "overall",
   },
 ];

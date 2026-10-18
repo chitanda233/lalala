@@ -17,7 +17,7 @@ async function mockAdminApi(page, { conflict = false } = {}) {
           json: { error: "Configuration changed" },
         });
       expect(data.revision).toBe(revision);
-      expect(Object.keys(data.foods)).toHaveLength(51);
+      expect(Object.keys(data.foods)).toHaveLength(53);
       revision = "test-revision-2";
       saved = data.foods;
     }
@@ -42,10 +42,10 @@ test("admin edits nine intuitive attributes with an actual seven-type preview, t
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   const submissions = await mockAdminApi(page);
-  await page.goto("/admin/index.html");
+  await page.goto("/admin/index.html#foods");
   await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
   await page.locator('[data-food-id="banana"]').click();
-  await expect(page.locator(".food-item")).toHaveCount(51);
+  await expect(page.locator(".food-item")).toHaveCount(53);
   await expect(page.locator("#food-influence input")).toHaveCount(1);
   await expect(page.locator("#main-attributes input")).toHaveCount(6);
   await expect(page.locator("#extra-attributes input")).toHaveCount(2);
@@ -135,7 +135,7 @@ test("softness runs from very soft 1 to very hard 7 while Bristol taxonomy keeps
   page,
 }) => {
   await mockAdminApi(page);
-  await page.goto("/admin/index.html");
+  await page.goto("/admin/index.html#foods");
   await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
   await expect(page.getByLabel("软硬程度", { exact: true })).toHaveAttribute(
     "id",
@@ -164,7 +164,7 @@ test("food drafts survive category switching and selected reset leaves other dra
   page,
 }) => {
   const submissions = await mockAdminApi(page);
-  await page.goto("/admin/index.html");
+  await page.goto("/admin/index.html#foods");
   await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
   await page.locator('[data-food-id="banana"]').click();
   await setAttribute(page, "softness", 7);
@@ -189,7 +189,7 @@ test("a stale disk revision preserves the draft and clearly reports a save confl
   page,
 }) => {
   await mockAdminApi(page, { conflict: true });
-  await page.goto("/admin/index.html");
+  await page.goto("/admin/index.html#foods");
   await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
   await setAttribute(page, "softness", 7);
   await page.locator("#save-foods").click();
@@ -209,7 +209,7 @@ for (const width of [390, 320]) {
   }) => {
     await mockAdminApi(page);
     await page.setViewportSize({ width, height: 844 });
-    await page.goto("/admin/index.html");
+    await page.goto("/admin/index.html#foods");
     await expect(page.locator("#save-status")).toHaveText(
       "所有调整已保存到项目",
     );

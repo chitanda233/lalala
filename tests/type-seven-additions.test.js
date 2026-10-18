@@ -33,7 +33,7 @@ test("six new type-7 collectible definitions have fixed physical structure and i
 test("ordinary type-7 additions have explicit recipes and rare additions are always reachable", () => {
   for (const [id] of candidates) {
     const recipe = stoolRecipeByCharacterId[id];
-    const input = recipe ? { ...base, ...recipe, force: { low: 20, medium: 50, high: 90 }[recipe.forceZone] } : base;
+    const input = recipe ? { ...base, ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], force: { low: 20, medium: 50, high: 90 }[recipe.forceZone] } : base;
     const pool = conditionalDropPool(input, 7);
     assert.ok(pool.some((entry) => entry.characterId === id), id);
     assert.ok(pool.every((entry) => entry.probability >= 0));
