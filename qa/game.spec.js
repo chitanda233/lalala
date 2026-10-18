@@ -122,7 +122,7 @@ test("quick rounds retain all eight discoveries and the fixed reveal delay", asy
   await page.locator("#play-again").click();
   await page.locator("#collection-button").click();
   await expect(page.locator("#collection-summary")).toContainText(
-    "8 / 50 种便便",
+    "8 / 56 种便便",
   );
   await expect(page.locator(".stool-card.collected")).toHaveCount(8);
   await expect(page.locator("#collection-total")).toHaveText("5 / 7 型");

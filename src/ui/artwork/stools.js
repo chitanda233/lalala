@@ -18,6 +18,26 @@ const materialArts = new Set([
   "meteor",
   "amber",
 ]);
+
+const waterAtlasIndices = Object.freeze({
+  "enoki-jet": 0,
+  "corn-cannon": 1,
+  "golden-juice": 2,
+  "rainbow-falls": 3,
+  "glitter-galaxy": 4,
+  "ink-fountain": 5,
+});
+// Six artwork crops from ChatGPT's 2026-10-18 type-7 concept sheet.
+// Stored as one locally hosted atlas to keep the mobile release lightweight.
+const waterAtlasPath = "/assets/stools/water-type-seven-atlas.webp";
+function waterAtlasSvg(character, type, marks) {
+  const index = waterAtlasIndices[character.id];
+  const x = (index % 3) * 144;
+  const y = Math.floor(index / 3) * 144;
+  const safeMarks = normalizeMarks(marks);
+  return `<svg viewBox="0 0 320 320" role="img" aria-label="${safeText(character.name)} · 布里斯托第 7 型" data-specimen="${safeText(character.id)}:${type}" data-material="${safeText(character.material)}" data-marks="${safeMarks.join(" ")}"><svg x="0" y="0" width="320" height="320" viewBox="${x} ${y} 144 144" preserveAspectRatio="xMidYMid meet"><image href="${waterAtlasPath}" x="0" y="0" width="432" height="288"/></svg></svg>`;
+}
+
 let illustrationId = 0;
 const normalizeType = (type) =>
   Number.isInteger(type) && type >= 1 && type <= 7 ? type : 4;
@@ -131,6 +151,9 @@ export function characterSvg(
   appearance = null,
 ) {
   if (locked) return mysterySvg();
+  // Hand-authored water illustrations keep their liquid silhouette and own palette.
+  if (Object.hasOwn(waterAtlasIndices, character.id) && type === 7)
+    return waterAtlasSvg(character, type, marks);
   type = normalizeType(type);
   const id = `specimen-${++illustrationId}`;
   const compatible =

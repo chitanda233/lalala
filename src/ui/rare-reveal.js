@@ -12,6 +12,20 @@ export const rareRevealThemes = {
     symbol: "✦",
     notes: [523.25, 659.25, 783.99, 1046.5, 1318.51],
   },
+  "golden-juice": {
+    title: "黄金汁，液态金光！",
+    copy: "金箔配方与水样形态碰面，这一次真的流出了黄金。",
+    accent: "#d2aa39", glow: "#f3d77d", surface: "#fff9e8",
+    ink: "#8a6425", motif: "sunburst", symbol: "✦",
+    notes: [523.25, 659.25, 783.99, 1046.5, 1318.51],
+  },
+  "rainbow-falls": {
+    title: "彩虹瀑布，七色飞溅！",
+    copy: "不是一条彩色长条，而是水花也排成了彩虹。",
+    accent: "#b88cc1", glow: "#ecc5d7", surface: "#fff4fb",
+    ink: "#916a9d", motif: "rainbow", symbol: "✧",
+    notes: [523.25, 587.33, 659.25, 783.99, 880, 1046.5],
+  },
   crystal: {
     title: "晶莹时刻，棱角分明。",
     copy: "晶种等到了自己的聚光灯，每一面都接住了光。",

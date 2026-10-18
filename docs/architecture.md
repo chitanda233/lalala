@@ -9,9 +9,9 @@
 | content/foods.js / expanded-foods.js            | 51 种食物、分类、属性、效果文案、幻想标记与解锁局数    |
 | content/drinks.js / additives.js                | 20 种饮料、18 种添加剂，描述、标签、效果、预留解锁字段 |
 | content/toilets.js                              | 10 种马桶，材质、形态、功能、效果与配色                |
-| content/stools.js / specimens.js                | 七型定义、50 种便便、来源条件与稀有度                  |
+| content/stools.js / specimens.js                | 七型定义、56 种便便、来源条件与稀有度                  |
 | content/colors.js / force.js                    | 底色、力度区间与往复指针计算                           |
-| content/stool-forms.js / specimen-blueprints.js | 结构定义与 50 个固定形态的独立条目                     |
+| content/stool-forms.js / specimen-blueprints.js | 结构定义与 56 个固定形态的独立条目                     |
 | game/recipe-shape.js / outcome-pool.js          | 配方结构亲和度、完整标本概率池                         |
 | game/specimen.js / progression/individuals.js   | 按成品结构分类、每次产出的独立归档                     |
 | game/selection.js                               | 统一输入、有效内容校验、去重与数量限制                 |
@@ -86,7 +86,7 @@
 
 食物在 foods.js 汇总，expanded-foods.js 提供本轮新增内容。字段包括 category、art、unlockAt、attributes、traits、appearanceId、tags、effects，可选 fictional；attributes 由独立参数文件提供，界面说明由实际参数生成。regional 与 fantasy 分别用于「风味奇遇」和「幻想配料」分类；fictional: true 的内容在介绍中显示幻想标记。游戏和 Admin 都不提供搜索功能。normalizeFoods 按当前内容配置与完成局数计算可用食物。
 
-调整或替换现有便便在 specimens.js 配置；便便总数保持 50，不再按七型扩展同款：
+调整或替换现有便便在 specimens.js 配置；便便总数为 56，不再按七型扩展同款：
 
 ```js
 {
@@ -107,7 +107,7 @@
 
 variantRules / specialRules 从 drop、固定 types、rarity 生成。稀有款必须通过稀有池，不能通过普通基础外观设成必出。specimen-blueprints.js 对每种便便只建立一个条目；调整后验证总数仍为 50、每种只出现在一个分类、能够实际产出且素材齐全。
 
-图鉴保持「全部 + 七型」。50 个独立条目各有固定 morphology，通过 classifySpecimen 归档；每次产出另有 individualId，展开对应条目可逐只查看。顺畅小能手只属于 4 型，摊平小煎饼只属于 7 型；改颜色或加印记不会创建额外条目。
+图鉴保持「全部 + 七型」。56 个独立条目各有固定 morphology，通过 classifySpecimen 归档；每次产出另有 individualId，展开对应条目可逐只查看。顺畅小能手只属于 4 型，摊平小煎饼只属于 7 型；改颜色或加印记不会创建额外条目。
 
 未收集卡片的可见内容统一为神秘剪影和未知状态，隐藏名称、类别、稀有度、材质、描述及线索。收集后才调用真实美术并显示具体文案；七型分类定义独立保留，避免透过未发现造型提前识别收藏。
 
@@ -125,11 +125,11 @@ createRareReveal(dialog) 提供 show(character) 与 clear()，只在 rarity: "sp
 
 单局 ID、lastSettledSessionId 与已归档个体 ID 防止重复发放，Web Locks 串行处理跨标签页结算。无法写 localStorage 时仍可在页面内存中游玩。暂未引入货币、付费或服务端账号。
 
-验证覆盖 50 个独立条目的名称、结构和素材，50 种便便经完整候选池实际产出；20/18/10 内容数量；配方印记与色素叠加；稀有资格与合计 0.5% 上限；同款多次独立归档、当前模型校验、刷新和多标签页结算；桌面与手机布局。
+验证覆盖 50 个独立条目的名称、结构和素材，56 种便便经完整候选池实际产出；20/18/10 内容数量；配方印记与色素叠加；稀有资格与合计 0.5% 上限；同款多次独立归档、当前模型校验、刷新和多标签页结算；桌面与手机布局。
 
 完整设计表见 [配方实验室内容手册](recipe-lab.md)，食物细节见 [食物模块指南](foods.md)。
 
-美术入口 `ui/artwork/stools.js` 使用本地透明 PNG 与 SVG 染色层，`content/marks.js` 维护印记注册表。`scripts/stool-art/` 在开发期统一渲染 50 个实际形态，运行时不需要 WebGL；164 张素材覆盖主体、装饰、金针菇印记和七型兜底。规范、视觉校样与重渲染说明见 [美术管线](stool-art.md)。
+美术入口 `ui/artwork/stools.js` 使用本地透明 PNG 与 SVG 染色层，`content/marks.js` 维护印记注册表。`scripts/stool-art/` 在开发期统一渲染 50 个实际形态，运行时不需要 WebGL；164 张旧款 PNG 素材覆盖原有 50 款及七型兜底，新增 6 款第7型藏品另使用本地 WebP 图集。规范、视觉校样与重渲染说明见 [美术管线](stool-art.md)。
 
 ## 独立策划后台
 
