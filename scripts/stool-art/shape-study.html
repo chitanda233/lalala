@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>软块 · 稠糊 · 液态轮廓校样</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:32px; background:#f5f2e9; color:#394639; font:15px system-ui; }
+  h1 { font-size:26px; margin:0 0 8px; }
+  p { margin:0 0 24px; color:#647060; }
+  section { display:grid; grid-template-columns:repeat(4, 240px); gap:14px; margin:0 0 24px; }
+  h2 { grid-column:1/-1; font-size:18px; margin:0; }
+  article { background:#fffdf5; border:1px solid #e1e3d6; border-radius:20px; padding:12px; }
+  .art svg { display:block; width:216px; height:216px; }
+  strong { font-size:16px; display:block; margin-bottom:6px; }
+  small { display:block; line-height:1.6; min-height:42px; font-size:13px; color:#647060; }
+  .samples { display:flex; align-items:center; justify-content:center; border-top:1px solid #eeebdf; margin-top:10px; }
+  .samples svg { display:block; width:96px; height:96px; }
+  .silhouette { filter:brightness(0); opacity:.68; }
+</style>
+<h1>软块 · 稠糊 · 液态</h1>
+<p>上方看体积与结构，下方看 96 px 手机小图和纯色剪影。</p>
+<main></main>
+<script type="module">
+  import { characters } from '../../src/content/specimens.js';
+  import { characterSvg } from '../../src/ui/artwork/stools.js';
+  const groups = [
+    ['7 型 · 水样液体：薄、流动、溅射', ['pancake','ink-black','bubbly','jet']],
+    ['6 型 · 稠糊：塌落、抹开、参差碎边', ['mashed-potato','fire','popping','luminous']],
+    ['5 型 · 软块：独立、饱满、完整边界', ['soft-pillows','coffee','cloud','jelly']],
+  ];
+  document.querySelector('main').innerHTML = groups.map(([label,ids]) => `<section><h2>${label}</h2>${ids.map(id=> {
+    const item=characters.find(item=>item.id===id);
+    return `<article><div class="art">${characterSvg(item)}</div><strong>${item.name}</strong><small>${item.description}</small><div class="samples"><div>${characterSvg(item)}</div><div class="silhouette">${characterSvg(item)}</div></div></article>`;
+  }).join('')}</section>`).join('');
+  window.previewReady=true;
+</script>

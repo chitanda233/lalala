@@ -1,219 +1,231 @@
-// Recipe-lab values are game fiction. Unlock metadata is reserved for progression.
-const drink = (
-  id,
-  name,
-  category,
-  color,
-  description,
-  effectLabel,
-  tags,
-  effects = {},
-) => ({
-  id,
-  name,
-  category,
-  color,
-  description,
-  effectLabel,
-  tags,
-  effects,
-  icon: id === "coffee" ? "coffee" : "drop",
-  unlock: { kind: "open" },
-});
+// 饮料只定义物态、颜色和顺畅效果；固定配方另在 stool-recipes.js 维护。
 export const drinks = [
-  drink(
-    "water",
-    "清水",
-    "日常",
-    "#a8d2cf",
-    "没有隐藏剧本，给今天留一点发挥空间。",
-    "保留餐盘原本的形态与颜色倾向",
-    [],
-  ),
-  drink(
-    "coffee",
-    "一杯咖啡",
-    "日常",
-    "#94735c",
-    "叫醒灵魂，也给出场铃按快一档。",
-    "偏软 +1；提供咖啡色线索",
-    ["coffee"],
-    { typeShift: 1 },
-  ),
-  drink(
-    "black-tea",
-    "浓缩红茶",
-    "日常",
-    "#b7834d",
-    "这一杯很有收尾意识，连配方都想收紧一点。",
-    "偏硬 0.6；增加琥珀色候选",
-    ["tea", "amber"],
-    { typeShift: -0.6 },
-  ),
-  drink(
-    "oat-milk",
-    "燕麦奶",
-    "日常",
-    "#e3d1aa",
-    "谷物开了家奶茶店，招牌叫稳稳当当。",
-    "向 4 型平衡 0.5；增加谷物斑点候选",
-    ["oat"],
-    { typeBalance: 0.5, formationStability: 0.08 },
-  ),
-  drink(
-    "prune-juice",
-    "西梅汁",
-    "果蔬",
-    "#8c6b88",
-    "江湖上流传着它的名字，游戏里负责催一催进度。",
-    "偏软 0.7；顺畅 +0.3",
-    ["prune"],
-    { typeShift: 0.7, smoothnessBonus: 0.3 },
-  ),
-  drink(
-    "dragon-juice",
-    "红心火龙果汁",
-    "果蔬",
-    "#d57b9c",
-    "颜色鲜明到连结算都想多看一眼。",
-    "提供玫红色线索",
-    ["dragon-pigment"],
-    { dropWeightMultipliers: { "red-dragon": 2 } },
-  ),
-  drink(
-    "spinach-juice",
-    "菠菜青汁",
-    "果蔬",
-    "#8ea76d",
-    "一口把整支绿叶小队请进了实验室。",
-    "提供绿色线索；略微平衡干硬",
-    ["green"],
-    { typeBalance: 0.3 },
-  ),
-  drink(
-    "blueberry-juice",
-    "蓝莓浓浆",
-    "果蔬",
-    "#9783b5",
-    "紫色信封已经寄出，等待肚子的回信。",
-    "提供紫色线索",
-    ["berry-pigment"],
-  ),
-  drink(
-    "beet-juice",
-    "甜菜根汁",
-    "果蔬",
-    "#b96c76",
-    "今天的调色盘，红得很认真。",
-    "提供砖红色线索",
-    ["beet-pigment"],
-  ),
-  drink(
-    "ink-tonic",
-    "深海墨水汽水",
-    "幻想",
-    "#607478",
-    "章鱼借出了一点墨水，气泡负责摇匀。",
-    "提供墨黑色与气泡线索；偏软 0.3",
-    ["ink", "bubbles"],
-    { typeShift: 0.3 },
-  ),
-  drink(
-    "milk",
-    "鲜牛奶",
-    "日常",
-    "#e5e2cb",
-    "白白的一杯，在这个实验室里负责奶油配色。",
-    "提供奶白色线索",
-    ["milk"],
-  ),
-  drink(
-    "soda",
-    "气泡水",
-    "日常",
-    "#b0cdd0",
-    "咕噜是配乐，泡泡是本局的临时演员。",
-    "提供气孔与泡沫线索",
-    ["bubbles"],
-  ),
-  drink(
-    "honey-water",
-    "蜂蜜浓饮",
-    "日常",
-    "#d1af68",
-    "黏黏糊糊，给拉长的线条一点耐心。",
-    "提供蜜糖色与拉丝线索；偏硬 0.3",
-    ["honey", "amber"],
-    { typeShift: -0.3 },
-  ),
-  drink(
-    "coconut-water",
-    "椰子水",
-    "日常",
-    "#c5d9b4",
-    "小岛营业中，先把紧张放在岸上。",
-    "向 4 型平衡 0.4；顺畅 +0.5",
-    ["coconut"],
-    { typeBalance: 0.4, smoothnessBonus: 0.5 },
-  ),
-  drink(
-    "golden-tea",
-    "金箔乌龙",
-    "幻想",
-    "#d5b85d",
-    "茶叶沉底，金箔漂着，财富感需要另外抽签。",
-    "提供金箔碎片线索；黄金权重 ×3",
-    ["gold-source", "tea"],
-    { dropWeightMultipliers: { gold: 3 } },
-  ),
-  drink(
-    "prism-soda",
-    "棱镜汽水",
-    "幻想",
-    "#bc9ac7",
-    "把一道彩虹装进瓶子，喝完也未必能完整还原。",
-    "开启彩虹候选；仍参与稀有抽签",
-    ["rainbow-source", "bubbles"],
-    { dropWeightMultipliers: { rainbow: 2 } },
-  ),
-  drink(
-    "gel-drink",
-    "果冻实验饮",
-    "幻想",
-    "#b5c991",
-    "瓶子里的东西正在认真练习弹性。",
-    "开启果冻候选；偏软 0.4",
-    ["gel-source"],
-    { typeShift: 0.4, dropWeightMultipliers: { jelly: 2 } },
-  ),
-  drink(
-    "mineral-tonic",
-    "晶簇矿泉液",
-    "幻想",
-    "#a2c8d3",
-    "矿物自带几何作业，结晶还需要一点运气。",
-    "开启晶体候选；偏硬 0.4",
-    ["crystal-source"],
-    { typeShift: -0.4, dropWeightMultipliers: { crystal: 2 } },
-  ),
-  drink(
-    "glow-soda",
-    "月光荧汽水",
-    "幻想",
-    "#acd4b2",
-    "借来半瓶月光，普通灯光下也不耽误做梦。",
-    "开启夜光候选；提供气泡线索",
-    ["glow-source", "bubbles"],
-    { dropWeightMultipliers: { luminous: 2 } },
-  ),
-  drink(
-    "cocoa",
-    "热可可",
-    "日常",
-    "#a78065",
-    "温暖的棕色选手，擅长把零碎收成团。",
-    "提供可可色线索；偏硬 0.4",
-    ["cocoa"],
-    { typeShift: -0.4 },
-  ),
+  {
+    "id": "water",
+    "name": "清水",
+    "category": "补水基准",
+    "color": "#a8d2cf",
+    "description": "补水打底，保留餐盘原本的形态与颜色倾向。",
+    "effectLabel": "软硬 4；保留餐盘底色",
+    "tags": [],
+    "hardness": 4,
+    "porosity": 0,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "coffee",
+    "name": "一杯咖啡",
+    "category": "肠道促动",
+    "color": "#94735c",
+    "description": "给肠道按一下出场铃，咖啡色也跟着报到。",
+    "effectLabel": "软硬 2；咖啡色",
+    "tags": [
+      "coffee"
+    ],
+    "hardness": 2,
+    "porosity": 0,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "coffee",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "prune-juice",
+    "name": "西梅汁",
+    "category": "软化干硬",
+    "color": "#8c6b88",
+    "description": "干硬路线的软化选手，还会留下深紫色的签名。",
+    "effectLabel": "软硬 1；莓紫色；顺畅 +0.3",
+    "tags": [
+      "prune",
+      "berry-pigment"
+    ],
+    "hardness": 1,
+    "porosity": 0,
+    "effects": {
+      "smoothnessBonus": 0.3
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "milk",
+    "name": "鲜牛奶",
+    "category": "乳糖反应",
+    "color": "#e5e2cb",
+    "description": "有些肚子对乳糖很敏感，喝完可能咕噜闹腾。",
+    "effectLabel": "软硬 3；奶白色",
+    "tags": [
+      "milk",
+      "lactose"
+    ],
+    "hardness": 3,
+    "porosity": 0,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "soda",
+    "name": "气泡水",
+    "category": "气泡胀气",
+    "color": "#b0cdd0",
+    "description": "咕噜冒泡，给配方添点气孔，不额外推高稀软。",
+    "effectLabel": "软硬 3；蓬松 +1；保留餐盘底色",
+    "tags": [
+      "bubbles"
+    ],
+    "hardness": 3,
+    "porosity": 1,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "bubble-tea",
+    "name": "珍珠奶茶",
+    "category": "珍珠颗粒",
+    "color": "#c8a27a",
+    "description": "奶茶里滚着一颗颗黑珍珠，嚼着喝才有意思。",
+    "effectLabel": "软硬 4；奶茶色",
+    "tags": [
+      "milk",
+      "tea",
+      "amber",
+      "tapioca"
+    ],
+    "hardness": 4,
+    "porosity": 0,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "grass-jelly",
+    "name": "仙草冻饮",
+    "category": "凝胶冻块",
+    "color": "#827660",
+    "description": "一杯茶里漂着滑溜溜的仙草冻，吸一口，冻块也跟着出发。",
+    "effectLabel": "软硬 5；凝胶饮料；保留餐盘底色",
+    "tags": [
+      "gel-source",
+      "grass-jelly"
+    ],
+    "hardness": 5,
+    "porosity": 0,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "ink-tonic",
+    "name": "深海墨水汽水",
+    "category": "幻想",
+    "color": "#607478",
+    "description": "章鱼借出了一点墨水，气泡负责摇匀。",
+    "effectLabel": "软硬 1；墨黑色；蓬松 +1",
+    "tags": [
+      "ink",
+      "bubbles"
+    ],
+    "hardness": 1,
+    "porosity": 1,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "prism-soda",
+    "name": "棱镜汽水",
+    "category": "幻想",
+    "color": "#bc9ac7",
+    "description": "把彩虹装进瓶子，给普通成品留下砖红色。",
+    "effectLabel": "软硬 2；砖红色；蓬松 +1",
+    "tags": [
+      "rainbow-source",
+      "beet-pigment",
+      "bubbles"
+    ],
+    "hardness": 2,
+    "porosity": 1,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "mineral-tonic",
+    "name": "晶簇矿泉液",
+    "category": "幻想",
+    "color": "#a2c8d3",
+    "description": "矿物饮料让自由组合更偏硬，颜色仍由餐盘决定。",
+    "effectLabel": "软硬 6；保留餐盘底色",
+    "tags": [
+      "crystal-source"
+    ],
+    "hardness": 6,
+    "porosity": 0,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  },
+  {
+    "id": "glow-soda",
+    "name": "月光荧汽水",
+    "category": "幻想",
+    "color": "#acd4b2",
+    "description": "借来半瓶月光，普通灯光下也不耽误做梦。",
+    "effectLabel": "软硬 2；蓬松 +1；保留餐盘底色",
+    "tags": [
+      "glow-source",
+      "bubbles"
+    ],
+    "hardness": 2,
+    "porosity": 1,
+    "effects": {
+      "smoothnessBonus": 0
+    },
+    "icon": "drop",
+    "unlock": {
+      "kind": "open"
+    }
+  }
 ];

@@ -19,7 +19,7 @@ test("each meal saves an independent visible specimen under exactly one morpholo
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await chooseMeal(page, ["enoki", "corn"]);
-  await chooseDrink(page, "blueberry-juice");
+  await chooseDrink(page, "prune-juice");
   await chooseAdditives(page, ["glitter"]);
 
   await armSpecimen(page, "glitter", 4);

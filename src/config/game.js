@@ -1,13 +1,15 @@
 export const gameConfig = {
   storageKey: "lalala-dev",
   saveVersion: 5,
-  rulesVersion: 14,
+  rulesVersion: 15,
   maxFoods: 3,
-  maxAdditives: 3,
+  maxAdditives: 1,
   resultDelayMs: 400,
   water: { min: 250, max: 2500, step: 250, default: 1500 },
-  commonDropWeight: 100,
-  maxSpecialProbability: 0.005,
+  recipeHitProbability: 0.8,
+  stabilizedRecipeHitProbability: 1,
+  baseRareProbability: 0.02,
+  rareAdditiveBonus: 0.03,
 };
 
 export function formatDuration(seconds) {

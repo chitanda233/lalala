@@ -9,7 +9,7 @@ import { classifySpecimen } from "./specimen.js";
 import { explainOutcome } from "./explanation.js";
 import { smoothness } from "./smoothness.js";
 
-export { getOutcomePool, normalizeDropPool } from "./outcome-pool.js";
+export { getOutcomePool } from "./outcome-pool.js";
 
 // Conditional inspection API for planning tools; gameplay draws a whole specimen.
 export function getDropPool(input, type = resolveBristolType(input)) {
@@ -43,7 +43,7 @@ export function rollOutcome(input, random = Math.random) {
     specimenId: candidate.specimenId,
     characterId: character.id,
     morphology: { ...candidate.morphology },
-    colorId: resolveColor(selection, character),
+    colorId: candidate.special ? null : resolveColor(selection, character),
     marks: effects.outcomeMarks,
     appearance: {
       ...foodAppearance(
@@ -52,6 +52,7 @@ export function rollOutcome(input, random = Math.random) {
         resolveColorStrength(selection, character),
       ),
       variationSeed,
+
     },
     special: candidate.special,
   };
@@ -62,7 +63,7 @@ export function rollOutcome(input, random = Math.random) {
     type,
     smoothness: level,
     score: Math.round(
-      Math.min(100, 50 + level * 9 + (character.id === "gold" ? 5 : 0)),
+      Math.min(100, 50 + level * 9 + (specimen.special ? 5 : 0)),
     ),
   };
   return { ...outcome, reasons: explainOutcome(outcome) };

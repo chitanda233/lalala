@@ -7,6 +7,8 @@ import {
 } from "/src/content/food-attributes.js";
 import { foodById, characterById } from "/src/content/catalog.js";
 import { drinks } from "/src/content/drinks.js";
+import { additives } from "/src/content/additives.js";
+import { forceZones } from "/src/content/force.js";
 import { toilets } from "/src/content/toilets.js";
 import { stoolColors } from "/src/content/colors.js";
 import { bristolTypes } from "/src/content/stools.js";
@@ -16,8 +18,8 @@ import { typeDistribution } from "/src/game/stool-type.js";
 import {
   getOutcomePool,
   rollOutcome,
-  specialProbability,
 } from "/src/game/drops.js";
+import { getRecipeForecast } from "/src/game/outcome-pool.js";
 import { specimenName } from "/src/game/specimen.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -174,7 +176,7 @@ function currentSelection() {
     force: Number($("#preview-force").value),
     digestionTime: $("#preview-digestion").value,
     toiletId: $("#preview-toilet").value,
-    additives: [],
+    additives: $("#preview-additive").value ? [$("#preview-additive").value] : [],
   };
 }
 function calculatePreview(selection) {
@@ -199,7 +201,8 @@ function calculatePreview(selection) {
   return {
     distribution,
     outcome: rollOutcome(selection, () => draws.shift() ?? 0),
-    rare: specialProbability(selection),
+    forecast: getRecipeForecast(selection),
+    pool,
   };
 }
 function formatPercent(value) {
@@ -208,7 +211,18 @@ function formatPercent(value) {
 function specimenCard(label, data, after = false) {
   const outcome = data.outcome;
   const character = characterById[outcome.characterId];
-  return `<div class="specimen${after ? " after" : ""}" data-character-id="${escapeText(character.id)}"><small>${label} · 代表外观</small>${characterSvg(character, false, outcome.type, outcome.colorId, outcome.marks, outcome.appearance)}<strong>${escapeText(specimenName(outcome))}</strong><p>${outcome.type} 型 · ${escapeText(bristolTypes[outcome.type - 1].name)}</p><p>稀有款 ${formatPercent(data.rare)}</p></div>`;
+  return `<div class="specimen${after ? " after" : ""}" data-character-id="${escapeText(character.id)}"><small>${label} · 代表外观</small>${characterSvg(character, false, outcome.type, outcome.colorId, outcome.marks, outcome.appearance)}<strong>${escapeText(specimenName(outcome))}</strong><p>${outcome.type} 型 · ${escapeText(bristolTypes[outcome.type - 1].name)}</p><p>稀有合计 ${formatPercent(data.forecast.rareProbability)}</p></div>`;
+}
+function recipeForecast(data) {
+  const { forecast, pool } = data;
+  const recipe = forecast.matchedRecipe || forecast.suggestedRecipe;
+  if (!recipe) return "<p>按食物主体与饮料物态生成普通形态。</p>";
+  const target = characterById[recipe.characterId];
+  const zone = forceZones.find((item) => item.id === recipe.forceZone);
+  const actualProbability = pool
+    .filter((entry) => entry.characterId === recipe.characterId)
+    .reduce((sum, entry) => sum + entry.probability, 0);
+  return `<strong>${forecast.matchedRecipe ? "固定配方已匹配" : "建议固定配方"} · ${escapeText(target.name)}</strong><p>${recipe.foodIds.map((id) => escapeText(foodById[id].name)).join(" + ")} + ${escapeText(drinks.find((item) => item.id === recipe.drinkId).name)} · ${zone.name} ${zone.min}–${zone.max}</p><div class="forecast-values"><span>目标实际概率<strong>${formatPercent(actualProbability)}</strong></span><span>稀有合计<strong>${formatPercent(forecast.rareProbability)}</strong></span></div><p>${forecast.matchedRecipe ? `未中稀有后，固定配方命中 ${formatPercent(forecast.recipeConditionalProbability)}；整局命中 ${formatPercent(forecast.recipeProbability)}。` : "当前搭配尚未完全符合这条配方，目标概率按属性候选计算。"}</p>`;
 }
 function renderPreview() {
   previewFrame = null;
@@ -225,7 +239,14 @@ function renderPreview() {
     const after = calculatePreview(selection);
     $("#preview-recipe").textContent = selection.foodIds
       .map((id) => foodById[id].name)
+      .concat(
+        drinks.find((item) => item.id === selection.drinkId).name,
+        selection.additives.length
+          ? additives.find((item) => item.id === selection.additives[0]).name
+          : "无添加剂",
+      )
       .join(" ＋ ");
+    $("#preview-forecast").innerHTML = recipeForecast(after);
     $("#specimen-preview").innerHTML =
       specimenCard("已保存", before) + specimenCard("当前草稿", after, true);
     const probabilities = (distribution) =>
@@ -331,6 +352,7 @@ $("#pigment-id").innerHTML =
     )
     .join("");
 $("#preview-drink").innerHTML = optionList(drinks, "water");
+$("#preview-additive").innerHTML = optionList(additives, "", "无添加剂");
 $("#preview-digestion").innerHTML = optionList(digestionOptions, "4");
 $("#preview-toilet").innerHTML = optionList(toilets, "standard");
 $("#preview-water").innerHTML = Array.from(

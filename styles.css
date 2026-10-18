@@ -391,6 +391,7 @@ svg {
 }
 .force-heading strong {
   font-weight: 500;
+  font-size: 14px;
 }
 .force-heading {
   margin-top: 0;
@@ -1334,6 +1335,30 @@ input[type="range"] {
   height: 50px;
   flex-shrink: 0;
   font-size: 18px;
+}
+.collection-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.collection-preview-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 42px;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.collection-preview-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #647e4d;
+}
+.collection-dialog .dialog-heading > div:first-child {
+  min-width: 0;
 }
 .type-filters {
   gap: 5px;

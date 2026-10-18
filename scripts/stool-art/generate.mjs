@@ -86,6 +86,7 @@ for (const [index, item] of characters.entries()) {
 }
 if (!prototype) {
   for (let type = 1; type <= 7; type++) {
+    if (onlyType && type !== onlyType) continue;
     if (!onlyMarks) {
       const url = await page.evaluate(
         (args) => window.renderCollectible(args),

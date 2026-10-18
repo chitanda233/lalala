@@ -1,3 +1,4 @@
+import { specimenMaterial } from "../content/materials.js";
 import { characterById } from "../content/catalog.js";
 import { bristolTypes } from "../content/stools.js";
 import { stoolColors } from "../content/colors.js";
@@ -38,16 +39,22 @@ export function diagnoseOutcome(outcome) {
     `表面：${texture.length ? `${texture.join("，")}。` : surfaces[type.id - 1]}`,
   );
 
-  const material = compatible && character.rarity === "special";
+  const coating = specimenMaterial(outcome);
+  const material = coating || (compatible && character.rarity === "special");
   const color =
     appearance?.colorStrength === 1 && !material
       ? stoolColors.classic.name
       : stoolColors[outcome.colorId]?.name;
   details.push(
     material
-      ? `材质：可见${character.material}质感；软硬与成形仍按 ${type.id} 型判断。`
+      ? `材质：可见${coating?.material || character.material}质感；软硬与成形仍按 ${type.id} 型判断。`
       : `色泽：${color ? `${appearance?.colorStrength < 7 ? "底色带有" : "呈"}${color}色调` : "保留本款底色"}。`,
   );
+
+  if (appearance?.decorations.length) {
+    const names = { glitter: "闪粉", "gold-flake": "金箔", silver: "银色斑点", petals: "花瓣", popping: "跳跳颗粒", charcoal: "炭色斑点" };
+    details.push(`添加物：${appearance.decorations.map(id => names[id]).join("、")}。`);
+  }
 
   const residues = [];
   if (normalizeMarks(outcome.marks).includes("enoki"))

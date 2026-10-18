@@ -3,20 +3,13 @@ import assert from "node:assert/strict";
 import { foods } from "../src/content/foods.js";
 import { normalizeSelection } from "../src/game/selection.js";
 import { collectEffects } from "../src/game/effects.js";
-import {
-  resolveBristolType,
-  typeDistribution,
-} from "../src/game/stool-type.js";
+import { typeDistribution } from "../src/game/stool-type.js";
 import { rollOutcome, specialProbability } from "../src/game/drops.js";
 import { outcomeDraws } from "./outcome-helpers.js";
-import { classifySpecimen } from "../src/game/specimen.js";
+
 import { normalizeSave } from "../src/storage/model.js";
 import { normalizeFoods, canEatFoods } from "../src/progression/foods.js";
-import {
-  createSession,
-  restoreSession,
-  settleSession,
-} from "../src/game/session.js";
+import { createSession, restoreSession, settleSession } from "../src/game/session.js";
 
 const meal = {
   foodIds: ["rice"],
@@ -74,47 +67,18 @@ test("mixed-food effects are independent of slot order and similar bonuses are c
     rollOutcome(reversed, () => 0.5),
   );
   assert.equal(collectEffects(first).food.fiber, 6);
-  assert.ok(
-    resolveBristolType(first) > resolveBristolType({ ...meal, water: 1000 }),
-  );
-  assert.equal(resolveBristolType({ ...first, water: 500 }), 1);
-  const hot = { ...meal, foodIds: ["hotpot", "spicy-wings", "snail-noodles"] };
-  assert.equal(resolveBristolType(hot), 6);
-  assert.ok(
-    typeDistribution(hot).find((entry) => entry.type === 7).probability < 0.2,
-  );
+  assert.ok(collectEffects(first).food.shape.softness >= 1);
 });
 
-test("the rare preview accounts for actual form probabilities and excludes ineligible forms", () => {
-  const input = { ...meal, water: 1250 };
-  const eligibleProbability = typeDistribution(input)
-    .filter((form) => form.type === 4)
-    .reduce((sum, form) => sum + form.probability, 0);
-  assert.ok(
-    Math.abs(specialProbability(input) - (eligibleProbability * 0.1) / 100.1) <
-      1e-12,
-  );
-  let draws = outcomeDraws(
-    input,
-    (entry) => classifySpecimen(entry) === 2 && !entry.special,
-  );
-  const hard = rollOutcome(input, () => draws.shift());
-  assert.equal(hard.type, 2);
-  assert.equal(hard.special, false);
-  draws = outcomeDraws(
-    input,
-    (entry) => classifySpecimen(entry) === 4 && entry.characterId === "gold",
-  );
-  const formed = rollOutcome(input, () => draws.shift());
-  assert.equal(formed.type, 4);
-  assert.equal(formed.characterId, "gold");
-  assert.ok(
-    specialProbability({
-      ...meal,
-      foodIds: ["oatmeal", "broccoli", "yogurt"],
-      toiletId: "golden",
-    }) <= 0.005,
-  );
+test("rare preview includes every special species independent of food and water", () => {
+  const input = { ...meal, water: 250 };
+  assert.ok(Math.abs(specialProbability(input) - 0.02) < 1e-12);
+  const draws = outcomeDraws(input, (entry) => entry.characterId === "gold");
+  const outcome = rollOutcome(input, () => draws.shift());
+  assert.equal(outcome.type, 4);
+  assert.equal(outcome.characterId, "gold");
+  assert.equal(outcome.special, true);
+  assert.ok(Math.abs(specialProbability({ ...input, foodIds: ["oatmeal", "broccoli", "yogurt"], toiletId: "golden" }) - 0.02) < 1e-12);
 });
 
 test("the current save model restores full sessions and validates food unlocks", () => {

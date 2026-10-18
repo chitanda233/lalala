@@ -29,7 +29,7 @@ test("all 56 collectible species have dedicated artwork (50 PNG, six atlas crops
   for (const item of characters)
     for (const type of item.types) {
       if (waterAtlasIds.has(item.id)) {
-        assert.match(characterSvg(item, false, type), /water-type-seven-atlas\.jpg/);
+        assert.match(characterSvg(item, false, type), /water-type-seven-atlas\.webp/);
         forms++;
         continue;
       }
@@ -64,5 +64,22 @@ test("locked art is one anonymous silhouette with no name, material, palette or 
   for (const item of characters) {
     assert.ok(!locked[0].includes(item.name));
     assert.ok(!locked[0].includes(item.description));
+  }
+});
+
+test("all collectible geometry fits the shader primitive budget and has finite positive dimensions", async () => {
+  const { geometry } = await import("../scripts/stool-art/geometry.js");
+  for (const [variant, item] of characters.entries()) {
+    const shape = geometry(item.art, item.homeType, variant);
+    assert.equal(shape.a.length, shape.b.length, item.id);
+    assert.ok(shape.a.length / 4 <= 128, `${item.id} exceeds GPU primitive budget`);
+    assert.ok([...shape.a, ...shape.b].every(Number.isFinite), item.id);
+    assert.ok(shape.vertical > 0 && shape.blend > 0, item.id);
+    for (let i = 0; i < shape.a.length; i += 4) {
+      if (shape.a[i + 3] === 0)
+        assert.ok(shape.b.slice(i, i + 3).every(value => value > 0), `${item.id} has invalid ellipse radii`);
+      else
+        assert.ok(shape.a[i + 3] > 0 && shape.b[i + 3] > 0, `${item.id} has invalid tube radii`);
+    }
   }
 });

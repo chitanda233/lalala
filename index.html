@@ -151,7 +151,7 @@
                   d="m24 22 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z"
                   fill="#fff9df"
                 /></svg></span
-            ><strong>添加剂</strong><small id="additive-count">0 / 3</small>
+            ><strong>添加剂</strong><small id="additive-count">0 / 1</small>
           </button>
         </nav>
         <section
@@ -531,13 +531,19 @@
             我的快乐图鉴 <small id="collection-total"></small>
           </h2>
         </div>
-        <button
-          class="close-button"
-          data-close="collection-dialog"
-          aria-label="关闭图鉴"
-        >
-          <svg class="icon"><use href="#i-close" /></svg>
-        </button>
+        <div class="collection-heading-actions">
+          <label class="collection-preview-toggle">
+            <input id="collection-preview-all" type="checkbox" aria-label="显示全部样式" />
+            <span>全部样式</span>
+          </label>
+          <button
+            class="close-button"
+            data-close="collection-dialog"
+            aria-label="关闭图鉴"
+          >
+            <svg class="icon"><use href="#i-close" /></svg>
+          </button>
+        </div>
       </header>
       <button id="collection-back" hidden>‹ 返回图鉴</button>
       <div
@@ -584,7 +590,7 @@
       <ol class="help-steps">
         <li>
           <strong>选这一餐</strong>
-          <p>左侧添加最多三种食物，再配饮料、饮用量和添加剂。</p>
+          <p>左侧添加最多三种食物，再配饮料、饮用量和一种添加剂。</p>
         </li>
         <li>
           <strong>选消化时间</strong>

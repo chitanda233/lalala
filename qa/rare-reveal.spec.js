@@ -31,7 +31,7 @@ async function prepareRecipe(
 const rareRecipes = [
   {
     id: "gold",
-    drink: "golden-tea",
+    drink: "water",
     additives: ["gold-leaf"],
     motif: "sunburst",
   },
@@ -49,7 +49,7 @@ const rareRecipes = [
   },
   {
     id: "jelly",
-    drink: "gel-drink",
+    drink: "water",
     additives: ["gelatin"],
     motif: "bubbles",
   },
@@ -69,7 +69,7 @@ const rareRecipes = [
   { id: "meteor", additives: ["stardust"], water: 500, motif: "meteor" },
   {
     id: "amber-fossil",
-    drink: "black-tea",
+    drink: "mineral-tonic",
     additives: ["amber-resin"],
     motif: "leaves",
   },

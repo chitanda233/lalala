@@ -30,12 +30,16 @@ const waterAtlasIndices = Object.freeze({
 // Six artwork crops from ChatGPT's 2026-10-18 type-7 concept sheet.
 // Stored as one locally hosted atlas to keep the mobile release lightweight.
 const waterAtlasPath = "/assets/stools/water-type-seven-atlas.webp";
-function waterAtlasSvg(character, type, marks) {
+function waterAtlasSvg(character, type, marks, appearance) {
   const index = waterAtlasIndices[character.id];
   const x = (index % 3) * 144;
   const y = Math.floor(index / 3) * 144;
-  const safeMarks = normalizeMarks(marks);
-  return `<svg viewBox="0 0 320 320" role="img" aria-label="${safeText(character.name)} · 布里斯托第 7 型" data-specimen="${safeText(character.id)}:${type}" data-material="${safeText(character.material)}" data-marks="${safeMarks.join(" ")}"><svg x="0" y="0" width="320" height="320" viewBox="${x} ${y} 144 144" preserveAspectRatio="xMidYMid meet"><image href="${waterAtlasPath}" x="0" y="0" width="432" height="288"/></svg></svg>`;
+  const signatures = normalizeMarks(marks);
+  const id = `specimen-${++illustrationId}`;
+  const crop = `<svg x="0" y="0" width="320" height="320" viewBox="${x} ${y} 144 144" preserveAspectRatio="xMidYMid meet"><image href="${waterAtlasPath}" x="0" y="0" width="432" height="288"/></svg>`;
+  const mask = surfaceMask(crop, id, true);
+  const signature = signatures.map(mark => imageAsset(`type-${type}-${mark}`)).join("");
+  return `<svg viewBox="0 0 320 320" role="img" aria-label="${safeText(character.name)} · 布里斯托第 7 型" data-specimen="${safeText(character.id)}:${type}" data-material="${safeText(character.material)}" data-marks="${signatures.join(" ")}">${crop}${textureLayers(`type-${type}`, `${id}-texture`, appearance, character, crop, true)}${additiveDecorationLayers(crop, `${id}-decor`, appearance, true)}${signature ? `${mask}<g mask="url(#${id}-surface)">${signature}</g>` : ""}</svg>`;
 }
 
 let illustrationId = 0;
@@ -70,6 +74,27 @@ function tintFilter(id, color, light) {
 function imageAsset(filename, filter = "") {
   return `<image href="${assetRoot}${filename}.png" x="0" y="0" width="320" height="320"${filter ? ` filter="url(#${filter})"` : ""}/>`;
 }
+// PNG主体按透明度裁切；概念图集先去掉浅色纸底，再承接同样的外观叠层。
+function surfaceMask(body, id, atlas = false) {
+  const removePaper = atlas
+    ? '<feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -1.4 -1.4 -1.4 0 4"/>'
+    : "";
+  return `<defs><filter id="${id}-solid" color-interpolation-filters="sRGB">${removePaper}<feComponentTransfer><feFuncA type="discrete" tableValues="0 0 1 1"/></feComponentTransfer></filter><mask id="${id}-surface" maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="320" style="mask-type:alpha"><g filter="url(#${id}-solid)">${body}</g></mask></defs>`;
+}
+function additiveDecorationLayers(body, id, appearance, atlas = false) {
+  const decorations = appearance?.decorations || [];
+  if (!decorations.length) return "";
+  const designs = {
+    glitter: '<path d="M10 4v12M4 10h12" stroke="#fff4bd" stroke-width="2"/><circle cx="30" cy="29" r="2.1" fill="#fcf3dd"/>',
+    "gold-flake": '<path d="m7 7 9-2 4 6-8 5Z" fill="#e4b93f"/><path d="m29 28 7-2 2 5-6 3Z" fill="#f4d77a"/>',
+    silver: '<circle cx="11" cy="12" r="3" fill="#e7edf2"/><circle cx="31" cy="31" r="2.2" fill="#b7c4d2"/>',
+    petals: '<ellipse cx="12" cy="11" rx="5" ry="2.5" transform="rotate(-30 12 11)" fill="#db93ad"/><ellipse cx="29" cy="30" rx="4" ry="2" fill="#e6b9d0"/>',
+    popping: '<circle cx="11" cy="12" r="3" fill="#e1a1a8"/><circle cx="31" cy="30" r="2.8" fill="#d7c76e"/>',
+    charcoal: '<circle cx="11" cy="12" r="2.4" fill="#465050"/><circle cx="29" cy="31" r="1.7" fill="#5c6761"/>',
+  };
+  const layers = decorations.map((decoration, index) => `<defs><pattern id="${id}-${index}" width="44" height="46" patternUnits="userSpaceOnUse">${designs[decoration]}</pattern></defs><rect data-decoration="${decoration}" width="320" height="320" fill="url(#${id}-${index})"/>`).join("");
+  return `${surfaceMask(body, id, atlas)}<g mask="url(#${id}-surface)">${layers}</g>`;
+}
 function mixHex(first, second, amount) {
   const parts = [0, 1, 2].map((index) =>
     Math.round(
@@ -81,12 +106,12 @@ function mixHex(first, second, amount) {
   );
   return `#${parts.join("")}`;
 }
-function textureLayers(filename, id, appearance, palette) {
+function textureLayers(filename, id, appearance, palette, body = null, atlas = false) {
   if (!appearance) return "";
   const { grain, porosity, residues } = appearance;
   if (grain <= 1 && porosity <= 1 && !residues.length) return "";
   const mask = `${id}-surface`;
-  const definitions = `<filter id="${id}-solid"><feComponentTransfer><feFuncA type="discrete" tableValues="0 0 1 1"/></feComponentTransfer></filter><mask id="${mask}" maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="320" style="mask-type:alpha">${imageAsset(filename, `${id}-solid`)}</mask>`;
+  const definitions = surfaceMask(body || imageAsset(filename), id, atlas);
   let layers = "";
   const phase =
     appearance.variationSeed == null
@@ -126,7 +151,7 @@ function textureLayers(filename, id, appearance, palette) {
       layers += `<g data-food-residue="${safeText(residue.foodId)}" opacity="${opacity}">${mark}</g>`;
     }
   });
-  return `<defs>${definitions}</defs><g mask="url(#${mask})">${layers}</g>`;
+  return `${definitions}<g mask="url(#${mask})">${layers}</g>`;
 }
 export function stoolShape(type, color, light) {
   type = normalizeType(type);
@@ -153,7 +178,7 @@ export function characterSvg(
   if (locked) return mysterySvg();
   // Hand-authored water illustrations keep their liquid silhouette and own palette.
   if (Object.hasOwn(waterAtlasIndices, character.id) && type === 7)
-    return waterAtlasSvg(character, type, marks);
+    return waterAtlasSvg(character, type, marks, normalizeAppearance(appearance));
   type = normalizeType(type);
   const id = `specimen-${++illustrationId}`;
   const compatible =
@@ -178,7 +203,7 @@ export function characterSvg(
     appearance && [3, 4].includes(type)
       ? 1 + (appearance.elongation - 4) * 0.025
       : 1;
-  const sculpture = `${body}${compatible ? imageAsset(`${filename}-decor`) : ""}${textureLayers(filename, id, appearance, palette)}${signatures.map((mark) => `<g opacity="${appearance ? 0.25 + appearance.enokiRetention * 0.107 : 1}">${imageAsset(`${filename}-${mark}`)}</g>`).join("")}`;
+  const sculpture = `${body}${compatible ? imageAsset(`${filename}-decor`) : ""}${textureLayers(filename, id, appearance, palette)}${additiveDecorationLayers(imageAsset(filename), `${id}-decor`, appearance)}${signatures.map((mark) => `<g opacity="${appearance ? 0.25 + appearance.enokiRetention * 0.107 : 1}">${imageAsset(`${filename}-${mark}`)}</g>`).join("")}`;
   const rotation =
     appearance?.variationSeed == null
       ? 0

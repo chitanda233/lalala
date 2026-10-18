@@ -1,35 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { typeDistribution } from "../src/game/stool-type.js";
+
 import { getOutcomePool } from "../src/game/outcome-pool.js";
-import {
-  createAimingSession,
-  lockSessionForce,
-  restoreSession,
-} from "../src/game/session.js";
+import { createAimingSession, lockSessionForce, restoreSession } from "../src/game/session.js";
 import { normalizeSelection } from "../src/game/selection.js";
 
 const meal = { foodIds: ["rice", "enoki"], force: 50 };
-const mean = (selection) =>
-  typeDistribution(selection).reduce(
-    (sum, entry) => sum + entry.type * entry.probability,
-    0,
-  );
 
-test("digestion time shifts the meal toward softer or harder concrete specimens", () => {
-  const short = mean({ ...meal, digestionTime: "2" });
-  const medium = mean({ ...meal, digestionTime: "4" });
-  const long = mean({ ...meal, digestionTime: "8" });
-  assert.ok(short > medium);
-  assert.ok(medium > long);
-  assert.notDeepEqual(
-    typeDistribution({ ...meal, digestionTime: "8" }),
-    typeDistribution({ ...meal, foodIds: ["burger"], digestionTime: "8" }),
-  );
-  assert.equal(
-    normalizeSelection({ digestionTime: "unknown" }).digestionTime,
-    "4",
-  );
+test("digestion time is saved but does not override an exact food, drink and force recipe", () => {
+  const expected = getOutcomePool({ ...meal, digestionTime: "4" });
+  for (const digestionTime of ["2", "8", "random"])
+    assert.deepEqual(getOutcomePool({ ...meal, digestionTime }), expected);
+  assert.equal(normalizeSelection({ digestionTime: "unknown" }).digestionTime, "4");
 });
 
 test("random preview is the exact equal mixture of all three digestion pools", () => {
@@ -53,7 +35,7 @@ test("random preview is the exact equal mixture of all three digestion pools", (
     pool
       .filter((entry) => entry.special)
       .reduce((sum, entry) => sum + entry.probability, 0) <=
-      0.005 + 1e-12,
+      0.02 + 1e-12,
   );
 });
 

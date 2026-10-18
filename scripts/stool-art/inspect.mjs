@@ -10,8 +10,9 @@ const page = await browser.newPage({
   deviceScaleFactor: 1,
 });
 const prototype = process.argv.includes("--prototype");
+const shapes = process.argv.includes("--shapes");
 await page.goto(
-  `http://127.0.0.1:4175/scripts/stool-art/preview.html${prototype ? "?prototype" : ""}`,
+  `http://127.0.0.1:4175/scripts/stool-art/${shapes ? "shape-study" : "preview"}.html${prototype ? "?prototype" : ""}`,
 );
 await page.waitForFunction(() => window.previewReady);
 await page.evaluate(() =>
@@ -29,7 +30,7 @@ await page.evaluate(() =>
 );
 await page.screenshot({
   path: new URL(
-    prototype ? "prototype.png" : "contact-sheet.png",
+    shapes ? "shape-study.png" : prototype ? "prototype.png" : "contact-sheet.png",
     import.meta.url,
   ).pathname,
   fullPage: true,

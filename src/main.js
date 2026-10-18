@@ -21,7 +21,7 @@ let frame;
 let finishing = false;
 const audio = createAudio(() => save.sound);
 const collectionView = createCollectionView(() => save);
-const sessionView = createSessionView();
+const sessionView = createSessionView(() => selection);
 const selectionView = createSelectionView({
   getSelection: () => selection,
   getInventory: () => save.toilets,

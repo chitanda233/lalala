@@ -12,15 +12,16 @@ export function foodProfile(ids) {
     lubricity: 0,
   };
   const foods = [...new Set(ids)].sort().map((id) => foodById[id]);
+  const foodInfluence = (food) => food.attributes.influence * (food.category === "staple" ? 2 : 1);
   const influence = foods.reduce(
-    (sum, food) => sum + food.attributes.influence,
+    (sum, food) => sum + foodInfluence(food),
     0,
   );
   for (const food of foods) {
     for (const key of Object.keys(profile)) profile[key] += food.traits[key];
     for (const key of Object.keys(shape))
       shape[key] +=
-        (food.attributes[key] * food.attributes.influence) / influence;
+        (food.attributes[key] * foodInfluence(food)) / influence;
     appearances.set(
       food.appearanceId,
       (appearances.get(food.appearanceId) || 0) + 1,

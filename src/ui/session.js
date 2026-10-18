@@ -7,20 +7,59 @@ import {
 } from "../content/catalog.js";
 import { stoolColors } from "../content/colors.js";
 import { normalizeMarks, outcomeMarks } from "../content/marks.js";
-import { forceZone } from "../content/force.js";
+import { forceZone, forceZones } from "../content/force.js";
 import { digestionById } from "../content/digestion.js";
 import { bristolTypes } from "../content/stools.js";
 import { diagnoseOutcome } from "../game/explanation.js";
 import { specimenName } from "../game/specimen.js";
 import { formatDuration } from "../config/game.js";
+import { getRecipeForecast } from "../game/outcome-pool.js";
 import { characterSvg } from "./artwork/stools.js";
 import { closeDialogs } from "./dialogs.js";
 import { createRareReveal } from "./rare-reveal.js";
 import { $ } from "./dom.js";
 
-export function createSessionView() {
+const percent = (value) => `${(value * 100).toFixed(1).replace(/\.0$/, "")}%`;
+
+export function createSessionView(getSelection = () => ({})) {
   const resultDialog = $("#result-dialog");
   const rareReveal = createRareReveal(resultDialog);
+  let activeSelection = null;
+  let lastForecastZone = null;
+
+  function guidance(selection, force = selection.force) {
+    const forecast = getRecipeForecast({ ...selection, force });
+    const recipe = forecast.matchedRecipe || forecast.suggestedRecipe;
+    const zone = recipe && forceZones.find((item) => item.id === recipe.forceZone);
+    const targetForecast = recipe && !forecast.matchedRecipe
+      ? getRecipeForecast({ ...selection, force: zone.min })
+      : forecast;
+    return { forecast, recipe, zone, targetForecast };
+  }
+
+  function renderAimingForecast(force) {
+    const { forecast, recipe, zone } = guidance(activeSelection, force);
+    const missedAtLock = activeSelection.phase === "running" && !forecast.matchedRecipe;
+    $("#action-title").textContent = missedAtLock
+      ? "自由组合 · 力度已锁定"
+      : recipe
+      ? `目标 · ${characterById[recipe.characterId].name}`
+      : "自由组合，试试手气。";
+    $(".force-heading strong").textContent = forecast.matchedRecipe
+      ? `命中 ${percent(forecast.recipeProbability)}`
+      : missedAtLock ? "未匹配配方" : recipe ? `停在 ${zone.min}–${zone.max}` : "拉屎力度";
+    $("#keyboard-hint").textContent = forecast.matchedRecipe
+      ? `未中稀有后 ${percent(forecast.recipeConditionalProbability)} · 稀有 ${percent(forecast.rareProbability)}`
+      : missedAtLock
+        ? `本次按属性生成 · 稀有 ${percent(forecast.rareProbability)}`
+        : recipe
+        ? `${zone.name}匹配配方 · 稀有 ${percent(forecast.rareProbability)}`
+        : `图鉴可查固定配方 · 稀有 ${percent(forecast.rareProbability)}`;
+    $("#action-description").textContent = recipe
+      ? `${characterById[recipe.characterId].name}需要${zone.name}，${zone.min}到${zone.max}。${forecast.matchedRecipe ? `当前整局命中率${percent(forecast.recipeProbability)}。` : "指针到达该区间时点击停止。"}`
+      : "当前为自由组合。图鉴中的配方页可以查看食物、饮料和力度要求。";
+  }
+
   function renderForce(force, locked = false) {
     const zone = forceZone(force);
     $("#force-pointer").style.left = `${force}%`;
@@ -29,19 +68,19 @@ export function createSessionView() {
     $("#force-track").setAttribute("aria-valuetext", `${force}，${zone.name}`);
     $("#force-meter").dataset.zone = zone.id;
     $("#force-meter").classList.toggle("locked", locked);
+    if (activeSelection && zone.id !== lastForecastZone) {
+      lastForecastZone = zone.id;
+      renderAimingForecast(force);
+    }
   }
   function showRunning(session) {
     const aiming = session.phase === "aiming";
+    activeSelection = session;
+    lastForecastZone = null;
     if (resultDialog.open) resultDialog.close();
     rareReveal.clear();
     $("#bathroom-scene").classList.add("running");
     $("#ready-tag").innerHTML = "<span></span>嘘，正在认真办大事";
-    $("#action-title").textContent = aiming
-      ? "找准这一刻。"
-      : "力度已锁定。";
-    $("#action-description").textContent = aiming
-      ? "左侧力度低，右侧力度大。看准时机，点击停止。"
-      : "马上揭晓本次便便。";
     $("#floating-note").innerHTML =
       '<svg class="icon"><use href="#i-clock"/></svg> 你的快乐正在路上';
     $("#force-meter").hidden = false;
@@ -52,23 +91,29 @@ export function createSessionView() {
     $("#start-button").disabled = !aiming;
     $("#start-button").dataset.phase = session.phase;
     $(".button-text").textContent = aiming ? "停止" : "马上揭晓…";
-    $("#keyboard-hint").innerHTML = aiming
-      ? "<span>SPACE</span> 也可以停止指针"
-      : "深呼吸，把这一刻留给自己。";
   }
   function showIdle() {
+    activeSelection = null;
+    lastForecastZone = null;
+    const { forecast, recipe, zone, targetForecast } = guidance(getSelection());
     $("#bathroom-scene").classList.remove("running");
     $("#ready-tag").innerHTML = "<span></span>一切就绪，等你落座";
-    $("#action-title").textContent = "把烦恼，统统冲走。";
-    $("#action-description").textContent = "选好今天的配方，剩下的交给时间。";
+    $("#action-title").textContent = recipe
+      ? `目标 · ${characterById[recipe.characterId].name}`
+      : "自由组合，试试手气。";
+    $("#action-description").textContent = recipe
+      ? `点击开始，指针到${zone.name}${zone.min}到${zone.max}时点击停止。未中稀有后，配方命中率${percent(targetForecast.recipeConditionalProbability)}。`
+      : "当前食物与饮料没有对应的固定配方，可打开图鉴的配方页查看搭配。";
+    $(".idle-hint").innerHTML = recipe
+      ? `停在${zone.name} ${zone.min}–${zone.max}<br><span>命中 ${percent(targetForecast.recipeProbability)} · 稀有 ${percent(forecast.rareProbability)}</span>`
+      : `图鉴可查固定配方<br><span>每局稀有 ${percent(forecast.rareProbability)}</span>`;
     $("#floating-note").innerHTML =
       '<svg class="icon"><use href="#i-leaf"/></svg> 放轻松，好事正在发生';
     $("#force-meter").hidden = true;
     $("#start-button").disabled = false;
     $("#start-button").dataset.phase = "idle";
     $(".button-text").textContent = "开始拉屎";
-    $("#keyboard-hint").innerHTML =
-      "给自己一点时间 <span>SPACE</span> 也可以开始";
+    $("#keyboard-hint").innerHTML = "点击开始，再次点击停止";
   }
   function showResult({
     session,

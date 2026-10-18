@@ -3,24 +3,12 @@ import assert from "node:assert/strict";
 import { foods } from "../src/content/foods.js";
 import { foodById, characterById } from "../src/content/catalog.js";
 import { stoolColors } from "../src/content/colors.js";
-import {
-  foodAttributeFields,
-  validateFoodAttributes,
-  describeFoodAttributes,
-  initialFoodAttributes,
-} from "../src/content/food-attributes.js";
+import { foodAttributeFields, validateFoodAttributes, describeFoodAttributes, initialFoodAttributes } from "../src/content/food-attributes.js";
 import { collectEffects } from "../src/game/effects.js";
 import { typeDistribution } from "../src/game/stool-type.js";
-import {
-  getDropPool,
-  rollOutcome,
-  specialProbability,
-} from "../src/game/drops.js";
-import {
-  createSession,
-  restoreSession,
-  settleSession,
-} from "../src/game/session.js";
+import { recipeProperties, getRecipeForecast } from "../src/game/outcome-pool.js";
+import { getDropPool, rollOutcome, specialProbability } from "../src/game/drops.js";
+import { createSession, restoreSession, settleSession } from "../src/game/session.js";
 import { normalizeSave } from "../src/storage/model.js";
 import { characterSvg, mysterySvg } from "../src/ui/artwork/stools.js";
 
@@ -55,15 +43,6 @@ const meal = {
   toiletId: "standard",
   force: 50,
 };
-const meanType = (selection) =>
-  typeDistribution(selection).reduce(
-    (total, entry) => total + entry.type * entry.probability,
-    0,
-  );
-const chance = (selection, types) =>
-  typeDistribution(selection)
-    .filter((entry) => types.includes(entry.type))
-    .reduce((total, entry) => total + entry.probability, 0);
 function withAttributes(overrides, run) {
   const previous = new Map();
   for (const [id, values] of Object.entries(overrides)) {
@@ -91,16 +70,6 @@ function markup(outcome) {
     .replaceAll(/specimen-\d+/g, "specimen-ID")
     .replaceAll(/\s(?:data-[\w-]+|aria-[\w-]+)="[^"]*"/g, "")
     .replaceAll(/<(title|desc)>[\s\S]*?<\/\1>/g, "");
-}
-function variantOdds(selection, type, characterId) {
-  const pool = getDropPool(selection, type);
-  const candidate = pool.find((entry) => entry.characterId === characterId);
-  const ordinary = pool.find((entry) => entry.characterId === "classic");
-  assert.ok(
-    candidate && ordinary,
-    `${characterId} must be an eligible ordinary candidate`,
-  );
-  return candidate.probability / ordinary.probability;
 }
 
 test("all 51 foods expose a complete, validated and editable parameter set", () => {
@@ -171,42 +140,28 @@ test("attribute validation rejects incomplete, nonnumeric, out-of-range and unsa
     assert.throws(() => validateFoodAttributes({ ...baseline, pigmentId }));
 });
 
-test("larger hardness values move actual form probabilities toward harder types monotonically", () => {
-  const means = [];
+test("larger food hardness values increase the five-property profile while preserving an exact recipe", () => {
+  let previous = 0;
   for (let softness = 1; softness <= 7; softness++)
     withAttributes({ rice: { softness } }, () => {
-      const distribution = typeDistribution(meal);
-      assert.ok(
-        distribution.every(
-          (entry) =>
-            entry.type >= 1 && entry.type <= 7 && entry.probability >= 0,
-        ),
-      );
-      assert.ok(
-        Math.abs(
-          distribution.reduce((total, entry) => total + entry.probability, 0) -
-            1,
-        ) < 1e-12,
-      );
-      means.push(meanType(meal));
+      const hardness = recipeProperties(meal).hardness;
+      assert.ok(hardness > previous);
+      previous = hardness;
+      const forecast = getRecipeForecast(meal);
+      assert.equal(forecast.matchedRecipe.characterId, "classic");
+      assert.ok(Math.abs(forecast.recipeProbability - 0.784) < 1e-12);
     });
-  for (let index = 1; index < means.length; index++)
-    assert.ok(means[index] <= means[index - 1], means.join(", "));
-  assert.ok(
-    means[0] > means.at(-1) + 2,
-    "the hardness slider must have a substantial observable effect",
-  );
 });
 
-test("hardness labels, generated defaults and actual endpoints agree on 1 soft and 7 hard", () => {
+test("hardness labels, generated defaults and the recipe profile agree on 1 soft and 7 hard", () => {
   const field = foodAttributeFields.find((item) => item.key === "softness");
   assert.equal(field.low, "非常软");
   assert.equal(field.high, "非常硬");
   withAttributes({ rice: { softness: 1 } }, () =>
-    assert.equal(typeDistribution(meal)[0].type, 7),
+    assert.ok(recipeProperties(meal).hardness < 4),
   );
   withAttributes({ rice: { softness: 7 } }, () =>
-    assert.equal(typeDistribution(meal)[0].type, 1),
+    assert.ok(recipeProperties(meal).hardness > 4),
   );
   const plain = {
     traits: { fiber: 0, fat: 0, spice: 0, moisture: 0, fermented: 0 },
@@ -226,27 +181,18 @@ test("hardness labels, generated defaults and actual endpoints agree on 1 soft a
   );
 });
 
-test("cohesion and elongation independently change compatible ordinary sculpture odds", () => {
-  const selection = { ...meal, force: 20, additives: ["oil"] };
-  const odds = (values, id) =>
-    withAttributes({ rice: values }, () => variantOdds(selection, 4, id));
-  assert.ok(odds({ cohesion: 7 }, "spiral") > odds({ cohesion: 1 }, "spiral"));
-  assert.ok(
-    odds({ elongation: 7 }, "long-rope") > odds({ elongation: 1 }, "long-rope"),
-  );
-  for (const cohesion of [1, 7])
-    for (const elongation of [1, 7])
-      withAttributes({ rice: { cohesion, elongation } }, () => {
-        for (const form of typeDistribution(selection))
-          for (const drop of getDropPool(selection, form.type)) {
-            const item = characterById[drop.characterId];
-            if (item.drop)
-              assert.ok(
-                item.types.includes(form.type),
-                `${item.id}: ${form.type}`,
-              );
-          }
+test("cohesion and elongation adjust separate attributes without overriding a fixed shape", () => {
+  const profiles = {};
+  for (const key of ["cohesion", "elongation"])
+    for (const level of [1, 7])
+      withAttributes({ rice: { [key]: level } }, () => {
+        profiles[key + level] = recipeProperties(meal);
+        assert.equal(getRecipeForecast(meal).matchedRecipe.characterId, "classic");
       });
+  assert.ok(profiles.cohesion7.cohesion > profiles.cohesion1.cohesion);
+  assert.equal(profiles.cohesion7.elongation, profiles.cohesion1.elongation);
+  assert.ok(profiles.elongation7.elongation > profiles.elongation1.elongation);
+  assert.equal(profiles.elongation7.cohesion, profiles.elongation1.cohesion);
 });
 
 test("grain and porosity change rendered texture independently and remain in the result snapshot", () => {
@@ -329,9 +275,9 @@ test("color strength visibly changes a chosen pigment while rare materials retai
 });
 
 test("a food pigment changes its matching collectible color gradually and a null pigment adds no dye", () => {
-  const selection = { ...meal, foodIds: ["broccoli"] };
+  const selection = { ...meal, foodIds: ["rice", "spinach"] };
   const result = (pigmentId, colorStrength) =>
-    withAttributes({ broccoli: { pigmentId, colorStrength } }, () =>
+    withAttributes({ spinach: { pigmentId, colorStrength } }, () =>
       rollOutcome(selection, () => 0.5),
     );
   const tint = (outcome) => {
@@ -367,7 +313,7 @@ test("a food pigment changes its matching collectible color gradually and a null
   assert.equal(noPigment[0].colorId, noPigment[1].colorId);
   assert.equal(tint(noPigment[0]), tint(noPigment[1]));
   assert.equal(markup(noPigment[0]), markup(noPigment[1]));
-  withAttributes({ broccoli: { pigmentId: null, colorStrength: 7 } }, () => {
+  withAttributes({ spinach: { pigmentId: null, colorStrength: 7 } }, () => {
     assert.equal(collectEffects(selection).food.hasPigment, false);
   });
 });
@@ -389,9 +335,9 @@ test("influence lets one food lead a mixed meal without making slot order matter
   const expected = (influence) =>
     withAttributes(
       { rice: { softness: 1, influence }, egg: { softness: 7, influence: 4 } },
-      () => meanType(selection),
+      () => recipeProperties(selection).hardness,
     );
-  assert.ok(expected(7) > expected(1));
+  assert.ok(expected(7) < expected(1));
   withAttributes(
     { rice: { softness: 1, influence: 7 }, egg: { softness: 7, influence: 2 } },
     () => {
@@ -413,46 +359,23 @@ test("influence lets one food lead a mixed meal without making slot order matter
   );
 });
 
-test("extreme food parameters never bypass the shared rare budget or required source conditions", () => {
-  for (const food of foods)
-    for (const softness of [1, 4, 7])
-      withAttributes(
-        {
-          [food.id]: {
-            softness,
-            cohesion: 7,
-            elongation: 7,
-            grain: 7,
-            retention: 7,
-            colorStrength: 7,
-            porosity: 7,
-            lubricity: 7,
-            influence: 7,
-          },
-        },
-        () => {
-          const selection = {
-            ...meal,
-            foodIds: [food.id],
-            additives: ["gold-leaf", "crystal-seed", "gelatin"],
-            toiletId: "golden",
-          };
-          assert.ok(
-            specialProbability(selection) <= 0.005 + 1e-12,
-            `${food.id}: ${softness}`,
-          );
-          for (const form of typeDistribution(selection)) {
-            assert.ok(form.type >= 1 && form.type <= 7);
-            if (!food.tags.includes("rainbow-source"))
-              assert.ok(
-                !getDropPool(selection, form.type).some(
-                  (drop) => drop.characterId === "rainbow",
-                ),
-                "attributes cannot invent a rainbow source",
-              );
-          }
-        },
-      );
+test("a staple leads an equally influential side food in the mixed shape profile", () => {
+  withAttributes({ rice: { grain: 1, influence: 4 }, egg: { grain: 7, influence: 4 } }, () => {
+    const properties = recipeProperties({ ...meal, foodIds: ["rice", "egg"] });
+    assert.ok(properties.grain < 4, "the main staple must carry more weight than the side food");
+    assert.ok(properties.grain > 1, "the side food must still contribute");
+  });
+});
+
+test("extreme food parameters cannot change the independent rare roll or require source ingredients", () => {
+  for (const id of ["rice", "burger", "guanyin-clay"])
+    for (const softness of [1, 7])
+      withAttributes({ [id]: { softness, cohesion: 7, elongation: 7, grain: 7, retention: 7, colorStrength: 7, porosity: 7, lubricity: 7, influence: 7 } }, () => {
+        const selection = { ...meal, foodIds: [id] };
+        assert.ok(Math.abs(specialProbability(selection) - 0.02) < 1e-12);
+        assert.ok(Math.abs(specialProbability({ ...selection, additives: ["crystal-seed"] }) - 0.05) < 1e-12);
+        assert.ok(getDropPool(selection, 4).some((entry) => entry.characterId === "rainbow"));
+      });
 });
 
 test("appearance snapshots survive reload and later tuning without rerolling an active reward", () => {

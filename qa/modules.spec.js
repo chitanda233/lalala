@@ -22,7 +22,7 @@ test("food, drinks and toilet equipment survive a running-session reload", async
   await page.goto("/");
   await setCompletedRounds(page, 40);
   await expect(page.locator("#meal-summary .meal-summary-slot")).toHaveCount(3);
-  await expect(page.locator("[data-drink]")).toHaveCount(20);
+  await expect(page.locator("[data-drink]")).toHaveCount(11);
   await expect(page.locator(".additive-input")).toHaveCount(18);
   await chooseMeal(page, ["rice"]);
   await setWater(page, "1250");

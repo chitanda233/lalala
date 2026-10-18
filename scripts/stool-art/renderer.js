@@ -1,3 +1,5 @@
+import { geometry } from "./geometry.js";
+
 // Development-only renderer. Generated PNGs are the game's dependency-free assets.
 const canvas = document.querySelector("canvas");
 const gl = canvas.getContext("webgl2", {
@@ -36,7 +38,7 @@ float primitive(vec3 p,vec4 a,vec4 b){
 float scene(vec3 p){
  p.y/=vertical;
  float d=10.;for(int i=0;i<128;i++){if(i>=count)break;d=smin(d,primitive(p,starts[i],ends[i]),blending);}
- if(pattern==8){
+ if(pattern==8&&stoolType!=7){
    vec3 hole=vec3(.31,.34,.18);d=max(d,-(length(p-hole)-.105));
    hole=vec3(-.34,.29,.32);d=max(d,-(length(p-hole)-.085));
    hole=vec3(.03,.39,-.23);d=max(d,-(length(p-hole)-.08));
@@ -58,7 +60,7 @@ void main(){
  vec3 forward=normalize(target-ro),right=normalize(cross(forward,vec3(0.,1.,0.))),up=cross(right,forward);
  vec3 rd=normalize(forward*4.1+right*uv.x*1.04+up*uv.y*1.04);
  float t=2.7,d=1.;bool hit=false;
- for(int i=0;i<100;i++){vec3 p=ro+rd*t;d=scene(p);if(d<.0012){hit=true;break;}t+=d*.82;if(t>7.)break;}
+ for(int i=0;i<220;i++){vec3 p=ro+rd*t;d=scene(p);if(d<.0012){hit=true;break;}t+=d*.82;if(t>7.)break;}
  if(!hit){
   if(pass==1){pixel=vec4(0.);return;}
   float ground=-ro.y/rd.y;vec3 p=ro+rd*ground;
@@ -98,6 +100,11 @@ void main(){
  }else if(material==8){
    float edge=pow(1.-max(dot(n,view),0.),2.);color=mix(vec3(.65,.31,.075),vec3(.96,.66,.24),lum)*(.85+edge*.3);
    color+=pow(max(dot(n,halfway),0.),52.)*.3;
+ }
+ // Liquid gets a broad clean reflection; paste keeps a soft, subdued finish.
+ if(stoolType==7&&material==0){
+   float wet=pow(max(dot(n,halfway),0.),64.)*.30;
+   color=vec3(lum*.91+wet+.035);
  }
  if(pattern==11||stoolType==3){float groove=pow(max(0.,cos(p.x*23.+sin(p.z*15.)*.7)),28.)*smoothstep(.08,.22,p.y);color*=1.-groove*.27;}
  if(pattern==6&&material==0){float wave=sin(p.x*25.+p.z*5.+sin(p.y*5.)*2.);color*=1.-smoothstep(.88,.97,wave)*.14;}
@@ -210,194 +217,6 @@ const patternIds = {
   oats: 1,
   cocoa: 10,
 };
-function geometry(art, type, variant = 0) {
-  const a = [],
-    b = [];
-  let blend = 0.05,
-    vertical = 1;
-  const ball = (x, y, z, rx, ry = rx, rz = rx) => {
-    a.push(x, y, z, 0);
-    b.push(rx, ry, rz, 0);
-  };
-  const line = (p, q, r, s = r) => {
-    a.push(...p, r);
-    b.push(...q, s);
-  };
-  const tube = (points, radius) => {
-    for (let i = 1; i < points.length; i++)
-      line(
-        points[i - 1],
-        points[i],
-        typeof radius === "function"
-          ? radius((i - 1) / (points.length - 1))
-          : radius,
-        typeof radius === "function" ? radius(i / (points.length - 1)) : radius,
-      );
-  };
-  const curve = (fn, n = 30) =>
-    Array.from({ length: n + 1 }, (_, i) => fn(i / n));
-  const seed = variant * 0.037;
-  if (type === 1) {
-    const points = [
-      [-0.54, -0.37],
-      [0.03, -0.47],
-      [0.56, -0.2],
-      [-0.63, 0.25],
-      [-0.08, 0.35],
-      [0.5, 0.39],
-    ];
-    points.forEach(([x, z], i) => {
-      const r = art === "marbles" ? 0.205 : 0.18 + (i % 3) * 0.016;
-      ball(
-        x,
-        r * 0.85,
-        z,
-        r,
-        r * (art === "marbles" ? 1 : 0.86),
-        r * (1 + (i % 2) * 0.1),
-      );
-    });
-  } else if (type === 2) {
-    if (art === "tower") {
-      [
-        [0, 0.19, 0, 0.56, 0.19, 0.39],
-        [0.02, 0.47, -0.02, 0.43, 0.17, 0.32],
-        [-0.04, 0.73, 0, 0.32, 0.15, 0.25],
-        [0.03, 0.96, -0.01, 0.22, 0.12, 0.18],
-      ].forEach((p) => ball(...p));
-    } else {
-      const total = art === "beads" ? 5 : art === "cuts" ? 5 : 7;
-      for (let i = 0; i < total; i++) {
-        const t = i / (total - 1),
-          x = (t - 0.5) * 1.48,
-          z = Math.sin(t * 3.5 + seed) * 0.24;
-        const r = art === "beads" ? 0.225 : 0.205 + Math.sin(t * 8) * 0.018;
-        ball(x, r * 0.95, z, r, r * 0.94, r * (art === "cuts" ? 1.08 : 0.98));
-      }
-      blend = art === "beads" ? 0.025 : 0.075;
-    }
-  } else if (type === 3) {
-    tube(
-      curve((t) => [(t - 0.5) * 1.5, 0.235, Math.sin(t * 5 + seed) * 0.19]),
-      (t) => 0.22 + Math.sin(t * Math.PI) * 0.025,
-    );
-    if (art === "crystal") {
-      ball(-0.18, 0.43, -0.03, 0.15, 0.22, 0.15);
-      ball(0.17, 0.39, -0.1, 0.14, 0.19, 0.13);
-      blend = 0.025;
-    }
-  } else if (type === 4) {
-    if (["spiral", "warm", "metal", "rainbow"].includes(art)) {
-      const turns = art === "warm" ? 2.35 : 2.8;
-      tube(
-        curve((t) => {
-          const angle = t * Math.PI * 2 * turns + 2.1,
-            r = 0.62 * (1 - t) + 0.035;
-          return [Math.cos(angle) * r, 0.19 + t * 0.93, Math.sin(angle) * r];
-        }, 120),
-        (t) => 0.19 - t * 0.07,
-      );
-      blend = 0.035;
-    } else if (art === "spring") {
-      tube(
-        curve((t) => {
-          const angle = t * Math.PI * 5.7;
-          const r = 0.55 - t * 0.16;
-          return [Math.cos(angle) * r, 0.17 + t * 0.61, Math.sin(angle) * r];
-        }, 120),
-        0.14,
-      );
-      blend = 0.025;
-    } else if (art === "rope") {
-      tube(
-        curve(
-          (t) => [(t - 0.5) * 1.55, 0.17, Math.sin(t * Math.PI * 3.7) * 0.4],
-          48,
-        ),
-        0.145,
-      );
-      blend = 0.025;
-    } else if (art === "ribbon") {
-      tube(
-        curve(
-          (t) => [(t - 0.5) * 1.5, 0.25, Math.sin(t * Math.PI * 2.3) * 0.37],
-          40,
-        ),
-        0.22,
-      );
-      vertical = 0.52;
-      blend = 0.025;
-    } else if (art === "curve") {
-      tube(
-        curve((t) => {
-          const angle = t * Math.PI * 1.45 - 0.1;
-          return [Math.cos(angle) * 0.66, 0.22, Math.sin(angle) * 0.51];
-        }, 40),
-        (t) => 0.19 + Math.sin(t * Math.PI) * 0.04,
-      );
-    } else {
-      tube(
-        curve(
-          (t) => [
-            (t - 0.5) * 1.5,
-            0.23 + Math.sin(t * Math.PI) * 0.025,
-            Math.sin(t * 5.9 + seed) * 0.3,
-          ],
-          36,
-        ),
-        (t) => 0.19 + Math.sin(t * Math.PI) * 0.055,
-      );
-    }
-  } else if (type === 5) {
-    const points = [
-      [-0.52, -0.3],
-      [0.25, -0.39],
-      [-0.25, 0.34],
-      [0.53, 0.27],
-    ];
-    points.forEach(([x, z], i) => {
-      const rx = 0.27 + (i % 2) * 0.035;
-      ball(
-        x,
-        0.17,
-        z,
-        rx,
-        art === "pillows" ? 0.16 : 0.18,
-        art === "ribbon" ? 0.17 : 0.245,
-      );
-      if (art === "foam") ball(x + 0.08, 0.25, z - 0.05, 0.17, 0.16, 0.16);
-    });
-    blend = 0.04;
-  } else if (type === 6) {
-    const points = [
-      [-0.44, -0.18],
-      [0.38, -0.18],
-      [-0.03, 0.35],
-    ];
-    points.forEach(([x, z], i) => {
-      ball(x, 0.14, z, 0.35, 0.17, 0.29);
-      ball(x - 0.1, 0.21, z - 0.05, 0.24, 0.19, 0.23);
-      ball(x + 0.15, 0.14, z + 0.09, 0.26, 0.13, 0.22);
-    });
-    blend = art === "mash" ? 0.2 : 0.11;
-    if (art === "flat" || art === "jet") vertical = 0.62;
-  } else {
-    ball(0, 0.055, 0, 0.78, 0.065, 0.5);
-    [
-      [-0.56, 0.24, 0.32],
-      [0.51, 0.31, 0.31],
-      [-0.39, -0.31, 0.3],
-      [0.43, -0.33, 0.3],
-      [0.04, 0.43, 0.29],
-    ].forEach(([x, z, r]) => ball(x, 0.044, z, r, 0.047, r * 0.78));
-    blend = 0.12;
-    if (art === "jet") {
-      ball(-0.63, 0.035, -0.27, 0.35, 0.04, 0.16);
-      ball(0.68, 0.035, 0.1, 0.32, 0.04, 0.18);
-    }
-  }
-  return { a, b, blend, vertical };
-}
 window.renderCollectible = async ({
   art = "plain",
   type = 4,

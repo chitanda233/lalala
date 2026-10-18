@@ -28,7 +28,7 @@ test("three-food enoki signature survives a running reload, pigment, decoration 
   });
   await page.goto("/");
   await chooseMeal(page, ["banana", "enoki", "burger"]);
-  await chooseDrink(page, "blueberry-juice");
+  await chooseDrink(page, "prune-juice");
   await chooseAdditives(page, ["glitter"]);
 
   await startRound(page);
@@ -105,7 +105,7 @@ test("diagnosis describes the physical snapshot without displaying recipe logs",
       { now: Date.now() - 10000, random: () => 0.5 },
     );
     session.outcome.reasons = [
-      "华莱士汉堡、蓝莓浓浆、恒温暖座：1500 mL，影响强度 7。",
+      "华莱士汉堡、西梅汁、恒温暖座：1500 mL，影响强度 7。",
     ];
     localStorage.setItem(
       storageKey,
@@ -124,7 +124,7 @@ test("diagnosis describes the physical snapshot without displaying recipe logs",
   await page.locator("#result-explanation summary").click();
   await expect(page.locator("#result-reasons")).toContainText("形态：");
   await expect(page.locator("#result-reasons")).not.toContainText(
-    /华莱士汉堡|蓝莓浓浆|恒温暖座|影响强度|mL|抽中/,
+    /华莱士汉堡|西梅汁|恒温暖座|影响强度|mL|抽中/,
   );
   await page.screenshot({
     path: "qa/stool-diagnosis-result.png",

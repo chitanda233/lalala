@@ -5,17 +5,11 @@ import { expandedFoods } from "../src/content/expanded-foods.js";
 import { foodById } from "../src/content/catalog.js";
 import { foodArt } from "../src/ui/artwork/foods.js";
 import { normalizeSave } from "../src/storage/model.js";
+import { recipeProperties } from "../src/game/outcome-pool.js";
 import { collectEffects } from "../src/game/effects.js";
-import {
-  resolveBristolType,
-  typeDistribution,
-} from "../src/game/stool-type.js";
+import { typeDistribution } from "../src/game/stool-type.js";
 import { resolveColor } from "../src/game/color.js";
-import {
-  getDropPool,
-  specialProbability,
-  rollOutcome,
-} from "../src/game/drops.js";
+import { specialProbability, rollOutcome } from "../src/game/drops.js";
 import { characterById } from "../src/content/catalog.js";
 import { createSession, restoreSession } from "../src/game/session.js";
 const meal = {
@@ -54,76 +48,25 @@ test("existing banana and twenty-one new foods have unique illustrated playable 
   }
 });
 
-test("clay has a fantasy label, hardens the game profile, tints clay and weights cracks", () => {
+test("clay has a fantasy label, hardens the free-form profile and tints the result", () => {
   assert.equal(foodById["guanyin-clay"].fictional, true);
   const input = { ...meal, foodIds: ["guanyin-clay"] };
-  assert.ok(resolveBristolType(input) < resolveBristolType(meal));
+  assert.ok(recipeProperties(input).hardness > recipeProperties(meal).hardness);
   assert.equal(resolveColor(input, characterById.classic), "clay");
-  const ordinary = getDropPool({ ...meal, foodIds: ["toast"] }, 3).find(
-    (entry) => entry.characterId === "cracked",
-  ).probability;
-  assert.ok(
-    getDropPool({ ...input, foodIds: ["toast", "guanyin-clay"] }, 3).find(
-      (entry) => entry.characterId === "cracked",
-    ).probability > ordinary,
-  );
   const combo = { ...input, foodIds: ["guanyin-clay", "banana", "rose-cake"] };
   const reversed = { ...combo, foodIds: [...combo.foodIds].reverse() };
   assert.deepEqual(collectEffects(combo), collectEffects(reversed));
-  assert.deepEqual(
-    rollOutcome(combo, () => 0.5),
-    rollOutcome(reversed, () => 0.5),
-  );
+  assert.deepEqual(rollOutcome(combo, () => 0.5), rollOutcome(reversed, () => 0.5));
 });
 
-test("new food traits expose color, texture and rare candidates without bypassing rarity", () => {
-  for (const [id, character] of [
-    ["rainbow-crayon", "rainbow"],
-    ["marshmallow-foam", "jelly"],
-    ["konjac", "jelly"],
-    ["meteor-cookie", "meteor"],
-  ]) {
-    const selection = {
-      ...meal,
-      foodIds: [id],
-      water: character === "meteor" ? 1000 : 1500,
-    };
-    const eligible = typeDistribution(selection).some((form) =>
-      getDropPool(selection, form.type).some(
-        (entry) => entry.characterId === character && entry.special,
-      ),
-    );
-    assert.ok(eligible, `${id} enables ${character}`);
+test("new food pigments and rare rolls remain independent", () => {
+  assert.equal(resolveColor({ ...meal, foodIds: ["squid-ink-pasta"] }, characterById.classic), "ink");
+  for (const food of expandedFoods) {
+    const input = { ...meal, foodIds: [food.id] };
+    assert.ok(Math.abs(specialProbability(input) - 0.02) < 1e-12);
+    assert.ok(Math.abs(specialProbability({ ...input, additives: ["gold-leaf"] }) - 0.05) < 1e-12);
+    assert.equal(rollOutcome(input, () => 0.5).special, false);
   }
-  assert.equal(
-    resolveColor(
-      { ...meal, foodIds: ["squid-ink-pasta"] },
-      characterById.classic,
-    ),
-    "ink",
-  );
-  assert.ok(
-    getDropPool({ ...meal, foodIds: ["rose-cake"] }, 4).some(
-      (entry) => entry.characterId === "petal",
-    ),
-  );
-  assert.ok(
-    getDropPool({ ...meal, foodIds: ["popping-chocolate"] }, 6).some(
-      (entry) => entry.characterId === "popping",
-    ),
-  );
-  for (const food of expandedFoods)
-    for (const water of [500, 1000, 1500, 2500]) {
-      const input = {
-        ...meal,
-        foodIds: [food.id, "rainbow-crayon", "marshmallow-foam"],
-        water,
-        additives: ["gold-leaf", "crystal-seed", "gelatin"],
-        toiletId: "golden",
-      };
-      assert.ok(specialProbability(input) <= 0.005 + 1e-12);
-      assert.equal(rollOutcome(input, () => 0.5).special, false);
-    }
 });
 
 test("food availability, current sessions and explicit unlocks are normalized", () => {

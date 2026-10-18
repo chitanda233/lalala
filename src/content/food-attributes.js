@@ -50,7 +50,7 @@ export const foodAttributeFields = [
     label: "蓬松度",
     low: "紧实",
     high: "蓬松多孔",
-    description: "控制气孔纹理，并提高符合条件的气泡、云朵与蓬松造型机会。",
+    description: "控制气孔纹理，并影响自由组合对蓬松形态的接近程度；不改变固定配方概率。",
     advanced: true,
   },
   {
@@ -58,7 +58,7 @@ export const foodAttributeFields = [
     label: "顺滑度",
     low: "阻滞",
     high: "顺滑",
-    description: "影响顺畅程度，以及符合条件的顺滑长条、缎带造型。",
+    description: "影响顺畅评分；不改变固定配方命中率。",
     advanced: true,
   },
   {
@@ -67,7 +67,7 @@ export const foodAttributeFields = [
     low: "轻微点缀",
     high: "主导混搭",
     description:
-      "整份食物的混搭权重。数值越高，这份食物对整体形态、颗粒和蓬松效果的影响越大；单吃时占比为 100%。",
+      "自由组合中整份食物的属性权重，主食额外乘2；固定配方的80%/益生菌100%不受此值影响。",
     group: "overall",
   },
 ];
@@ -128,6 +128,8 @@ export function withFoodAttributes(food, configured) {
     attributes: validateFoodAttributes(
       configured ?? initialFoodAttributes(food),
     ),
+    // 旧食品掉落倍率不再作为运行时规则暴露。
+    effects: { smoothnessBonus: food.effects.smoothnessBonus || 0 },
   };
 }
 

@@ -46,8 +46,8 @@ test("the recipe generates whole specimens and the forecast groups those same ou
   const recipe = {
     foodIds: ["banana", "enoki", "corn"],
     water: 1500,
-    drinkId: "blueberry-juice",
-    additives: ["glitter", "crystal-seed"],
+    drinkId: "prune-juice",
+    additives: ["glitter"],
     toiletId: "golden",
   };
   const pool = getOutcomePool(recipe);
@@ -92,7 +92,7 @@ test("the recipe generates whole specimens and the forecast groups those same ou
   }
   for (const form of typeDistribution(recipe))
     assert.ok(Math.abs(form.probability - marginal.get(form.type)) < 1e-12);
-  assert.ok(specialProbability(recipe) <= 0.005 + 1e-12);
+  assert.ok(Math.abs(specialProbability(recipe) - 0.02) < 1e-12);
 });
 
 test("two individuals retain different meal imprints without overwriting or merging after reload", () => {

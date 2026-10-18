@@ -2,7 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { characterById } from "../src/content/catalog.js";
 import { specimenBlueprintById } from "../src/content/specimen-blueprints.js";
-import { conditionalDropPool, getOutcomePool, specialProbability } from "../src/game/drops.js";
+import { conditionalDropPool, getOutcomePool } from "../src/game/outcome-pool.js";
+import { stoolRecipeByCharacterId } from "../src/content/stool-recipes.js";
+import { specialProbability } from "../src/game/drops.js";
 import { classifySpecimen } from "../src/game/specimen.js";
 import { characterSvg, mysterySvg } from "../src/ui/artwork/stools.js";
 import { rareRevealTheme } from "../src/ui/rare-reveal.js";
@@ -21,32 +23,32 @@ test("six new type-7 collectible definitions have fixed physical structure and d
     assert.ok(character && bp,id);
     assert.deepEqual(character.types,[7]);
     assert.equal(classifySpecimen(bp),7);
-    assert.match(characterSvg(character,false,7),/water-type-seven-atlas\.jpg/);
+    assert.match(characterSvg(character,false,7),/water-type-seven-atlas\.webp/);
     assert.equal(characterSvg(character,true,7),mysterySvg());
   }
   assert.ok(rareRevealTheme(characterById["golden-juice"]));
   assert.ok(rareRevealTheme(characterById["rainbow-falls"]));
   assert.equal(rareRevealTheme(characterById["enoki-jet"]),null);
 });
-test("all six candidates can enter the seventh form pool, with correct prerequisites", () => {
-  for (const [id,recipe] of candidates) {
-    const pool=conditionalDropPool(recipe,7);
-    assert.ok(pool.some(x=>x.characterId===id),id);
-    assert.ok(pool.every(x=>x.probability>=0));
+test("ordinary type-7 additions have explicit recipes and rare additions are always reachable", () => {
+  for (const [id] of candidates) {
+    const recipe = stoolRecipeByCharacterId[id];
+    const input = recipe ? { ...base, ...recipe, force: { low: 20, medium: 50, high: 90 }[recipe.forceZone] } : base;
+    const pool = conditionalDropPool(input, 7);
+    assert.ok(pool.some((entry) => entry.characterId === id), id);
+    assert.ok(pool.every((entry) => entry.probability >= 0));
   }
-  const ids=(recipe)=>conditionalDropPool(recipe,7).map(x=>x.characterId);
-  assert.ok(!ids(base).includes("golden-juice"));
-  assert.ok(!ids(base).includes("rainbow-falls"));
-  assert.ok(!ids(base).includes("glitter-galaxy"));
-  assert.ok(!ids({...base,foodIds:["enoki"],force:20}).includes("enoki-jet"));
-  assert.ok(!ids({...base,foodIds:["corn"],force:20}).includes("corn-cannon"));
-  assert.ok(!ids({...base,drinkId:"ink-tonic",force:20}).includes("ink-fountain"));
+  const pool = getOutcomePool(base);
+  for (const id of ["golden-juice", "rainbow-falls"])
+    assert.ok(Math.abs(pool.find((entry) => entry.characterId === id).probability - 0.002) < 1e-12);
 });
-test("new rare type-7 entries remain chance-gated under shared 0.5% cap", () => {
-  const input={...base,foodIds:["enoki","corn"],drinkId:"prism-soda",additives:["gold-leaf","rainbow-sugar","glitter"]};
-  const pool=conditionalDropPool(input,7);
-  assert.ok(pool.some(x=>x.characterId==="golden-juice"));
-  assert.ok(pool.some(x=>x.characterId==="rainbow-falls"));
-  assert.ok(pool.filter(x=>x.special).every(x=>x.probability<1));
-  assert.ok(specialProbability(input)<=0.005+1e-12);
+
+test("type-7 rare bonuses share the 5% total budget and never coat an ordinary species", () => {
+  for (const additive of ["gold-leaf", "rainbow-sugar"]) {
+    const input = { ...base, additives: [additive] };
+    assert.ok(Math.abs(specialProbability(input) - 0.05) < 1e-12);
+    const pool = getOutcomePool(input);
+    assert.ok(pool.every((entry) => entry.special === (characterById[entry.characterId].rarity === "special")));
+    assert.ok(pool.every((entry) => !Object.hasOwn(entry, "materialId")));
+  }
 });

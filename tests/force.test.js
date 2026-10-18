@@ -10,7 +10,7 @@ import {
 } from "../src/game/session.js";
 import { normalizeSave } from "../src/storage/model.js";
 import { createSaveStore } from "../src/storage/save.js";
-import { getDropPool } from "../src/game/drops.js";
+import { getRecipeForecast } from "../src/game/outcome-pool.js";
 
 const meal = { foodIds: ["rice", "enoki"] };
 
@@ -102,13 +102,12 @@ test("refresh and many complete swings do not change the measured force", () => 
   assert.equal(session.endsAt - session.lockedAt, 400);
 });
 
-test("force ranges gate spiral and jet specimens while retaining recipe morphology", () => {
-  const has = (force, type, id) =>
-    getDropPool({ ...meal, force }, type).some((e) => e.characterId === id);
-  assert.equal(has(33, 4, "spiral"), true);
-  assert.equal(has(34, 4, "spiral"), false);
-  assert.equal(has(66, 7, "jet"), false);
-  assert.equal(has(67, 7, "jet"), true);
+test("force ranges choose fixed spiral and jet recipes at exact endpoints", () => {
+  const target = (foodIds, drinkId, force) => getRecipeForecast({ foodIds, drinkId, force }).matchedRecipe?.characterId;
+  assert.equal(target(["rice"], "water", 33), "spiral");
+  assert.equal(target(["rice"], "water", 34), "classic");
+  assert.equal(target(["burger"], "milk", 66), undefined);
+  assert.equal(target(["burger"], "milk", 67), "jet");
 });
 
 test("aiming and running records require valid phase-specific timing and force", () => {

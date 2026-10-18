@@ -12,25 +12,25 @@ import {
 } from "./helpers.js";
 const storageKey = "lalala-dev";
 
-test("twenty drinks and eighteen open additives support persistent selection with a three-item limit", async ({
+test("eleven drinks and eighteen open additives support persistent selection with a three-item limit", async ({
   page,
 }) => {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await page.locator("#choose-drinks").click();
-  await expect(page.locator("[data-drink]")).toHaveCount(20);
-  await showPageItem(page, '[data-drink="blueberry-juice"]');
-  await page.locator('[data-drink="blueberry-juice"]').click();
-  await expect(page.locator('[data-drink="blueberry-juice"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("[data-drink]")).toHaveCount(11);
+  await showPageItem(page, '[data-drink="prune-juice"]');
+  await page.locator('[data-drink="prune-juice"]').click();
+  await expect(page.locator('[data-drink="prune-juice"]')).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#supply-count")).not.toBeEmpty();
-  await expect(page.locator("#supply-count")).not.toContainText("蓝莓浓浆");
+  await expect(page.locator("#supply-count")).not.toContainText("西梅汁");
   await page.screenshot({
     path: "qa/drinks-desktop.png",
     animations: "disabled",
   });
   await page.keyboard.press("Escape");
-  await expect(page.locator("#drink-summary")).toHaveText("蓝莓浓浆");
+  await expect(page.locator("#drink-summary")).toHaveText("西梅汁");
   await chooseAdditives(page, ["glitter", "gold-leaf", "crystal-seed"]);
   await page.locator("#choose-additives").click();
   await expect(page.locator(".additive-input")).toHaveCount(18);
@@ -54,7 +54,7 @@ test("twenty drinks and eighteen open additives support persistent selection wit
   expect(saved.settings.additives.sort()).toEqual(
     ["glitter", "crystal-seed", "rainbow-sugar"].sort(),
   );
-  expect(saved.settings.drinkId).toBe("blueberry-juice");
+  expect(saved.settings.drinkId).toBe("prune-juice");
   expect(errors).toEqual([]);
 });
 
@@ -63,7 +63,7 @@ test("a purple glitter result keeps its color and explanation across an active r
 }) => {
   await page.goto("/");
   await setCompletedRounds(page, 5);
-  await chooseDrink(page, "blueberry-juice");
+  await chooseDrink(page, "prune-juice");
   await chooseAdditives(page, ["glitter"]);
   await chooseToilet(page, "heated");
 
@@ -98,7 +98,7 @@ test("a purple glitter result keeps its color and explanation across an active r
   await expect(page.locator("#result-reasons")).toContainText("反光颗粒");
   await expect(page.locator("#result-reasons")).toContainText("蓝莓紫");
   await expect(page.locator("#result-reasons")).not.toContainText(
-    /蓝莓浓浆|恒温暖座|影响强度|抽中|mL/,
+    /西梅汁|恒温暖座|影响强度|抽中|mL/,
   );
   await page.screenshot({
     path: "qa/recipe-lab-result.png",

@@ -6,7 +6,7 @@ import { $, $$ } from "./dom.js";
 import { renderPage } from "./pagination.js";
 
 const drinkArt = (drink) =>
-  `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="m17 15 4 37q11 6 22 0l4-37Z" fill="${drink.color}" opacity=".75" stroke="${drink.color}" stroke-width="2"/><ellipse cx="32" cy="15" rx="15" ry="5" fill="${drink.color}"/><path d="m26 23 2 21" stroke="#fffdf2" stroke-width="3" stroke-linecap="round" opacity=".7"/>${drink.tags.includes("bubbles") ? '<g fill="#fffdf2"><circle cx="35" cy="31" r="3"/><circle cx="39" cy="43" r="2"/><circle cx="31" cy="46" r="1.5"/></g>' : ""}</svg>`;
+  `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="m17 15 4 37q11 6 22 0l4-37Z" fill="${drink.color}" opacity=".75" stroke="${drink.color}" stroke-width="2"/><ellipse cx="32" cy="15" rx="15" ry="5" fill="${drink.color}"/><path d="m26 23 2 21" stroke="#fffdf2" stroke-width="3" stroke-linecap="round" opacity=".7"/>${drink.tags.includes("tapioca") ? '<g fill="#584333"><circle cx="26" cy="44" r="3"/><circle cx="34" cy="46" r="3"/><circle cx="40" cy="42" r="3"/><circle cx="31" cy="38" r="3"/></g>' : drink.tags.includes("grass-jelly") ? '<g fill="#443d32"><rect x="23" y="33" width="7" height="8" rx="2"/><rect x="34" y="40" width="7" height="8" rx="2"/><rect x="34" y="27" width="7" height="8" rx="2"/></g>' : ""}${drink.tags.includes("bubbles") ? '<g fill="#fffdf2"><circle cx="35" cy="31" r="3"/><circle cx="39" cy="43" r="2"/><circle cx="31" cy="46" r="1.5"/></g>' : ""}</svg>`;
 
 export function createSuppliesView({ getSelection, onChange }) {
   let locked = false;
@@ -38,7 +38,7 @@ export function createSuppliesView({ getSelection, onChange }) {
       $("#supply-intro").textContent =
         kind === "drink"
           ? `${drinks.length} 种饮料 · 单选，即选即存`
-          : `${additives.length} 种添加剂 · 即选即存`;
+          : `${additives.length} 种添加剂 · 单选，也可不加`;
       dialog.showModal();
       render();
     });
@@ -49,11 +49,9 @@ export function createSuppliesView({ getSelection, onChange }) {
   });
   $("#additive-options").addEventListener("change", (event) => {
     if (locked) return render();
-    const selected = $$(".additive-input:checked").map((input) => input.value);
-    if (selected.length > gameConfig.maxAdditives) return render();
-    onChange({ additives: selected });
-    // Retain focus on the toggle; unchecked choices become disabled at capacity.
-    if (event.target.disabled) $("#supply-count").focus();
+    const input = event.target.closest(".additive-input");
+    if (!input) return;
+    onChange({ additives: input.checked ? [input.value] : [] });
   });
   function render() {
     const selection = getSelection();
@@ -75,10 +73,7 @@ export function createSuppliesView({ getSelection, onChange }) {
     });
     $$(".additive-input").forEach((input) => {
       input.checked = selection.additives.includes(input.value);
-      input.disabled =
-        locked ||
-        (!input.checked &&
-          selection.additives.length >= gameConfig.maxAdditives);
+      input.disabled = locked;
       input.closest("label").classList.toggle("selected", input.checked);
     });
     $("#supply-count").textContent = $("#drink-library").hidden

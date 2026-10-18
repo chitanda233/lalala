@@ -59,7 +59,7 @@
         <section class="editor panel" aria-labelledby="selected-food-name">
           <div id="food-summary" class="food-summary"></div>
           <section class="food-influence" aria-label="整份食物的影响强度">
-            <span class="section-kicker">整体影响 · 混搭时的食物权重</span>
+            <span class="section-kicker">主体影响 · 食物属性占比</span>
             <div id="food-influence" class="attribute-list"></div>
           </section>
           <div class="section-heading">
@@ -73,7 +73,7 @@
           <div class="pigment-field">
             <div>
               <label for="pigment-id">食物颜色</label>
-              <p>与染色能力共同决定底色；稀有材质另行抽签。</p>
+              <p>决定食物底色；饮料优先染色，每局先抽稀有。</p>
             </div>
             <div class="pigment-control">
               <span id="pigment-swatch" class="pigment-swatch"></span
@@ -103,6 +103,7 @@
             <label>一起吃 · 食物 2<select id="companion-1"></select></label>
             <label>一起吃 · 食物 3<select id="companion-2"></select></label>
             <label>饮料<select id="preview-drink"></select></label>
+            <label>添加剂 · 单选<select id="preview-additive"></select></label>
             <label>饮水量<select id="preview-water"></select></label>
             <label>消化时间<select id="preview-digestion"></select></label>
             <label
@@ -117,6 +118,7 @@
             <label>马桶<select id="preview-toilet"></select></label>
           </div>
           <div id="preview-recipe" class="preview-recipe"></div>
+          <div id="preview-forecast" class="preview-forecast" aria-live="polite"></div>
           <div id="specimen-preview" class="specimen-preview"></div>
           <div class="chart-heading">
             <h3>七型产出概率</h3>
@@ -132,7 +134,7 @@
           ></div>
           <p id="preview-features" class="preview-features"></p>
           <div class="preview-note">
-            代表外观展示最可能形态中、概率最高的普通候选，实际产出仍会抽签。保存后刷新游戏，新开局使用新配置，已开始的局和既有藏品保留原样。
+            每局先抽稀有。未中稀有后，食物、饮料与力度匹配固定配方时基础命中 80%，选益生菌则命中 100%。添加剂单选；饮用量、消化档位和马桶不改变固定配方命中率。代表外观取普通结果中概率最高的一款。保存后刷新游戏查看新配置。
           </div>
         </section>
       </main>

@@ -1,25 +1,5 @@
+import { materialById } from "../content/materials.js";
 import { foodById } from "../content/catalog.js";
-
-export function morphologyMultiplier(character, shape) {
-  let multiplier = 1;
-  if (
-    ["spiral", "rope", "ribbon", "curve", "warm", "spring"].includes(
-      character.art,
-    )
-  )
-    multiplier *= Math.exp(
-      (shape.elongation - 4) * 0.22 + (shape.cohesion - 4) * 0.1,
-    );
-  if (
-    ["marbles", "segments", "pillows", "mash", "beads"].includes(character.art)
-  )
-    multiplier *= Math.exp((4 - shape.cohesion) * 0.18);
-  if (["bubbles", "foam", "cloud"].includes(character.art))
-    multiplier *= Math.exp((shape.porosity - 4) * 0.25);
-  if (["rope", "ribbon", "curve"].includes(character.art))
-    multiplier *= Math.exp((shape.lubricity - 4) * 0.12);
-  return multiplier;
-}
 
 export function normalizeAppearance(value) {
   if (!value || typeof value !== "object") return null;
@@ -31,6 +11,11 @@ export function normalizeAppearance(value) {
     "colorStrength",
   ];
   const result = {};
+  result.decorations = [...new Set(Array.isArray(value.decorations) ? value.decorations : [])].filter(id => ["glitter", "gold-flake", "silver", "petals", "popping", "charcoal"].includes(id));
+  if (value.materialId != null) {
+    if (!Object.hasOwn(materialById, value.materialId)) return null;
+    result.materialId = value.materialId;
+  }
   for (const key of fields) {
     if (!Number.isFinite(value[key]) || value[key] < 1 || value[key] > 7)
       return null;
@@ -72,6 +57,7 @@ export function normalizeAppearance(value) {
 export function foodAppearance(selection, effects, colorStrength) {
   const shape = effects.food.shape;
   return normalizeAppearance({
+    decorations: effects.decorations,
     grain: shape.grain,
     porosity: shape.porosity,
     cohesion: shape.cohesion,

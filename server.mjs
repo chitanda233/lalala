@@ -11,6 +11,7 @@ const types = {
   ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",
+  ".webp": "image/webp",
   ".json": "application/json; charset=utf-8",
 };
 export async function createGameServer({
@@ -59,7 +60,7 @@ export async function createGameServer({
       if (
         !file.startsWith(root + path.sep) ||
         relative.split(/[\\/]/).some((part) => part.startsWith(".")) ||
-        ![".html", ".css", ".js", ".svg", ".png"].includes(path.extname(file))
+        ![".html", ".css", ".js", ".svg", ".png", ".webp"].includes(path.extname(file))
       ) {
         response.writeHead(403).end("Forbidden");
         return;

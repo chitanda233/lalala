@@ -1,23 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { foods } from "../src/content/foods.js";
+
 import { characterById } from "../src/content/catalog.js";
+import { recipeProperties } from "../src/game/outcome-pool.js";
 import { collectEffects } from "../src/game/effects.js";
-import {
-  typeDistribution,
-  resolveBristolType,
-} from "../src/game/stool-type.js";
-import {
-  rollOutcome,
-  getDropPool,
-  getOutcomePool,
-  specialProbability,
-} from "../src/game/drops.js";
-import {
-  createSession,
-  restoreSession,
-  settleSession,
-} from "../src/game/session.js";
+import { typeDistribution } from "../src/game/stool-type.js";
+import { rollOutcome, getOutcomePool, specialProbability } from "../src/game/drops.js";
+import { createSession, restoreSession, settleSession } from "../src/game/session.js";
 import { normalizeSave } from "../src/storage/model.js";
 import { characterSvg } from "../src/ui/artwork/stools.js";
 
@@ -36,28 +25,16 @@ const chance = (input, types) =>
     .filter((entry) => types.includes(entry.type))
     .reduce((sum, entry) => sum + entry.probability, 0);
 
-test("banana favors soft blobs and the configured burger favors loose forms with random variation", () => {
+test("configured food hardness drives free-form properties without adding hidden type weights", () => {
   const banana = { ...meal, foodIds: ["banana"] };
   const burger = { ...meal, foodIds: ["burger"] };
-  assert.equal(resolveBristolType(banana), 5);
-  assert.ok(chance(banana, [5]) > 0.5);
-  assert.ok(chance(banana, [5]) > chance(meal, [5]) * 5);
-  assert.ok([6, 7].includes(resolveBristolType(burger)));
-  assert.ok(chance(burger, [6, 7]) > 0.74);
-  assert.ok(typeDistribution(burger).length > 1);
-  assert.ok(typeDistribution(burger)[0].probability < 1);
-  assert.ok(chance(banana, [3, 4]) > 0);
-  assert.notDeepEqual(
-    typeDistribution(banana),
-    typeDistribution({ ...banana, water: 500 }),
-  );
-  for (const food of foods)
-    for (const [type, weight] of Object.entries(
-      food.effects.typeWeights || {},
-    )) {
-      assert.ok(Number(type) >= 1 && Number(type) <= 7);
-      assert.ok(Number.isFinite(weight) && weight >= 0);
-    }
+  assert.ok(recipeProperties(burger).hardness < recipeProperties(banana).hardness);
+  assert.ok(recipeProperties(banana).hardness < recipeProperties(meal).hardness);
+  for (const input of [meal, banana, burger]) {
+    assert.ok(Math.abs(chance(input, [1, 2, 3, 4, 5, 6, 7]) - 1) < 1e-12);
+    assert.ok(typeDistribution(input).length > 1);
+    assert.ok(Math.abs(specialProbability(input) - 0.02) < 1e-12);
+  }
 });
 
 test("ingredient attributes combine across three slots independently of order and duplicates", () => {
@@ -66,23 +43,18 @@ test("ingredient attributes combine across three slots independently of order an
   assert.deepEqual(collectEffects(input), collectEffects(reversed));
   assert.deepEqual(typeDistribution(input), typeDistribution(reversed));
   assert.ok(collectEffects(input).food.shape.softness < 4);
-  assert.deepEqual(collectEffects(input).typeWeights, {});
-  assert.deepEqual(
-    collectEffects({ ...meal, foodIds: ["banana", "banana", "rice"] })
-      .typeWeights,
-    collectEffects({ ...meal, foodIds: ["banana"] }).typeWeights,
-  );
+  assert.deepEqual(collectEffects({ ...meal, foodIds: ["banana", "banana", "rice"] }), collectEffects({ ...meal, foodIds: ["banana", "rice"] }));
   for (const foodIds of [["banana"], ["burger"], input.foodIds])
     for (const water of [250, 500, 1000, 1500, 2500]) {
       const recipe = {
         ...meal,
         foodIds,
         water,
-        additives: ["gold-leaf", "crystal-seed", "gelatin"],
+        additives: ["gold-leaf"],
         toiletId: "golden",
       };
       assert.ok(Math.abs(chance(recipe, [1, 2, 3, 4, 5, 6, 7]) - 1) < 1e-12);
-      assert.ok(specialProbability(recipe) <= 0.005 + 1e-12);
+      assert.ok(Math.abs(specialProbability(recipe) - 0.05) < 1e-12);
     }
 });
 
@@ -92,7 +64,7 @@ test("enoki leaves a signature on every reachable shape and rare material while 
     for (const additives of [
       [],
       ["chili"],
-      ["gold-leaf", "crystal-seed", "gelatin"],
+      ["gold-leaf"],
     ]) {
       const input = { ...meal, foodIds: ["enoki"], water, additives };
       for (const drop of getOutcomePool(input)) {
@@ -133,7 +105,7 @@ test("individual signatures survive reload without merging separate births", () 
     {
       ...meal,
       foodIds: ["enoki", "banana", "burger"],
-      drinkId: "blueberry-juice",
+      drinkId: "prune-juice",
     },
     { now: 1000, random: () => 0.5 },
   );
@@ -159,11 +131,11 @@ test("all eight rare materials can retain enoki without becoming guaranteed or c
     ["gold", "water", ["gold-leaf"], 1500],
     ["crystal", "mineral-tonic", ["crystal-seed"], 1500],
     ["rainbow", "prism-soda", ["rainbow-sugar"], 1500],
-    ["jelly", "gel-drink", ["gelatin"], 1500],
+    ["jelly", "water", ["gelatin"], 1500],
     ["frost-crystal", "water", ["frost-salt"], 1000],
     ["luminous", "glow-soda", ["stardust"], 2250],
     ["meteor", "water", ["stardust"], 500],
-    ["amber-fossil", "black-tea", ["amber-resin"], 1500],
+    ["amber-fossil", "mineral-tonic", ["amber-resin"], 1500],
   ];
   for (const [id, drinkId, additives, water] of recipes) {
     const input = { ...meal, foodIds: ["enoki"], drinkId, additives, water };
@@ -173,6 +145,6 @@ test("all eight rare materials can retain enoki without becoming guaranteed or c
     assert.equal(outcome.colorId, null);
     assert.deepEqual(outcome.marks, ["enoki"]);
     assert.equal(outcome.special, true);
-    assert.ok(specialProbability(input) <= 0.005 + 1e-12);
+    assert.ok(Math.abs(specialProbability(input) - 0.05) < 1e-12);
   }
 });

@@ -1,78 +1,23 @@
-import {
-  foodById,
-  drinkById,
-  additiveById,
-  toiletById,
-} from "../content/catalog.js";
+import { foodById, drinkById, additiveById, toiletById } from "../content/catalog.js";
 import { normalizeSelection } from "./selection.js";
-import { forceZone } from "../content/force.js";
-import { digestionById } from "../content/digestion.js";
 import { foodProfile } from "./food-profile.js";
 import { normalizeMarks } from "../content/marks.js";
 
+// 外观与顺畅评分的数据收集器；不再累计任何产出权重。
 export function collectEffects(input) {
   const selection = normalizeSelection(input);
-  const meal = [...selection.foodIds].sort().map((id) => foodById[id]);
-  const profile = foodProfile(selection.foodIds);
-  const sources = [
-    ...meal,
-    drinkById[selection.drinkId],
-    ...[...selection.additives].sort().map((id) => additiveById[id]),
-    toiletById[selection.toiletId],
-    forceZone(selection.force),
-  ];
-  const effects = {
-    food: profile,
-    typeShift: digestionById[selection.digestionTime].typeShift ?? 0,
-    formationStability: 0,
-    typeBalance: 0,
-    smoothnessBonus: (profile.shape.lubricity - 4) * 0.5,
-    specialWeightBonus: 0,
-    specialWeightMultiplier: 1,
-    dropWeightMultipliers: {},
-    typeWeights: {},
-    outcomeMarks: meal.some(
-      (food) => food.id === "enoki" && food.attributes.retention > 1,
-    )
-      ? ["enoki"]
-      : [],
-    tags: [],
+  const food = foodProfile(selection.foodIds);
+  const meal = [...selection.foodIds].sort().map(id => foodById[id]);
+  const drink = drinkById[selection.drinkId];
+  const additive = additiveById[selection.additives[0]];
+  const toilet = toiletById[selection.toiletId];
+  return {
+    food,
+    tags: [...new Set([...meal.flatMap(item => item.tags), ...drink.tags, ...(additive?.tags || [])])],
+    smoothnessBonus: (food.shape.lubricity - 4) * .5 +
+      (drink.effects.smoothnessBonus || 0) + (additive?.effects.smoothnessBonus || 0) +
+      (toilet.effects.smoothnessBonus || 0),
+    outcomeMarks: normalizeMarks(meal.some(item => item.id === "enoki" && item.attributes.retention > 1) ? ["enoki"] : []),
+    decorations: additive?.decoration ? [additive.decoration] : [],
   };
-  for (const source of sources) {
-    // Main food controls use attributes. Nutritional metadata supplies content
-    // references; only source-specific drop bonuses enter through food effects.
-    const modifier = meal.includes(source)
-      ? {
-          specialWeightBonus: source.effects.specialWeightBonus,
-          specialWeightMultiplier: source.effects.specialWeightMultiplier,
-          dropWeightMultipliers: source.effects.dropWeightMultipliers,
-        }
-      : source.effects;
-    for (const key of [
-      "typeShift",
-      "formationStability",
-      "typeBalance",
-      "smoothnessBonus",
-      "specialWeightBonus",
-    ])
-      effects[key] += modifier[key] ?? 0;
-    effects.specialWeightMultiplier *= modifier.specialWeightMultiplier ?? 1;
-    for (const [type, weight] of Object.entries(modifier.typeWeights || {}))
-      effects.typeWeights[type] = (effects.typeWeights[type] ?? 0) + weight;
-    effects.outcomeMarks.push(...(modifier.outcomeMarks || []));
-    for (const [id, multiplier] of Object.entries(
-      modifier.dropWeightMultipliers || {},
-    ))
-      effects.dropWeightMultipliers[id] =
-        (effects.dropWeightMultipliers[id] ?? 1) * multiplier;
-    effects.tags.push(...(source.tags || []));
-  }
-  effects.tags = [...new Set(effects.tags)];
-  if (profile.shape.porosity >= 5 && !effects.tags.includes("bubbles"))
-    effects.tags.push("bubbles");
-  effects.outcomeMarks = normalizeMarks(effects.outcomeMarks);
-  effects.typeShift = Math.max(-2, Math.min(3, effects.typeShift));
-  effects.typeBalance = Math.min(2, effects.typeBalance);
-  effects.formationStability = Math.min(0.18, effects.formationStability);
-  return effects;
 }
