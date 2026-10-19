@@ -160,7 +160,7 @@ export function createCollectionView(getSave) {
       .map((blueprint) => {
         const known = discovered.has(blueprint.id);
         const character = characterById[blueprint.characterId];
-        const rare = (previewAll || known) && rareRevealTheme(character);
+        const rare = rareRevealTheme(character);
         return `<button class="stool-card ${known ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}${rare ? " rare-collection-card" : ""}" ${rare ? rareCardAttributes(character) : ""} data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}"><span class="stool-art">${previewAll || known ? characterSvg(character, false, classifySpecimen(blueprint)) : mysterySvg()}</span><span class="stool-title"><strong>${previewAll || known ? blueprint.name : "未发现的便便"}</strong><span>${rare ? "✦ 稀有 · " : ""}第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
       })
       .join("");

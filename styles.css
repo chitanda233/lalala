@@ -1418,15 +1418,16 @@ input[type="range"] {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--rare-accent) 65%, white);
+  border: 1px solid transparent;
   border-radius: 13px;
   background:
-    radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--rare-glow) 35%, transparent), transparent 66%),
-    var(--rare-card-pattern, linear-gradient(145deg, #27243f, #111b2b 80%));
+    radial-gradient(ellipse at 90% 12%, color-mix(in srgb, var(--rare-glow) 65%, white), transparent 65%) padding-box,
+    radial-gradient(ellipse at 5% 85%, #d3ece88c, transparent 60%) padding-box,
+    var(--rare-card-pearl, linear-gradient(150deg, #fffef9, #e9e4f2 52%, #e4eeeb)) padding-box,
+    linear-gradient(135deg, #fffdf6 5%, color-mix(in srgb, var(--rare-accent) 55%, #e4ddcd) 32%, #fffffa 54%, #c0cbdc 76%, #f5e9ce) border-box;
   box-shadow:
-    inset 0 0 0 2px #ffffff12,
-    inset 0 0 22px color-mix(in srgb, var(--rare-accent) 18%, transparent),
-    0 2px 10px color-mix(in srgb, var(--rare-accent) 25%, transparent);
+    inset 0 1px 0 #ffffffd9,
+    0 3px 12px #625b7820;
 }
 .rare-collection-card::before,
 .rare-collection-card::after {
@@ -1436,45 +1437,43 @@ input[type="range"] {
   pointer-events: none;
 }
 .rare-collection-card::before {
-  inset: 5px;
-  border: 1px solid color-mix(in srgb, var(--rare-glow) 30%, transparent);
-  border-radius: 8px;
-  background:
-    radial-gradient(circle at 12% 22%, #fffbea 0 1px, transparent 2px),
-    radial-gradient(circle at 84% 16%, #fffbea 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 91% 58%, #fffbea 0 1px, transparent 2px),
-    radial-gradient(circle at 17% 69%, #fffbea 0 1px, transparent 2px),
-    radial-gradient(circle at 68% 79%, #fffbea 0 1px, transparent 2px);
-  opacity: 0.7;
+  inset: -38% -70% 45% -45%;
+  border-radius: 50%;
+  background: linear-gradient(150deg, #ffffff00 35%, #ffffff70 78%, #ffffffa0);
+  box-shadow: 0 1px 0 #ffffffa8, 0 16px 35px #b1b0d312;
+  transform: rotate(-24deg);
 }
 .rare-collection-card::after {
-  inset: -70%;
-  background: linear-gradient(112deg, transparent 42%, #ffffff24 49%, #ffffff08 53%, transparent 59%);
-  animation: collection-rare-shimmer 7s ease-in-out infinite;
+  inset: -80%;
+  background: linear-gradient(112deg, transparent 40%, #ffffff55 49%, #dce8fa33 53%, transparent 62%);
+  mix-blend-mode: soft-light;
+  animation: collection-rare-shimmer 10s ease-in-out infinite;
 }
 .rare-collection-card[data-rare-motif="sunburst"] {
-  --rare-card-pattern: repeating-conic-gradient(from 15deg at 50% 42%, #c7973426 0deg 7deg, transparent 8deg 30deg), linear-gradient(145deg, #493719, #201c2d 80%);
+  --rare-card-pearl: linear-gradient(150deg, #fffdf6, #efe3c9 52%, #e4e8dd);
 }
 .rare-collection-card[data-rare-motif="rainbow"] {
-  --rare-card-pattern: conic-gradient(from 40deg at 50% 42%, #423252, #213e58, #26504c, #514329, #542c40, #423252);
+  --rare-card-pearl: linear-gradient(145deg, #faebee, #e5def3 42%, #d6ece8 78%, #f4ebd4);
 }
 .rare-collection-card[data-rare-motif="facets"],
 .rare-collection-card[data-rare-motif="snowflakes"] {
-  --rare-card-pattern: repeating-linear-gradient(60deg, transparent 0 34px, #c1f0ff18 35px 36px), repeating-linear-gradient(120deg, transparent 0 34px, #c1f0ff18 35px 36px), linear-gradient(145deg, #233e50, #172236 80%);
+  --rare-card-pearl: linear-gradient(150deg, #fcfdfc, #dce9f1 48%, #e3e1f0);
 }
 .stool-card.rare-collection-card.focused {
-  border-color: #fff4d0;
-  box-shadow: inset 0 0 0 2px var(--rare-accent), 0 0 12px color-mix(in srgb, var(--rare-glow) 40%, transparent);
+  border-color: color-mix(in srgb, var(--rare-accent) 55%, #8d8a88);
+  box-shadow: inset 0 1px 0 #ffffffd9, 0 3px 13px #625b782b;
 }
 .rare-collection-card .stool-title {
-  color: #fff9e9;
+  padding-top: 7px;
+  color: #494353;
+  background: linear-gradient(90deg, transparent, #ffffffb3, transparent) top center / 100% 1px no-repeat;
 }
 .rare-collection-card .stool-title span {
-  color: #e1e5f5;
+  color: #706779;
 }
 .rare-collection-card .stool-art,
 .rare-collection-card > svg {
-  filter: drop-shadow(0 3px 9px color-mix(in srgb, var(--rare-glow) 45%, transparent));
+  filter: drop-shadow(0 6px 7px #77708a20);
 }
 .individual-art.rare-collection-card {
   width: 100%;
