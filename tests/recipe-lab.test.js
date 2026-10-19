@@ -15,6 +15,7 @@ import { characterSvg } from "../src/ui/artwork/stools.js";
 import { toiletSvg } from "../src/ui/artwork/toilets.js";
 import { outcomeDraws } from "./outcome-helpers.js";
 import { classifySpecimen } from "../src/game/specimen.js";
+import { gameConfig } from "../src/config/game.js";
 
 const base = { foodIds: ["rice"], drinkId: "water", additives: [], toiletId: "standard", water: 1500, force: 50 };
 export function findWitness(item) {
@@ -77,7 +78,7 @@ test("loadouts and diagnoses use the current snapshot schema and one additive", 
   delete incomplete.outcome.morphology;
   assert.equal(restoreSession(incomplete), null);
   const save = normalizeSave({ settings: { ...input, additives: ["glitter", "glitter", "gold-leaf", "gelatin", "stardust"] }, session });
-  assert.equal(save.version, 6);
+  assert.equal(save.version, gameConfig.saveVersion);
   assert.equal(save.toilets.owned.length, 3);
   assert.deepEqual(save.settings.additives, ["glitter"]);
   assert.deepEqual(save.individuals, []);

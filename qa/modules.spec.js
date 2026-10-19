@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { gameConfig } from "../src/config/game.js";
 import {
   setWater,
   setCompletedRounds,
@@ -108,7 +109,7 @@ test("explicit coffee settings reload while mobile equipment stays usable", asyn
     (key) => JSON.parse(localStorage.getItem(key)),
     storageKey,
   );
-  expect(saved.version).toBe(6);
+  expect(saved.version).toBe(gameConfig.saveVersion);
   expect(saved.settings.drinkId).toBe("coffee");
   expect(saved.settings.additives).toEqual(["probiotic"]);
   expect(saved.individuals).toEqual([]);
