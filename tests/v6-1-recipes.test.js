@@ -83,6 +83,7 @@ test("V6.1: 46 normal recipes are complete and have the intended actual type, so
     const meal={...r,force:force[r.forceZone],additives:r.requiredAdditive?[r.requiredAdditive]:[]};
     assert.equal(physicalState(meal).type,characterById[r.characterId].homeType,r.characterId);
     assert.ok(sourceAllowed(characterById[r.characterId],mealSources(meal)),r.characterId);
+    assert.equal(characterById[r.characterId].generation.forceZone,r.forceZone,`${r.characterId}: shape preference must match the V6.1 recipe`);
     assert.equal(getRecipeForecast(meal).matchedRecipe?.characterId,r.characterId);
     const p=getOutcomePool(meal).find(x=>x.characterId===r.characterId)?.probability;
     assert.ok(p>=0.75,`${r.characterId}: ${p}`);

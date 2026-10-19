@@ -71,7 +71,9 @@ test("one slider step decays the ideal probability smoothly instead of removing 
   const points=[1000,1250].map(water=>getRecipeForecast({...input,water}));
   assert.ok(points.every(f=>f.primaryCharacterId==="classic"&&f.physicalState.type===4));
   close(points[1].primaryConditionalProbability,.8);
-  assert.ok(points[0].primaryConditionalProbability>=.65&&points[0].primaryConditionalProbability<=.75);
+  // V6.1 moves nearby anchors: test a small positive decay, rather than a suggested probability band.
+  const decay=points[1].primaryConditionalProbability-points[0].primaryConditionalProbability;
+  assert.ok(decay>.01&&decay<.1,`one-step decay: ${decay}`);
   for(let i=1;i<points.length;i++)assert.ok(Math.abs(points[i].primaryConditionalProbability-points[i-1].primaryConditionalProbability)<.16);
   const pools=[1000,1250].map(water=>new Map(getOutcomePool({...input,water}).map(e=>[e.characterId,e.probability])));
   for(let i=1;i<pools.length;i++){
@@ -130,17 +132,21 @@ test("every ideal meal has smooth adjacent intake distributions when physics and
 });
 
 test("porosity changes actual soft-shape probabilities without inventing a new source or changing type",()=>{
-  const food=foodById['marshmallow-foam'],original=food.attributes.porosity;
-  const input={foodIds:['marshmallow-foam'],drinkId:'water',water:1250,digestionTime:'4',force:50,additives:[]};
-  const probabilities=[];
-  try{
-    for(const porosity of [1,7]){
-      food.attributes.porosity=porosity;
-      assert.equal(physicalState(input).type,5);
-      const pool=ordinary(getOutcomePool(input));
-      assert.ok(pool.every(e=>['cloud','soft-pillows'].includes(e.characterId)));
-      probabilities.push(pool.find(e=>e.characterId==='cloud').probability);
-    }
-    assert.ok(probabilities[1]>probabilities[0]+.05);
-  }finally{food.attributes.porosity=original;}
+  // Pear isolates the trait effect. Marshmallow also moves the V6.1 cloud recipe's ideal traits.
+  for(const {id,minGain,monotonic} of [{id:'pear',minGain:.05,monotonic:true},{id:'marshmallow-foam',minGain:.04,monotonic:false}]){
+    const food=foodById[id],original=food.attributes.porosity;
+    const input={foodIds:[id],drinkId:'water',water:1250,digestionTime:'4',force:50,additives:[]};
+    const probabilities=[];
+    try{
+      for(const porosity of [1,2,3,4,5,6,7]){
+        food.attributes.porosity=porosity;
+        assert.equal(physicalState(input).type,5);
+        const pool=ordinary(getOutcomePool(input));
+        assert.ok(pool.every(e=>['cloud','soft-pillows'].includes(e.characterId)));
+        probabilities.push(pool.find(e=>e.characterId==='cloud').probability/pool.reduce((sum,e)=>sum+e.probability,0));
+      }
+      assert.ok(probabilities.at(-1)>probabilities[0]+minGain,`${id} porosity effect: ${probabilities.at(-1)-probabilities[0]}`);
+      if(monotonic)for(let i=1;i<probabilities.length;i++)assert.ok(probabilities[i]>=probabilities[i-1],`${id} porosity ${i+1} reduced cloud probability`);
+    }finally{food.attributes.porosity=original;}
+  }
 });

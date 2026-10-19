@@ -39,6 +39,25 @@ for(const [width,height]of [[320,640],[402,760]])test(`the player's free meal is
   expect(content.stools.find(s=>s.id==='corn-pebbles').generation.sources.foods).toEqual(['corn']);
 });
 
+test('V6.1 recipe and source pages agree on shape preferences',async({page})=>{
+  await page.setViewportSize({width:402,height:760});
+  await page.goto('/');
+  await page.locator('#collection-button').click();
+  await page.locator('#collection-preview-all').check();
+  await chooseSpecimen(page,'stone-tower:2');
+  await page.locator('[data-detail-panel="recipe"]').click();
+  await expect(page.locator('[data-recipe-for="stone-tower"]')).toContainText('强力度 · 67–100');
+  await page.locator('[data-detail-panel="source"]').click();
+  await expect(page.locator('[data-source-for="stone-tower"]')).toContainText('造型偏好：强力度');
+  await page.setViewportSize({width:1400,height:900});
+  await page.goto('/admin/#stools');
+  const response=await page.request.get('/api/admin/content');
+  expect(response.ok()).toBe(true);
+  const {content}=await response.json();
+  for(const recipe of content.recipes)
+    expect(content.stools.find(stool=>stool.id===recipe.characterId).generation.forceZone).toBe(recipe.forceZone);
+});
+
 test('aiming force changes never reveal the upcoming result or its probability',async({page})=>{
   await page.goto('/');await setWater(page,1250);await page.locator('#start-button').click();
   for(const force of [35,60]){

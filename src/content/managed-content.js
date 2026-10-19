@@ -207,7 +207,7 @@ export const contentValues = {
           "pigment": null,
           "additives": []
         },
-        "forceZone": "low"
+        "forceZone": "high"
       }
     },
     {
@@ -286,7 +286,7 @@ export const contentValues = {
           "pigment": null,
           "additives": []
         },
-        "forceZone": "medium"
+        "forceZone": "high"
       }
     },
     {
@@ -316,7 +316,7 @@ export const contentValues = {
           "pigment": null,
           "additives": []
         },
-        "forceZone": "medium"
+        "forceZone": "high"
       }
     },
     {
@@ -348,7 +348,7 @@ export const contentValues = {
           "pigment": null,
           "additives": []
         },
-        "forceZone": "high"
+        "forceZone": "medium"
       }
     },
     {
@@ -772,7 +772,7 @@ export const contentValues = {
           "pigment": "beet",
           "additives": []
         },
-        "forceZone": "medium"
+        "forceZone": "high"
       }
     },
     {
@@ -862,7 +862,7 @@ export const contentValues = {
           "pigment": "cocoa",
           "additives": []
         },
-        "forceZone": "low"
+        "forceZone": "medium"
       }
     },
     {
@@ -892,7 +892,7 @@ export const contentValues = {
           "pigment": "honey",
           "additives": []
         },
-        "forceZone": "low"
+        "forceZone": "medium"
       }
     },
     {
@@ -922,7 +922,7 @@ export const contentValues = {
           "pigment": "milk",
           "additives": []
         },
-        "forceZone": "medium"
+        "forceZone": "low"
       }
     },
     {
@@ -1020,7 +1020,7 @@ export const contentValues = {
             "gold-leaf"
           ]
         },
-        "forceZone": "low"
+        "forceZone": "medium"
       }
     },
     {
@@ -1084,7 +1084,7 @@ export const contentValues = {
           "pigment": null,
           "additives": []
         },
-        "forceZone": "low"
+        "forceZone": "medium"
       }
     },
     {
@@ -1178,7 +1178,7 @@ export const contentValues = {
           "pigment": null,
           "additives": []
         },
-        "forceZone": "low"
+        "forceZone": "high"
       }
     },
     {
@@ -1268,7 +1268,7 @@ export const contentValues = {
           "pigment": null,
           "additives": []
         },
-        "forceZone": "low"
+        "forceZone": "high"
       }
     },
     {
