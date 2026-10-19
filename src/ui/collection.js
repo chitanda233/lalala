@@ -10,6 +10,7 @@ import { stoolRecipeByCharacterId } from "../content/stool-recipes.js";
 import { forceZones } from "../content/force.js";
 import { getRecipeForecast } from "../game/outcome-pool.js";
 import { sourceRequirementText } from "../game/source-conditions.js";
+import { rareBudget } from "../game/rare-probabilities.js";
 import { outcomeMarks } from "../content/marks.js";
 import { stoolColors } from "../content/colors.js";
 import { classifySpecimen } from "../game/specimen.js";
@@ -61,8 +62,9 @@ export function createCollectionView(getSave) {
     if (!recipe) {
       const forecast = getRecipeForecast({ additives: [] });
       const theme = rareThemeRecipeById[characterId];
+      const boost = theme ? rareBudget(additiveById[theme.additiveId]) : null;
       const themed = theme ? `<p>${theme.foodIds.map(id => foodById[id].name).join("＋")}</p><p>${drinkById[theme.drinkId].name} ${theme.water} mL</p><p>阶段 ${theme.digestionTime} · ${forceZones.find(zone => zone.id === theme.forceZone).name}</p><p>主题添加剂：${additiveById[theme.additiveId].name}</p><br>` : "";
-      return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>稀有主题搭配</h3>${themed}<p>每局先抽稀有，基础合计 ${(forecast.rareProbability * 100).toFixed(0)}%，各款 0.2%。</p><p>主题食物、水量和阶段不是出现门槛；对应稀有添加剂才提高概率。</p></div></article>`;
+      return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>稀有主题搭配</h3>${themed}<p>无关联组：全体稀有均分基础 ${(forecast.rareProbability * 100).toFixed(0)}%。</p>${boost?.targets.length ? `<p>对应添加剂：目标组共享20%，每款${Number((boost.targetProbability * 100 / boost.targets.length).toFixed(2))}%；组外稀有概率为0。</p>` : ""}<p>主题搭配不是出现门槛；稀有保留自身固定造型。</p></div></article>`;
     }
     const zone = forceZones.find((item) => item.id === recipe.forceZone);
     const forecast = getRecipeForecast({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], force: zone.min });

@@ -23,7 +23,7 @@ export async function chooseAdditives(page, ids) {
   for (const selected of await page.locator(".additive-input:checked").all()) {
     const id = await selected.getAttribute("value");
     await showPageItem(page, `.additive-input[value="${id}"]`);
-    await selected.uncheck();
+    await page.locator(`.additive-input[value="${id}"]`).uncheck();
   }
   for (const id of ids) {
     await showPageItem(page, `.additive-input[value="${id}"]`);

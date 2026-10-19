@@ -4,6 +4,7 @@ import { stoolColors } from "../src/content/colors.js";
 import { contentValues } from "../src/content/managed-content.js";
 import { foods } from "../src/content/foods.js";
 import { stoolPropertyFields } from "../src/content/stool-properties.js";
+import { visualEffectLabels } from "../src/content/additive-effects.js";
 
 const baseline = structuredClone(contentValues);
 const foodIds = new Set(foods.map((item) => item.id));
@@ -99,7 +100,10 @@ export function validateManagedContent(value) {
     requireValue(Array.isArray(item.rareTargets) && new Set(item.rareTargets).size === item.rareTargets.length && item.rareTargets.every((id) => rareIds.has(id)), "稀有目标必须选择现有稀有款，且不能重复。");
     const changes = item.propertyChanges || {};
     requireValue(typeof changes === "object" && !Array.isArray(changes) && Object.keys(changes).every((key) => Object.hasOwn(propertyLabels, key)), "属性修正包含未知字段。");
-    const result = { id: original.id, name: text(item.name, "名称", 60), symbol: text(item.symbol, "图标", 8), color: color(item.color), description: text(item.description, "描述"), effectLabel: text(item.effectLabel, "效果说明"), tags: tags(item.tags), effects: effects(item.effects), rareTargets: [...item.rareTargets] };
+    requireValue(typeof item.functional === "boolean", "请选择是否启用物态与结构功能。");
+    requireValue(!item.visualEffect || Object.hasOwn(visualEffectLabels, item.visualEffect), "请选择有效的材质特效。");
+    const result = { id: original.id, name: text(item.name, "名称", 60), symbol: text(item.symbol, "图标", 8), color: color(item.color), description: text(item.description, "描述"), effectLabel: text(item.effectLabel, "效果说明"), tags: tags(item.tags), effects: effects(item.effects), rareTargets: [...item.rareTargets], functional: item.functional };
+    if (item.visualEffect) result.visualEffect = item.visualEffect;
     if (item.stability !== undefined) result.stability = number(item.stability, "稳定强度", 0, 7, true);
     if (item.decoration) { requireValue(Object.hasOwn(decorationLabels, item.decoration), "装饰类型无效。"); result.decoration = item.decoration; }
     if (item.propertyChanges) result.propertyChanges = Object.fromEntries(Object.entries(changes).map(([key, value]) => [key, number(value, propertyLabels[key], -6, 6, true)]));

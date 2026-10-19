@@ -66,27 +66,29 @@ test("46 ordinary species have unique complete intake/phase recipes and all 56 s
 
 test("every exact recipe gets 80% of the nonrare branch, or 100% with probiotic", () => {
   for (const recipe of stoolRecipes) {
-    const cases = recipe.requiredAdditive ? [[[recipe.requiredAdditive], .8, recipe.requiredAdditive === "gold-leaf" ? .76 : .784]] : [[[], .8, .784], [["glitter"], .8, .784], [["probiotic"], 1, .98]];
-    for (const [additives, plannedConditional, plannedTotal] of cases) {
+    const cases = recipe.requiredAdditive ? [[[recipe.requiredAdditive], .8]] : [[[], .8], [["glitter"], .8], [["probiotic"], 1]];
+    for (const [additives, plannedConditional] of cases) {
       const input = inputFor(recipe, additives);
       const forecast = getRecipeForecast(input);
       const legal = characters.filter(c => c.rarity !== "special" && c.homeType === forecast.physicalState.type && sourceAllowed(c, mealSources(input)));
       const conditional = legal.length === 1 ? 1 : plannedConditional;
-      const total = legal.length === 1 ? 1 - forecast.rareProbability : plannedTotal;
+      const expectedRare = additives.some(id => additiveById[id].rareTargets.length) ? .2 : .02;
+      const total = (1 - expectedRare) * conditional;
       assert.equal(forecast.matchedRecipe.characterId, recipe.characterId);
-      close(forecast.rareProbability, recipe.requiredAdditive === "gold-leaf" ? .05 : .02);
+      close(forecast.rareProbability, expectedRare);
       close(forecast.recipeConditionalProbability, conditional);
       close(forecast.recipeProbability, total);
       const pool = getOutcomePool(input);
       validPool(pool);
-      close(sum(rarityPool(pool)), recipe.requiredAdditive === "gold-leaf" ? .05 : .02);
+      close(sum(rarityPool(pool)), expectedRare);
       const targets = pool.filter((entry) => entry.characterId === recipe.characterId);
       assert.equal(targets.length, 1, "fallback must exclude the fixed target");
       close(targets[0].probability, total, recipe.characterId);
-      assert.equal(pool[rareCharacters.length].characterId, recipe.characterId);
-      assert.ok(pool.slice(0, rareCharacters.length).every((entry) => entry.special));
-      if (conditional === 1) assert.equal(pool.length, rareCharacters.length + 1);
-      else close(sum(pool.slice(rareCharacters.length + 1)), 1 - forecast.rareProbability - total);
+      const rareCount = rarityPool(pool).length;
+      assert.equal(pool[rareCount].characterId, recipe.characterId);
+      assert.ok(pool.slice(0, rareCount).every((entry) => entry.special));
+      if (conditional === 1) assert.equal(pool.length, rareCount + 1);
+      else close(sum(pool.slice(rareCount + 1)), 1 - forecast.rareProbability - total);
     }
   }
 });
@@ -107,7 +109,7 @@ test("food sets ignore order and duplicates while force endpoints use the three 
   }
 });
 
-test("each round can reach all ten rare species before ordinary recipes, including probiotic rounds", () => {
+test("without an associated group all rare species remain reachable, including probiotic rounds", () => {
   for (const input of [base, { ...base, additives: ["probiotic"] }, { foodIds: ["hotpot"], drinkId: "coffee", force: 100, water: 250 }]) {
     const pool = getOutcomePool(input);
     assert.deepEqual(new Set(rarityPool(pool).map((entry) => entry.characterId)), new Set(rareCharacters.map((item) => item.id)));
@@ -122,20 +124,21 @@ test("each round can reach all ten rare species before ordinary recipes, includi
   assert.equal(rollOutcome({ ...base, additives: ["probiotic"] }, () => 0.999999).characterId, "classic");
 });
 
-test("one rare booster adds three percentage points to its targets and retains 80% ordinary matching", () => {
+test("one rare booster assigns 20% to its target group and retains 80% ordinary matching", () => {
   for (const additive of Object.values(additiveById).filter((item) => item.rareTargets.length)) {
     const input = { ...base, additives: [additive.id] };
     const pool = getOutcomePool(input);
     validPool(pool);
-    close(sum(rarityPool(pool)), 0.05, additive.id);
+    const expectedRare = .2;
+    close(sum(rarityPool(pool)), expectedRare, additive.id);
     const targets = new Set(additive.rareTargets);
-    close(sum(rarityPool(pool).filter((entry) => targets.has(entry.characterId))), targets.size * 0.002 + 0.03, additive.id);
-    for (const entry of rarityPool(pool).filter((item) => !targets.has(item.characterId))) close(entry.probability, 0.002);
-    close(pool.find((entry) => entry.characterId === "classic").probability, 0.76);
+    close(sum(rarityPool(pool).filter((entry) => targets.has(entry.characterId))), 0.2, additive.id);
+    assert.ok(rarityPool(pool).every(entry => targets.has(entry.characterId)));
+    close(pool.find((entry) => entry.characterId === "classic").probability, (1 - expectedRare) * .8);
     const forecast = getRecipeForecast(input);
-    close(forecast.rareProbability, 0.05);
+    close(forecast.rareProbability, expectedRare);
     close(forecast.recipeConditionalProbability, 0.8);
-    close(forecast.recipeProbability, 0.76);
+    close(forecast.recipeProbability, (1 - expectedRare) * .8);
   }
 });
 

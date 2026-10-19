@@ -5,6 +5,7 @@ import { stoolColors } from "../content/colors.js";
 import { normalizeMarks } from "../content/marks.js";
 import { normalizeAppearance } from "./food-appearance.js";
 import { classifySpecimen } from "./specimen.js";
+import { visualEffectLabels } from "../content/additive-effects.js";
 
 const surfaces = [
   "颗粒轮廓分明，块体彼此分离。",
@@ -38,6 +39,8 @@ export function diagnoseOutcome(outcome) {
   details.push(
     `表面：${texture.length ? `${texture.join("，")}。` : surfaces[type.id - 1]}`,
   );
+  if (appearance?.visualEffects.length)
+    details.push(`特效：${appearance.visualEffects.map(id => visualEffectLabels[id]).join("、")}。`);
 
   const coating = specimenMaterial(outcome);
   const material = coating || (compatible && character.rarity === "special");

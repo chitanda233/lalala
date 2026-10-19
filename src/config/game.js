@@ -2,7 +2,7 @@ export const gameConfig = {
   storageKey: "lalala-dev",
   saveVersion: 6,
   maxIndividuals: 7,
-  rulesVersion: 22,
+  rulesVersion: 23,
   maxFoods: 3,
   maxAdditives: 1,
   resultDelayMs: 400,
@@ -10,7 +10,7 @@ export const gameConfig = {
   recipeHitProbability: 0.8,
   stabilizedRecipeHitProbability: 1,
   baseRareProbability: 0.02,
-  rareAdditiveBonus: 0.03,
+  boostedRareTargetProbability: 0.2,
 };
 
 export function formatDuration(seconds) {

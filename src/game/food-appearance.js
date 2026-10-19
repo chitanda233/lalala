@@ -1,5 +1,6 @@
 import { materialById } from "../content/materials.js";
 import { foodById } from "../content/catalog.js";
+import { visualEffectLabels } from "../content/additive-effects.js";
 
 export function normalizeAppearance(value) {
   if (!value || typeof value !== "object") return null;
@@ -12,6 +13,7 @@ export function normalizeAppearance(value) {
   ];
   const result = {};
   result.decorations = [...new Set(Array.isArray(value.decorations) ? value.decorations : [])].filter(id => ["glitter", "gold-flake", "silver", "petals", "popping", "charcoal"].includes(id));
+  result.visualEffects = [...new Set(Array.isArray(value.visualEffects) ? value.visualEffects : [])].filter(id => id && Object.hasOwn(visualEffectLabels, id));
   if (value.materialId != null) {
     if (!Object.hasOwn(materialById, value.materialId)) return null;
     result.materialId = value.materialId;
@@ -59,6 +61,7 @@ export function foodAppearance(selection, effects, colorStrength) {
   const level = value => Math.max(1, Math.min(7, value));
   return normalizeAppearance({
     decorations: effects.decorations,
+    visualEffects: effects.visualEffects,
     grain: shape.grain,
     porosity: level(shape.porosity + effects.drinkPorosity + (effects.propertyChanges.porosity || 0)),
     cohesion: level(shape.cohesion + (effects.propertyChanges.cohesion || 0)),

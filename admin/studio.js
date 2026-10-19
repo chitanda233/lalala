@@ -16,6 +16,8 @@ import { getRecipeForecast } from "/src/game/outcome-pool.js";
 import { sourceRequirementText } from "/src/game/source-conditions.js";
 import { stoolColors } from "/src/content/colors.js";
 import { gameConfig } from "/src/config/game.js";
+import { additiveRoles, visualEffectLabels } from "/src/content/additive-effects.js";
+import { rareBudget } from "/src/game/rare-probabilities.js";
 
 const $ = (selector) => document.querySelector(selector);
 const copy = (value) => structuredClone(value);
@@ -181,9 +183,10 @@ function renderForm() {
       fields += group("外观与标签", input("color", "饮料颜色", item.color, { type: "color" }) + select("icon", "图标", [{ id: "drop", name: "水滴" }, { id: "coffee", name: "咖啡" }], item.icon) + input("tags", "效果标签", item.tags.join(", "), { hint: "以英文逗号分隔；如 ink、bubbles、milk。" }));
     }
     if (active === "additives") {
-      fields += group("外观与评分", input("symbol", "图标符号", item.symbol, { maxLength: 8 }) + input("color", "颜色", item.color, { type: "color" }) + select("decoration", "表面装饰", dictionaryOptions(decorationLabels), item.decoration || "") + input("effects.smoothnessBonus", "顺畅评分加成", item.effects.smoothnessBonus || 0, { type: "number", min: -10, max: 10, step: .1 }));
-      fields += group("自由组合属性修正 · −6 至 +6", propertyInputs(item.propertyChanges || {}, "propertyChanges", -6, 6) + input("stability", "稳定强度", item.stability || 0, { type: "number", min: 0, max: 7 }));
-      fields += group("稀有目标 · 合计增加 3 个百分点", `<div class="check-grid field-wide">${draft.stools.filter((stool) => stool.rarity === "special").map((stool) => `<label><input type="checkbox" data-rare-target="${stool.id}" ${item.rareTargets.includes(stool.id) ? "checked" : ""}/><span>${esc(stool.name)}</span></label>`).join("")}</div>`);
+      fields += group("职责与外观", select("functional", "物态／结构功能", [{ id: "false", name: "关闭：仅特效与稀有增益" }, { id: "true", name: "开启：允许改变物态与同型结构" }], String(item.functional)) + input("symbol", "图标符号", item.symbol, { maxLength: 8 }) + input("color", "颜色", item.color, { type: "color" }) + select("decoration", "表面装饰", dictionaryOptions(decorationLabels), item.decoration || "") + select("visualEffect", "材质特效", dictionaryOptions(visualEffectLabels), item.visualEffect || "") + input("effects.smoothnessBonus", "顺畅评分加成", item.effects.smoothnessBonus || 0, { type: "number", min: -10, max: 10, step: .1 }));
+      fields += group("属性修正 · −6 至 +6", propertyInputs(item.propertyChanges || {}, "propertyChanges", -6, 6) + (item.id === "probiotic" ? input("stability", "益生菌稳定标记", item.stability || 0, { type: "number", min: 0, max: 7 }) : ""));
+      fields += '<p class="field-note">只有开启功能时，软硬、凝聚等修正才参与物态和普通造型概率；关闭时只保留表面纹理效果。益生菌稳定普通主结果，独立于稀有抽签。</p>';
+      fields += group("稀有目标 · 共享20%预算，平均分配", `<div class="check-grid field-wide">${draft.stools.filter((stool) => stool.rarity === "special").map((stool) => `<label><input type="checkbox" data-rare-target="${stool.id}" ${item.rareTargets.includes(stool.id) ? "checked" : ""}/><span>${esc(stool.name)}</span></label>`).join("")}</div>`);
       fields += group("效果标签", input("tags", "标签", item.tags.join(", "), { hint: "以英文逗号分隔。益生菌配方稳定使用固定 ID probiotic。" }));
     }
     if (active === "toilets") {
@@ -222,7 +225,8 @@ function renderInspector() {
     detail = `<div class="inspector-block"><h3>物态效果</h3><p>湿软偏置 ${item.wetnessBias} · 蓬松 +${item.porosity}</p><p>顺畅评分 ${item.effects.smoothnessBonus || 0}</p></div><div class="inspector-block"><h3>关联配方 · ${recipes.length} 款</h3><div class="related-links">${recipes.map((recipe) => `<button type="button" class="text-button" data-go="recipes" data-id="${recipe.characterId}">${esc(nameOf("recipes", recipe))} ↗</button>`).join("") || '<p class="field-note">暂无固定配方使用这款饮料。</p>'}</div></div>`;
   }
   if (active === "additives") {
-    detail = `<div class="inspector-block"><h3>本轮效果</h3><p>${esc(item.effectLabel)}</p><p>表面装饰：${decorationLabels[item.decoration || ""]}</p><div class="forecast-values"><span>稀有合计<strong>${item.rareTargets.length ? "5" : "2"}%</strong></span><span>目标数量<strong>${item.rareTargets.length}</strong></span></div>${item.rareTargets.length ? `<p>每个目标额外增加 ${(3 / item.rareTargets.length).toFixed(2)} 个百分点。</p><div class="target-portraits">${item.rareTargets.map((id) => `<button type="button" data-go="stools" data-id="${id}">${characterSvg(characterById[id])}<span>${esc(record("stools", id).name)}</span></button>`).join("")}</div>` : ""}</div>`;
+    const budget = rareBudget(item);
+    detail = `<div class="inspector-block"><h3>本轮效果</h3><p>${esc(item.effectLabel)}</p><p>职责：${additiveRoles(item).join("、") || "无已启用效果"}</p><p>表面装饰：${decorationLabels[item.decoration || ""]} · 材质：${visualEffectLabels[item.visualEffect || ""]}</p><div class="forecast-values"><span>稀有合计<strong>${(budget.rareProbability * 100).toFixed(1)}%</strong></span><span>普通合计<strong>${(budget.ordinaryProbability * 100).toFixed(1)}%</strong></span></div>${budget.targets.length ? `<p>目标组共享20%，每款 ${(budget.targetProbability * 100 / budget.targets.length).toFixed(2)}%；组外稀有概率为0。</p><div class="target-portraits">${budget.targets.map((id) => `<button type="button" data-go="stools" data-id="${id}">${characterSvg(characterById[id])}<span>${esc(record("stools", id).name)}</span></button>`).join("")}</div>` : `<p>没有关联目标，${budget.entries.length}款稀有均分基础2%。</p>`}</div>`;
   }
   if (active === "toilets") detail = `<div class="inspector-block"><h3>${item.unlock.kind === "open" ? "初始可用" : `完成 ${item.unlock.count} 次后解锁`}</h3><p>${esc(item.feature)} · ${esc(item.material)}</p><p>顺畅评分 ${item.effects.smoothnessBonus || 0}</p><p>${esc(item.effectLabel)}</p></div>`;
   $("#record-preview").innerHTML = `<div class="inspector-art art-stage">${artFor(active, item)}</div><h2>${esc(nameOf(active, item))}</h2>${stool ? `<p class="inspector-subtitle">布里斯托 ${stool.homeType} 型 · ${rarityLabels[stool.rarity]}</p>` : ""}${detail}`;
@@ -252,7 +256,7 @@ $("#content-form").addEventListener("input", (event) => {
   if (control.dataset.rareTarget) item.rareTargets = [...$("#content-form").querySelectorAll("[data-rare-target]:checked")].map((input) => input.dataset.rareTarget);
   else if (control.dataset.path) {
     const path = control.dataset.path;
-    const value = path === "tags" ? [...new Set(control.value.split(/[,，]/).map((value) => value.trim()).filter(Boolean))] : control.type === "number" || path === "water" ? control.value === "" ? NaN : Number(control.value) : ["requiredAdditive", "generation.sources.pigment"].includes(path) ? control.value || null : control.value;
+    const value = path === "functional" ? control.value === "true" : path === "tags" ? [...new Set(control.value.split(/[,，]/).map((value) => value.trim()).filter(Boolean))] : control.type === "number" || path === "water" ? control.value === "" ? NaN : Number(control.value) : ["requiredAdditive", "generation.sources.pigment"].includes(path) ? control.value || null : control.value;
     if (path.startsWith("foodIds.")) {
       // Read all slots before compacting optional selections.
       item.foodIds = [...$("#content-form").querySelectorAll('[data-path^="foodIds."]')].map((input) => input.value).filter(Boolean);

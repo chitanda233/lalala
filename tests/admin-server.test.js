@@ -391,6 +391,8 @@ test("content admin saves every module, serializes edits, and preserves food tun
   edited.content.recipes.find(item => item.characterId === "classic").foodIds = ["rice", "egg", "spinach"];
   edited.content.drinks[0].wetnessBias = .6;
   edited.content.additives[0].rareTargets = ["gold"];
+  edited.content.additives[0].functional = true;
+  edited.content.additives[0].visualEffect = "glow";
   edited.content.toilets.find((item) => item.id === "comfort").unlock.count = 9;
   edited.content.artwork[0].path = "/assets/stools/reference-v2/jet.png";
   const results = await Promise.all([put(edited), put(edited)]);
@@ -399,6 +401,8 @@ test("content admin saves every module, serializes edits, and preserves food tun
   assert.equal(saved.content.stools[0].name, "策划测试收藏");
   assert.equal(saved.content.drinks[0].wetnessBias, .6);
   assert.deepEqual(saved.content.additives[0].rareTargets, ["gold"]);
+  assert.equal(saved.content.additives[0].functional, true);
+  assert.equal(saved.content.additives[0].visualEffect, "glow");
   assert.equal(saved.content.toilets.find((item) => item.id === "comfort").unlock.count, 9);
   assert.equal(saved.content.artwork[0].path, "/assets/stools/reference-v2/jet.png");
   assert.deepEqual((await import(pathToFileURL(contentFile).href)).contentValues, saved.content);
@@ -421,12 +425,14 @@ test("content admin rejects conflicting recipes, invalid links, images and range
     (content) => { content.recipes[1] = { ...content.recipes[0], characterId: content.recipes[1].characterId }; },
     (content) => { content.recipes[0].foodIds = ["rice", "rice"]; },
     (content) => { content.recipes[0].drinkId = "missing"; },
-    (content) => { content.recipes[0].water = 0; },
+    (content) => { content.recipes[0].water = -250; },
     (content) => { content.recipes[0].water = 300; },
     (content) => { content.recipes[0].water = 2750; },
     (content) => { content.recipes.find(recipe => recipe.characterId === "enoki-thread").foodIds = ["rice"]; },
     (content) => { content.recipes.find(recipe => recipe.characterId === "enoki-jet").foodIds = ["burger"]; },
     (content) => { content.additives[0].rareTargets = ["classic"]; },
+    (content) => { content.additives[0].functional = "true"; },
+    (content) => { content.additives[0].visualEffect = "missing"; },
     (content) => { content.toilets[0].unlock = { kind: "rounds", count: 2 }; },
     (content) => { content.drinks[0].wetnessBias = null; },
     (content) => { content.artwork[0].path = "/assets/stools/../outside.png"; },
@@ -451,6 +457,8 @@ test("managed content is used by fresh game imports and survives release packagi
   const edited = await (await get()).json();
   edited.content.stools[0].name = "项目配置测试";
   edited.content.recipes.find(item => item.characterId === "classic").foodIds = ["rice", "egg", "spinach"];
+  edited.content.recipes.find(item => item.characterId === "classic").water = 1250;
+  edited.content.recipes.find(item => item.characterId === "classic").digestionTime = "4";
   edited.content.drinks[0].wetnessBias = .2;
   edited.content.additives[0].rareTargets = ["gold"];
   edited.content.toilets.find((item) => item.id === "comfort").unlock.count = 19;
@@ -461,7 +469,7 @@ test("managed content is used by fresh game imports and survives release packagi
     import { characterById, drinkById, additiveById, toiletById } from ${JSON.stringify(pathToFileURL(path.join(released, "src/content/catalog.js")).href)};
     import { getRecipeForecast } from ${JSON.stringify(pathToFileURL(path.join(released, "src/game/outcome-pool.js")).href)};
     import { referenceStoolAssets } from ${JSON.stringify(pathToFileURL(path.join(released, "src/content/stool-art-assets.js")).href)};
-    console.log(JSON.stringify({ name: characterById.classic.name, wetnessBias: drinkById.water.wetnessBias, rareTargets: additiveById.probiotic.rareTargets, unlock: toiletById.comfort.unlock.count, image: referenceStoolAssets.classic, forecast: getRecipeForecast({ foodIds: ["rice", "egg", "spinach"], drinkId: "water", force: 50 }).matchedRecipe?.characterId }));
+    console.log(JSON.stringify({ name: characterById.classic.name, wetnessBias: drinkById.water.wetnessBias, rareTargets: additiveById.probiotic.rareTargets, unlock: toiletById.comfort.unlock.count, image: referenceStoolAssets.classic, forecast: getRecipeForecast({ foodIds: ["rice", "egg", "spinach"], drinkId: "water", water:1250, digestionTime:"4", force: 50 }).matchedRecipe?.characterId }));
   `;
   const { stdout } = await execFile(process.execPath, ["--input-type=module", "--eval", script]);
   assert.deepEqual(JSON.parse(stdout), { name: "项目配置测试", wetnessBias: .2, rareTargets: ["gold"], unlock: 19, image: "/assets/stools/reference-v2/jet.png", forecast: "classic" });

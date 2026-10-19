@@ -2410,15 +2410,16 @@ export const contentValues = {
       "stability": 1,
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false
     },
     {
       "id": "chili",
       "name": "神秘辣酱",
       "symbol": "♨",
       "color": "#c88766",
-      "description": "让自由组合更偏软。",
-      "effectLabel": "自由组合软硬值 −1；提供辣色",
+      "description": "功能型添加剂：湿软指数增加0.5，并提供辣色；没有食物或饮料的隐藏联动。",
+      "effectLabel": "功能型：湿软指数 +0.5；提供辣色",
       "tags": [
         "chili"
       ],
@@ -2429,7 +2430,8 @@ export const contentValues = {
       },
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": true
     },
     {
       "id": "glitter",
@@ -2446,7 +2448,8 @@ export const contentValues = {
       "decoration": "glitter",
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false
     },
     {
       "id": "gold-leaf",
@@ -2454,7 +2457,7 @@ export const contentValues = {
       "symbol": "◆",
       "color": "#c8aa52",
       "description": "金色碎片与黄金收藏的机会。",
-      "effectLabel": "增加金箔装饰；黄金传说与黄金汁合计 +3% 稀有概率",
+      "effectLabel": "增加表面装饰；黄金传说、黄金汁共享20%概率，各10%；组外稀有0%",
       "tags": [
         "gold-source"
       ],
@@ -2466,7 +2469,8 @@ export const contentValues = {
       "decoration": "gold-flake",
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false
     },
     {
       "id": "silver-dust",
@@ -2483,7 +2487,8 @@ export const contentValues = {
       "decoration": "silver",
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false
     },
     {
       "id": "crystal-seed",
@@ -2491,7 +2496,7 @@ export const contentValues = {
       "symbol": "◇",
       "color": "#94c3d0",
       "description": "让晶体收藏更容易出现。",
-      "effectLabel": "晶簇收藏家 +3% 概率；稀有总概率变为 5%",
+      "effectLabel": "增加材质特效；晶簇收藏家共享20%概率，各20%；组外稀有0%",
       "tags": [
         "crystal-source"
       ],
@@ -2501,7 +2506,9 @@ export const contentValues = {
       ],
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false,
+      "visualEffect": "crystal"
     },
     {
       "id": "rainbow-sugar",
@@ -2509,7 +2516,7 @@ export const contentValues = {
       "symbol": "❖",
       "color": "#b08fb9",
       "description": "提高两款彩虹收藏的机会。",
-      "effectLabel": "七色同框与彩虹瀑布合计 +3% 稀有概率",
+      "effectLabel": "增加材质特效；七色同框、彩虹瀑布共享20%概率，各10%；组外稀有0%",
       "tags": [
         "rainbow-source"
       ],
@@ -2520,15 +2527,17 @@ export const contentValues = {
       ],
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false,
+      "visualEffect": "rainbow"
     },
     {
       "id": "gelatin",
       "name": "弹弹凝胶",
       "symbol": "◒",
       "color": "#adc985",
-      "description": "自由组合更凝聚，也更容易遇到果冻。",
-      "effectLabel": "自由组合凝聚 +1；Q 弹果冻 +3% 概率",
+      "description": "给本次形态增加果冻光泽，并提高果冻稀有款的机会。",
+      "effectLabel": "增加材质特效；Q 弹果冻共享20%概率，各20%；组外稀有0%",
       "tags": [
         "gel-source"
       ],
@@ -2541,7 +2550,9 @@ export const contentValues = {
       },
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false,
+      "visualEffect": "jelly"
     },
     {
       "id": "popping-candy",
@@ -2549,7 +2560,7 @@ export const contentValues = {
       "symbol": "※",
       "color": "#d7a574",
       "description": "小颗粒直接留在这一次的成品上。",
-      "effectLabel": "必定增加跳跳颗粒；自由组合蓬松 +1",
+      "effectLabel": "跳跳颗粒与表面气孔 +1；不参与基础物态或造型概率",
       "tags": [
         "popping",
         "bubbles"
@@ -2562,7 +2573,8 @@ export const contentValues = {
       },
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false
     },
     {
       "id": "charcoal",
@@ -2579,27 +2591,28 @@ export const contentValues = {
       "decoration": "charcoal",
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false
     },
     {
       "id": "fiber",
       "name": "膳食纤维粉",
       "symbol": "≋",
       "color": "#a9b282",
-      "description": "让自由组合更贴近目标软硬度。",
-      "effectLabel": "自由组合凝聚 +1，并优先保留相近软硬的形态",
+      "description": "功能型添加剂：增强凝聚度，影响同型结构成形。",
+      "effectLabel": "功能型：凝聚 +1；不额外改变湿软指数",
       "tags": [
         "fiber-powder"
       ],
       "effects": {},
       "rareTargets": [],
-      "stability": 2,
       "propertyChanges": {
         "cohesion": 1
       },
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": true
     },
     {
       "id": "oil",
@@ -2620,7 +2633,8 @@ export const contentValues = {
       },
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": true
     },
     {
       "id": "frost-salt",
@@ -2628,7 +2642,7 @@ export const contentValues = {
       "symbol": "❄",
       "color": "#accfd5",
       "description": "提高霜晶收藏的机会。",
-      "effectLabel": "霜花小晶块 +3% 概率；稀有总概率变为 5%",
+      "effectLabel": "增加材质特效；霜花小晶块共享20%概率，各20%；组外稀有0%",
       "tags": [
         "frost-source"
       ],
@@ -2638,7 +2652,9 @@ export const contentValues = {
       ],
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false,
+      "visualEffect": "frost"
     },
     {
       "id": "cocoa-powder",
@@ -2646,7 +2662,7 @@ export const contentValues = {
       "symbol": "∴",
       "color": "#9e7b61",
       "description": "增加可可色与细粒感。",
-      "effectLabel": "提供可可色；自由组合颗粒 +1",
+      "effectLabel": "可可色与表面细粒 +1；不改变基础物态",
       "tags": [
         "cocoa"
       ],
@@ -2657,7 +2673,8 @@ export const contentValues = {
       },
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false
     },
     {
       "id": "flower-petal",
@@ -2674,7 +2691,8 @@ export const contentValues = {
       "decoration": "petals",
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false
     },
     {
       "id": "stardust",
@@ -2682,7 +2700,7 @@ export const contentValues = {
       "symbol": "⋆",
       "color": "#9296bd",
       "description": "提高陨星和夜光收藏的机会。",
-      "effectLabel": "星尘小陨石与夜光小浮岛合计 +3% 稀有概率",
+      "effectLabel": "增加材质特效；星尘小陨石、夜光小浮岛共享20%概率，各10%；组外稀有0%",
       "tags": [
         "star-source",
         "glow-source"
@@ -2694,15 +2712,17 @@ export const contentValues = {
       ],
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false,
+      "visualEffect": "glow"
     },
     {
       "id": "magnet-sand",
       "name": "磁力砂",
       "symbol": "⌁",
       "color": "#858d9a",
-      "description": "让自由组合中的小块更容易聚在一起。",
-      "effectLabel": "自由组合凝聚 +2",
+      "description": "在本次成品表面形成聚拢的磁砂纹样。",
+      "effectLabel": "磁砂簇与表面凝聚 +2；不参与基础物态或造型概率",
       "tags": [
         "magnet"
       ],
@@ -2713,7 +2733,9 @@ export const contentValues = {
       },
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false,
+      "visualEffect": "magnet"
     },
     {
       "id": "amber-resin",
@@ -2721,7 +2743,7 @@ export const contentValues = {
       "symbol": "◈",
       "color": "#caa16c",
       "description": "提高暖色琥珀收藏的机会。",
-      "effectLabel": "琥珀时间胶囊 +3% 概率；稀有总概率变为 5%",
+      "effectLabel": "增加材质特效；琥珀时间胶囊共享20%概率，各20%；组外稀有0%",
       "tags": [
         "amber-source"
       ],
@@ -2731,7 +2753,9 @@ export const contentValues = {
       ],
       "unlock": {
         "kind": "open"
-      }
+      },
+      "functional": false,
+      "visualEffect": "amber"
     }
   ],
   "toilets": [

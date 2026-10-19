@@ -9,6 +9,8 @@ import { normalizeSelection } from "./selection.js";
 import { foodProfile } from "./food-profile.js";
 import { physicalState, timeWetness } from "./physical-state.js";
 import { mealSources, sourceAllowed } from "./source-conditions.js";
+import { functionalChanges } from "../content/additive-effects.js";
+import { rareBudget } from "./rare-probabilities.js";
 
 const ordinary = characters.filter(item => item.rarity !== "special");
 const rare = characters.filter(item => item.rarity === "special");
@@ -25,7 +27,7 @@ export function recipeProperties(input) {
   const food = foodProfile(selection.foodIds).shape;
   const state = physicalState(selection);
   const drink = drinkById[selection.drinkId];
-  const modifier = additiveById[selection.additives[0]]?.propertyChanges || {};
+  const modifier = functionalChanges(additiveById[selection.additives[0]]);
   return {
     hardness: clamp(4 - state.score),
     cohesion: clamp(food.cohesion + (modifier.cohesion || 0)),
@@ -121,10 +123,8 @@ function ordinaryDistribution(selection, state, properties) {
 }
 
 function rareProbabilities(selection) {
-  const targets = (additiveById[selection.additives[0]]?.rareTargets || []).filter(id => rare.some(item => item.id === id));
-  return rare.map(character => ({ character,
-    probability: gameConfig.baseRareProbability / rare.length +
-      (targets.includes(character.id) ? gameConfig.rareAdditiveBonus / targets.length : 0),
+  return rareBudget(additiveById[selection.additives[0]]).entries.map(entry => ({
+    character: rare.find(character => character.id === entry.characterId), probability: entry.probability,
   }));
 }
 

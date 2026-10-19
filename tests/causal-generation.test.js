@@ -39,7 +39,7 @@ test("the 18 player meals have only lawful soft shapes and all probiotic meals s
     const stable=getOutcomePool({...selection,additives:["probiotic"]});
     assert.deepEqual(ordinary(stable).map(e=>e.characterId),["soft-pillows"]);
     close(ordinary(stable)[0].probability,.98);
-    close(pool.filter(e=>e.special).reduce((sum,e)=>sum+e.probability,0),selection.additives[0]==="gold-leaf"?.05:.02);
+    close(pool.filter(e=>e.special).reduce((sum,e)=>sum+e.probability,0),selection.additives.some(id=>additiveById[id].rareTargets.length)?.2:.02);
   }
 });
 

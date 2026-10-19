@@ -21,6 +21,7 @@ export function collectEffects(input) {
       (toilet.effects.smoothnessBonus || 0),
     outcomeMarks: normalizeMarks(meal.some(item => item.id === "enoki" && item.attributes.retention > 1) ? ["enoki"] : []),
     decorations: additive?.decoration ? [additive.decoration] : [],
+    visualEffects: additive?.visualEffect ? [additive.visualEffect] : [],
     retentionChange,
     drinkPorosity: (drink.porosity || 0) * Math.min(selection.water / 1500, 5 / 3),
     propertyChanges: additive?.propertyChanges || {},

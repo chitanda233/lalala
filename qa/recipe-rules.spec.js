@@ -85,7 +85,7 @@ for (const [width, height] of [[320, 640], [402, 760]])
     await expect(recipe.locator("p").filter({ hasText: "未中稀有：" })).toBeInViewport();
   });
 
-test("single functional additives render glitter and give crystal a 5% rare pool with a 76% fixed target", async ({ page }) => {
+test("single additives render glitter and give crystal an exclusive 20% rare group with a 64% fixed target", async ({ page }) => {
   await prepare(page, { width: 402, height: 760 });
   await chooseAdditives(page, ["probiotic"]);
   await page.locator("#choose-additives").click();
@@ -119,8 +119,8 @@ test("single functional additives render glitter and give crystal a 5% rare pool
       conditional: getRecipeForecast(input).recipeConditionalProbability,
     };
   });
-  expect(actual.rare).toBeCloseTo(0.05, 12);
-  expect(actual.target).toBeCloseTo(0.76, 12);
+  expect(actual.rare).toBeCloseTo(0.2, 12);
+  expect(actual.target).toBeCloseTo(0.64, 12);
   expect(actual.conditional).toBe(0.8);
   await startRound(page, 50);
   await expect(page.locator("#result-dialog")).toBeVisible();

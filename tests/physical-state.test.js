@@ -74,8 +74,8 @@ test("rice and pumpkin never produce an enoki species, including a watery high-i
     const pool = getOutcomePool(input);
     assert.ok(!pool.some(entry => ["enoki-thread", "enoki-jet"].includes(entry.characterId)), JSON.stringify(input));
     close(pool.reduce((sum, entry) => sum + entry.probability, 0), 1);
-    close(pool.filter(entry => entry.special).reduce((sum, entry) => sum + entry.probability, 0), .05);
-    assert.equal(pool.filter(entry => entry.special).length, 10);
+    close(pool.filter(entry => entry.special).reduce((sum, entry) => sum + entry.probability, 0), .2);
+    assert.equal(pool.filter(entry => entry.special).length, 2);
   }
 });
 

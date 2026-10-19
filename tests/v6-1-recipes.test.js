@@ -85,8 +85,10 @@ test("V6.1: 46 normal recipes are complete and have the intended actual type, so
     assert.ok(sourceAllowed(characterById[r.characterId],mealSources(meal)),r.characterId);
     assert.equal(characterById[r.characterId].generation.forceZone,r.forceZone,`${r.characterId}: shape preference must match the V6.1 recipe`);
     assert.equal(getRecipeForecast(meal).matchedRecipe?.characterId,r.characterId);
-    const p=getOutcomePool(meal).find(x=>x.characterId===r.characterId)?.probability;
-    assert.ok(p>=0.75,`${r.characterId}: ${p}`);
+    const pool=getOutcomePool(meal).filter(x=>!x.special);
+    const p=pool.find(x=>x.characterId===r.characterId)?.probability;
+    const ordinaryTotal=pool.reduce((sum,x)=>sum+x.probability,0);
+    assert.ok(Math.abs(p/ordinaryTotal-(pool.length===1?1:.8))<1e-10,`${r.characterId}: ${p}`);
   }
 });
 test("V6.1: 10 rare themes are aligned but never treated as guaranteed recipes",()=>{
@@ -100,18 +102,19 @@ test("V6.1: 10 rare themes are aligned but never treated as guaranteed recipes",
     assert.equal(physicalState({...r,force:force[r.forceZone],additives:[r.additiveId]}).type,characterById[r.characterId].homeType,r.characterId);
   }
 });
-test("250 mL milk and chili combination hits type 7 without force modifying moisture",()=>{
+test("milk and explicitly functional chili have transparent effects without a hidden combo",()=>{
   assert.equal(drinkById.milk.wetnessBias,0.5);
   const meal={foodIds:["burger","enoki"],drinkId:"milk",water:250,digestionTime:"2",additives:["chili"],force:90};
   const state=physicalState(meal);
-  assert.equal(state.type,7);
-  assert.ok(Math.abs(state.score-2.272222222222222)<1e-9,state.score);
-  assert.equal(state.rapidIrritant,0.4);
-  assert.equal(physicalState({...meal,force:20}).type,7);
+  assert.equal(state.type,6);
+  assert.ok(Math.abs(state.score-1.872222222222222)<1e-9,state.score);
+  assert.equal(state.additiveBonus,0.5);
+  assert.equal(Object.hasOwn(state,"rapidIrritant"),false);
+  assert.equal(physicalState({...meal,force:20}).type,6);
   assert.equal(physicalState({...meal,additives:[]}).type,6);
   for(const patch of [{water:0},{drinkId:"water"},{digestionTime:"4"},{foodIds:["rice","enoki"]}])
-    assert.equal(physicalState({...meal,...patch}).rapidIrritant,0,JSON.stringify(patch));
-  assert.ok(getOutcomePool(meal).some(x=>x.characterId==="enoki-jet"&&x.probability>0));
+    assert.equal(physicalState({...meal,...patch}).additiveBonus,.5,JSON.stringify(patch));
+  assert.ok(!getOutcomePool(meal).some(x=>x.characterId==="enoki-jet"));
   for(const [id,expected] of [["milk-white",5],["fire",6],["enoki-jet",7]]){
     const r=stoolRecipeByCharacterId[id];
     assert.equal(physicalState({...r,force:force[r.forceZone],additives:[]}).type,expected,id);

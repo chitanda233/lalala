@@ -84,7 +84,8 @@ function surfaceMask(body, id) {
 }
 function additiveDecorationLayers(body, id, appearance) {
   const decorations = appearance?.decorations || [];
-  if (!decorations.length) return "";
+  const effects = appearance?.visualEffects || [];
+  if (!decorations.length && !effects.length) return "";
   const designs = {
     glitter: '<path d="M10 4v12M4 10h12" stroke="#fff4bd" stroke-width="2"/><circle cx="30" cy="29" r="2.1" fill="#fcf3dd"/>',
     "gold-flake": '<path d="m7 7 9-2 4 6-8 5Z" fill="#e4b93f"/><path d="m29 28 7-2 2 5-6 3Z" fill="#f4d77a"/>',
@@ -94,7 +95,17 @@ function additiveDecorationLayers(body, id, appearance) {
     charcoal: '<circle cx="11" cy="12" r="2.4" fill="#465050"/><circle cx="29" cy="31" r="1.7" fill="#5c6761"/>',
   };
   const layers = decorations.map((decoration, index) => `<defs><pattern id="${id}-${index}" width="44" height="46" patternUnits="userSpaceOnUse">${designs[decoration]}</pattern></defs><rect data-decoration="${decoration}" width="320" height="320" fill="url(#${id}-${index})"/>`).join("");
-  return `${surfaceMask(body, id)}<g mask="url(#${id}-surface)">${layers}</g>`;
+  const patterns = {
+    crystal: '<path d="m2 24 18-20 18 20-18 22Z" fill="#d5f1fc" opacity=".28"/><path d="m2 24 18-20v42m-18-22h36" fill="none" stroke="#eefbff" opacity=".65"/>',
+    rainbow: '<path d="M0 4h48" stroke="#ffa6c9" stroke-width="9"/><path d="M0 14h48" stroke="#f8e798" stroke-width="9"/><path d="M0 24h48" stroke="#a1f0cf" stroke-width="9"/><path d="M0 34h48" stroke="#a2cef8" stroke-width="9"/><path d="M0 44h48" stroke="#ccb0ef" stroke-width="9"/>',
+    jelly: '<path d="M8 10q10-8 20-3" fill="none" stroke="#f2ffe7" stroke-width="5" stroke-linecap="round"/><circle cx="35" cy="32" r="4" fill="#d4f3be" opacity=".7"/>',
+    frost: '<path d="M22 8v28M10 15l24 14M10 29l24-14m-19-1 7 4 7-4m-14 16 7-4 7 4" fill="none" stroke="#e9fbff" stroke-width="1.5"/>',
+    glow: '<path d="m15 6 3 9 9 3-9 3-3 9-3-9-9-3 9-3Z" fill="#eddf97"/><circle cx="35" cy="36" r="2.5" fill="#eef6db"/>',
+    magnet: '<g fill="#515a68"><circle cx="17" cy="20" r="4"/><circle cx="25" cy="23" r="3"/><circle cx="19" cy="28" r="3"/><circle cx="30" cy="31" r="2"/></g><path d="M6 11q-7 17 6 26M34 8q14 10 5 23" fill="none" stroke="#adb9c5" stroke-width="1.3"/>',
+    amber: '<path d="M2 3h44v44H2Z" fill="#e8a549" opacity=".22"/><circle cx="16" cy="18" r="5" fill="none" stroke="#f8d5a0"/><circle cx="34" cy="35" r="2" fill="#f8ddb0"/>',
+  };
+  const visualLayers = effects.map((effect, index) => `<defs><pattern id="${id}-effect-${index}" width="48" height="48" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)">${patterns[effect]}</pattern></defs><rect data-visual-effect="${effect}" width="320" height="320" fill="url(#${id}-effect-${index})" opacity="${effect === "rainbow" ? ".32" : ".75"}"/>`).join("");
+  return `${surfaceMask(body, id)}<g mask="url(#${id}-surface)">${layers}${visualLayers}</g>`;
 }
 function mixHex(first, second, amount) {
   const parts = [0, 1, 2].map((index) =>
