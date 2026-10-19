@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { chooseSpecimen, chooseMeal, startRound } from "./helpers.js";
+import { enableCollectionPreview, chooseSpecimen, chooseMeal, startRound } from "./helpers.js";
 
 test("collection shows zero for an unreachable ordinary target and a rare removed from its theme group", async ({ page }) => {
   await page.goto("/");
@@ -10,7 +10,7 @@ test("collection shows zero for an unreachable ordinary target and a rare remove
     additiveById["gold-leaf"].rareTargets = ["crystal"];
   });
   await page.locator("#collection-button").click();
-  await page.locator("#collection-preview-all").check();
+  await enableCollectionPreview(page);
   await chooseSpecimen(page, "classic:4");
   await page.locator('[data-detail-panel="recipe"]').click();
   const ordinary = page.locator('[data-recipe-for="classic"]');

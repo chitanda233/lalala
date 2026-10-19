@@ -19,15 +19,21 @@ import { characterSvg, mysterySvg } from "./artwork/stools.js";
 import { renderPage } from "./pagination.js";
 import { $, $$ } from "./dom.js";
 import { rareRevealTheme } from "./rare-reveal.js";
+import { collectionDisplayOrder } from "./collection-order.js";
 
-function rareCardAttributes(character) {
+function rareCardAttributes(character, unlocked = true) {
   const theme = rareRevealTheme(character);
   return theme
-    ? `data-rare-card="${character.id}" data-rare-motif="${theme.motif}" style="--rare-accent:${theme.accent};--rare-glow:${theme.glow}"`
+    ? `data-rare-card="${character.id}" data-rare-motif="${theme.motif}" data-rare-unlocked="${unlocked}" style="--rare-accent:${theme.accent};--rare-glow:${theme.glow}"`
+    : "";
+}
+function unlockedAura(character, unlocked = true) {
+  return unlocked && rareRevealTheme(character)
+    ? '<span class="rare-unlock-aura" aria-hidden="true"></span>'
     : "";
 }
 function individualArt(character, svg) {
-  return `<div class="individual-art${rareRevealTheme(character) ? " rare-collection-card" : ""}" ${rareCardAttributes(character)}>${svg}</div>`;
+  return `<div class="individual-art${rareRevealTheme(character) ? " rare-collection-card" : ""}" ${rareCardAttributes(character)}>${unlockedAura(character)}${svg}</div>`;
 }
 
 const artwork = (entry) =>
@@ -40,13 +46,15 @@ const artwork = (entry) =>
     entry.appearance,
   );
 export function createCollectionView(getSave) {
+  const displaySpecimens = collectionDisplayOrder(specimenBlueprints);
   let filter = "all",
     page = 0,
     focusedId = null,
     detailOpen = false,
     detailPanel = "art",
     individualPage = 0,
-    previewAll = false;
+    previewAll = false,
+    revealFocused = false;
   $("#type-filters").innerHTML = [
     { id: "all", label: "全部", name: "全部形态" },
     ...bristolTypes.map((type) => ({
@@ -61,6 +69,27 @@ export function createCollectionView(getSave) {
         `<button data-type-filter="${type.id}" aria-label="${type.label} · ${type.description || type.name}" aria-pressed="${type.id === filter}">${type.label}${type.id === "all" ? "" : `<span>${type.name}</span>`}</button>`,
     )
     .join("");
+  function detailSpecimens() {
+    const discovered = new Set(getSave().discoveredSpecimens);
+    return displaySpecimens.filter(item => previewAll || discovered.has(item.id));
+  }
+  function detailHeading(blueprint, type, preview = false) {
+    return `<h3 aria-live="polite">${blueprint.name}<small>${preview ? `第 ${type} 型 · 样式预览` : `固定归类 ${type} 型`}</small></h3>`;
+  }
+  function detailArtwork(character, svg) {
+    const disabled = detailSpecimens().length < 2 ? "disabled" : "";
+    const label = previewAll ? "图鉴" : "已解锁图鉴";
+    return `<div class="collection-art-carousel" role="group" aria-label="切换图鉴"><button data-specimen-prev aria-label="上一个${label}" ${disabled}>‹</button>${individualArt(character, svg)}<button data-specimen-next aria-label="下一个${label}" ${disabled}>›</button></div>`;
+  }
+  function returnToList() {
+    detailOpen = false;
+    const blueprint = specimenBlueprintById[focusedId];
+    if (blueprint && filter !== "all" && filter !== String(classifySpecimen(blueprint)))
+      filter = "all";
+    revealFocused = true;
+    render();
+    $(`[data-stool="${focusedId}"]`)?.focus({ preventScroll: true });
+  }
   function detailTabs() {
     return `<div class="individual-nav" role="group" aria-label="详情内容">${[["art","形态"],["recipe","配方"],["source","来源"]].map(([id,label]) => `<button data-detail-panel="${id}" aria-pressed="${detailPanel === id}" ${detailPanel === id ? "disabled" : ""}>${label}</button>`).join("")}</div>`;
   }
@@ -99,6 +128,7 @@ export function createCollectionView(getSave) {
   function renderDetail() {
     $("#collection-dialog").classList.toggle("detail-open", detailOpen);
     $("#collection-back").hidden = !detailOpen;
+    $("#collection-close").setAttribute("aria-label", detailOpen ? "关闭详情" : "关闭图鉴");
     if (!detailOpen) {
       const blueprint = specimenBlueprintById[focusedId];
       const type = blueprint ? bristolTypes[classifySpecimen(blueprint) - 1] : null;
@@ -121,19 +151,19 @@ export function createCollectionView(getSave) {
     if (previewAll && !entry) {
       const character = characterById[blueprint.characterId];
       $("#collection-detail").innerHTML =
-        `<h3>${blueprint.name}<small>第 ${type} 型 · 样式预览</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-style-preview="${blueprint.id}">${individualArt(character, characterSvg(character, false, type))}<p>${character.description}</p></article>`}`;
+        `${detailHeading(blueprint, type, true)}${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-style-preview="${blueprint.id}">${detailArtwork(character, characterSvg(character, false, type))}<p>${character.description}</p></article>`}`;
       return;
     }
     if (!entry) {
       const character = characterById[blueprint.characterId];
       $("#collection-detail").innerHTML =
-        `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-discovered="${blueprint.id}">${individualArt(character, characterSvg(character, false, type))}<p>${character.description}</p><p>暂无保留个体</p></article>`}`;
+        `${detailHeading(blueprint, type)}${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-discovered="${blueprint.id}">${detailArtwork(character, characterSvg(character, false, type))}<p>${character.description}</p><p>暂无保留个体</p></article>`}`;
       return;
     }
     const diagnosis = diagnoseOutcome(entry);
     const marks = entry.marks.map((mark) => outcomeMarks[mark].name).join("、");
     $("#collection-detail").innerHTML =
-      `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(entry.characterId) : detailPanel === "source" ? sourceDetail(entry.characterId) : `<article class="individual-card" data-individual="${entry.id}">${individualArt(characterById[entry.characterId], artwork(entry))}${individualNavigation(entry, entries.length)}<p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article>`}`;
+      `${detailHeading(blueprint, type)}${detailTabs()}${detailPanel === "recipe" ? recipeDetail(entry.characterId) : detailPanel === "source" ? sourceDetail(entry.characterId) : `<article class="individual-card" data-individual="${entry.id}">${detailArtwork(characterById[entry.characterId], artwork(entry))}${individualNavigation(entry, entries.length)}<p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article>`}`;
   }
   function render() {
     const save = getSave();
@@ -152,22 +182,23 @@ export function createCollectionView(getSave) {
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", selected);
     });
-    const visible = specimenBlueprints.filter(
-      (blueprint) =>
-        filter === "all" || String(classifySpecimen(blueprint)) === filter,
+    const visible = filter === "all" ? displaySpecimens : collectionDisplayOrder(
+      specimenBlueprints.filter(blueprint => String(classifySpecimen(blueprint)) === filter),
     );
     $("#bristol-grid").innerHTML = visible
       .map((blueprint) => {
         const known = discovered.has(blueprint.id);
         const character = characterById[blueprint.characterId];
         const rare = rareRevealTheme(character);
-        return `<button class="stool-card ${known ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}${rare ? " rare-collection-card" : ""}" ${rare ? rareCardAttributes(character) : ""} data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}"><span class="stool-art">${previewAll || known ? characterSvg(character, false, classifySpecimen(blueprint)) : mysterySvg()}</span><span class="stool-title"><strong>${previewAll || known ? blueprint.name : "未发现的便便"}</strong><span>${rare ? "✦ 稀有 · " : ""}第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
+        return `<button class="stool-card ${known ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}${rare ? " rare-collection-card" : ""}" ${rare ? rareCardAttributes(character, previewAll || known) : ""} data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}">${unlockedAura(character, previewAll || known)}<span class="stool-art">${previewAll || known ? characterSvg(character, false, classifySpecimen(blueprint)) : mysterySvg()}</span><span class="stool-title"><strong>${previewAll || known ? blueprint.name : "未发现的便便"}</strong><span>${rare ? "✦ 稀有 · " : ""}第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
       })
       .join("");
     $("#collection-dialog").classList.toggle("detail-open", detailOpen);
     if (!detailOpen) {
       const cards = $$("#bristol-grid .stool-card");
-      page = renderPage("collection", cards, page);
+      page = renderPage("collection", cards, page,
+        revealFocused ? cards.find(card => card.dataset.stool === focusedId) : null);
+      revealFocused = false;
       const currentPage = cards.filter((card) => !card.hidden);
       if (!currentPage.some((card) => card.dataset.stool === focusedId)) {
         focusedId = currentPage[0]?.dataset.stool;
@@ -189,6 +220,11 @@ export function createCollectionView(getSave) {
     detailPanel = "art";
     individualPage = 0;
     render();
+    if (previewAll) $("#collection-preview-notice").showModal();
+  });
+  $("#collection-preview-notice").addEventListener("close", () => {
+    if ($("#collection-dialog").open)
+      $("#collection-preview-all").focus({ preventScroll: true });
   });
   $("#bristol-grid").addEventListener("click", (event) => {
     const button = event.target.closest("[data-stool]");
@@ -217,6 +253,20 @@ export function createCollectionView(getSave) {
     render();
   });
   $("#collection-detail").addEventListener("click", (event) => {
+    const specimenPrevious = event.target.closest("[data-specimen-prev]");
+    const specimenNext = event.target.closest("[data-specimen-next]");
+    if (specimenPrevious || specimenNext) {
+      const button = specimenPrevious || specimenNext;
+      if (button.disabled) return;
+      const specimens = detailSpecimens();
+      const index = specimens.findIndex(item => item.id === focusedId);
+      if (index < 0 || specimens.length < 2) return;
+      focusedId = specimens[(index + (specimenNext ? 1 : -1) + specimens.length) % specimens.length].id;
+      individualPage = 0;
+      renderDetail();
+      $(specimenNext ? "[data-specimen-next]" : "[data-specimen-prev]")?.focus({ preventScroll: true });
+      return;
+    }
     const previous = event.target.closest("[data-individual-prev]");
     const next = event.target.closest("[data-individual-next]");
     if (previous || next) {
@@ -231,10 +281,15 @@ export function createCollectionView(getSave) {
     detailPanel = tab.dataset.detailPanel;
     renderDetail();
   });
-  $("#collection-back").addEventListener("click", () => {
-    detailOpen = false;
-    render();
-    $(`[data-stool="${focusedId}"]`)?.focus({ preventScroll: true });
+  $("#collection-back").addEventListener("click", returnToList);
+  $("#collection-close").addEventListener("click", () => {
+    if (detailOpen) returnToList();
+    else $("#collection-dialog").close();
+  });
+  $("#collection-dialog").addEventListener("cancel", (event) => {
+    if (!detailOpen) return;
+    event.preventDefault();
+    returnToList();
   });
   $("#collection-dialog").addEventListener("close", () => {
     detailOpen = false;

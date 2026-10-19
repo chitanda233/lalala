@@ -1343,6 +1343,27 @@ input[type="range"] {
 .collection-dialog .dialog-heading > div:first-child {
   min-width: 0;
 }
+.collection-preview-notice {
+  width: min(calc(100vw - 36px), 340px);
+  height: auto;
+  max-height: calc(var(--screen-height) - 32px);
+  top: calc(var(--screen-top, 0px) + var(--screen-height) / 2);
+  transform: translateY(-50%);
+  container-type: normal;
+  padding: 22px;
+}
+.collection-preview-notice[open] {
+  gap: 16px;
+}
+.collection-preview-notice h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.collection-preview-notice p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
 .type-filters {
   gap: 5px;
 }
@@ -1497,6 +1518,40 @@ input[type="range"] {
 .individual-art.rare-collection-card {
   width: 100%;
 }
+.rare-unlock-aura {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: linear-gradient(#000 0 66%, transparent 90%);
+}
+.rare-unlock-aura::before,
+.rare-unlock-aura::after {
+  content: "";
+  position: absolute;
+  width: 220%;
+  aspect-ratio: 1;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+}
+.rare-unlock-aura::before {
+  background: repeating-conic-gradient(from 0deg, #fff6cb45 0deg 9deg, transparent 10deg 30deg);
+  mask-image: radial-gradient(circle, transparent 4%, #000 22% 55%, transparent 74%);
+  animation: collection-rare-rays 24s linear infinite;
+}
+.rare-unlock-aura::after {
+  background: conic-gradient(#ff79a9, #ffb767, #ffe995, #7df0bc, #6edbf4, #a098ff, #e18bff, #ff79a9);
+  mask-image: repeating-conic-gradient(transparent 0deg 15deg, #000 20deg 24deg, transparent 30deg 45deg);
+  opacity: 0.65;
+  filter: blur(1px);
+  animation: collection-rare-rays 16s linear infinite reverse;
+}
+@keyframes collection-rare-rays {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
 @keyframes collection-rare-shimmer {
   0%, 20% { transform: translateX(-55%); }
   65%, 100% { transform: translateX(55%); }
@@ -1530,6 +1585,33 @@ input[type="range"] {
   font-size: 13px;
   color: #647258;
   display: block;
+}
+.collection-art-carousel {
+  position: relative;
+  display: grid;
+  height: 100%;
+  min-height: 0;
+}
+.collection-art-carousel > button {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 44px;
+  border: 1px solid #bfcbb3;
+  border-radius: 12px;
+  background: #fbfaf0e8;
+  color: #43583a;
+  box-shadow: 0 2px 8px #20342b25;
+  backdrop-filter: blur(8px);
+  font-size: 28px;
+}
+.collection-art-carousel > [data-specimen-prev] {
+  left: 6px;
+}
+.collection-art-carousel > [data-specimen-next] {
+  right: 6px;
 }
 .individual-card {
   display: grid;

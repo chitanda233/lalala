@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { chooseAdditives, startRound, chooseSpecimen } from "./helpers.js";
+import { enableCollectionPreview, chooseAdditives, startRound, chooseSpecimen } from "./helpers.js";
 
 for(const [width,height] of [[320,640],[402,760]])
   test(`Drink intake and digestion controls change the rice meal and random phases stay locked at ${width}`, async ({page}) => {
@@ -47,7 +47,7 @@ test('the catalogue and content studio expose complete volume and phase recipes'
   await page.setViewportSize({width:402,height:760});
   await page.goto('/');
   await page.locator('#collection-button').click();
-  await page.locator('#collection-preview-all').check();
+  await enableCollectionPreview(page);
   await chooseSpecimen(page,'classic:4');
   await page.locator('[data-detail-panel="recipe"]').click();
   await expect(page.locator('[data-recipe-for="classic"]')).toContainText('1250 mL');

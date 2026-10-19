@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { chooseSpecimen } from "./helpers.js";
+import { enableCollectionPreview, chooseSpecimen } from "./helpers.js";
 
 for (const [width, height] of [[320, 640], [402, 760]])
   test(`standard catalog covers and seven per-species records with merged repeats at ${width}`, async ({ page }) => {
@@ -76,7 +76,7 @@ for (const [width, height] of [[320, 640], [402, 760]])
     await chooseSpecimen(page, fixture.archived);
     await expect(page.locator("[data-discovered]")).toContainText("暂无保留个体");
     await page.locator("#collection-back").click();
-    await page.locator("#collection-preview-all").check();
+    await enableCollectionPreview(page);
     await chooseSpecimen(page, fixture.primary);
     await expect(page.locator("[data-individual]")).toHaveAttribute("data-individual", "history-9");
     await expect(cover).toHaveAttribute("data-tint", fixture.standardTint);

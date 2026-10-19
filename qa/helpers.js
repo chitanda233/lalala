@@ -156,6 +156,13 @@ export async function chooseSpecimen(page, id) {
   await page.locator(`[data-stool="${id}"]`).click();
 }
 
+export async function enableCollectionPreview(page) {
+  await page.locator("#collection-preview-all").check();
+  const notice = page.locator("#collection-preview-notice");
+  if (await notice.isVisible())
+    await notice.getByRole("button", { name: "知道了" }).click();
+}
+
 export async function chooseDigestion(page, phase) {
   await page.locator("#choose-digestion").click();
   await page.locator(`[data-digestion="${phase}"]`).click();

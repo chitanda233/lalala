@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {chooseAdditives,setWater,startRound,armSpecimen,chooseSpecimen} from './helpers.js';
+import {enableCollectionPreview,chooseAdditives,setWater,startRound,armSpecimen,chooseSpecimen} from './helpers.js';
 
 for(const [width,height] of [[320,640],[402,760]])test(`shared rare groups and visual effects persist at ${width}`,async({page})=>{
   await page.setViewportSize({width,height});
@@ -25,7 +25,7 @@ for(const [width,height] of [[320,640],[402,760]])test(`shared rare groups and v
   await expect(page.locator('#result-type')).toContainText('布里斯托 3 型');
   await page.screenshot({path:`qa/新规则晶体特效-${width}.png`});
   await page.locator('#play-again').click();
-  await page.locator('#collection-button').click();await page.locator('#collection-preview-all').check();
+  await page.locator('#collection-button').click();await enableCollectionPreview(page);
   await chooseSpecimen(page,'crystal:3');await page.locator('[data-detail-panel="recipe"]').click();
   await expect(page.locator('[data-recipe-for="crystal"]')).toContainText('目标组共享20%');
   await expect(page.locator('[data-recipe-for="crystal"]')).toContainText('组外稀有概率为0');

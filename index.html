@@ -543,8 +543,8 @@
             <span>全部样式</span>
           </label>
           <button
+            id="collection-close"
             class="close-button"
-            data-close="collection-dialog"
             aria-label="关闭图鉴"
           >
             <svg class="icon"><use href="#i-close" /></svg>
@@ -577,6 +577,17 @@
         rel="noopener noreferrer"
         >形态分类参考 Bristol 七型 ↗</a
       >
+    </dialog>
+    <dialog
+      id="collection-preview-notice"
+      class="collection-preview-notice"
+      role="alertdialog"
+      aria-labelledby="collection-preview-notice-title"
+      aria-describedby="collection-preview-notice-copy"
+    >
+      <h2 id="collection-preview-notice-title">调试功能提示</h2>
+      <p id="collection-preview-notice-copy">该功能仅供调试使用，会提前展示全部图鉴，降低探索和收集的游戏乐趣。</p>
+      <button class="food-confirm" data-close="collection-preview-notice" autofocus>知道了</button>
     </dialog>
     <dialog
       id="help-dialog"

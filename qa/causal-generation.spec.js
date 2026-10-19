@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {chooseMeal,chooseDrink,chooseAdditives,setWater,startRound,chooseSpecimen,setCompletedRounds} from './helpers.js';
+import {enableCollectionPreview,chooseMeal,chooseDrink,chooseAdditives,setWater,startRound,chooseSpecimen,setCompletedRounds} from './helpers.js';
 for(const [width,height]of [[320,640],[402,760]])test(`the player's free meal is predictable and probiotic-stable at ${width}`,async({page})=>{
   await page.setViewportSize({width,height});
   await page.addInitScript(()=>{Math.random=()=>.5;});
@@ -19,7 +19,7 @@ for(const [width,height]of [[320,640],[402,760]])test(`the player's free meal is
     await expect(page.locator('#action-title')).toHaveText('准备好，开始吧。');
   }
   await page.screenshot({path:`qa/主界面保留惊喜-${width}.png`});
-  await page.locator('#collection-button').click();await page.locator('#collection-preview-all').check();await chooseSpecimen(page,'corn-pebbles:5');
+  await page.locator('#collection-button').click();await enableCollectionPreview(page);await chooseSpecimen(page,'corn-pebbles:5');
   await page.locator('[data-detail-panel="source"]').click();
   await expect(page.locator('[data-source-for="corn-pebbles"]')).toContainText('蒸玉米');
   expect(await page.locator('#collection-dialog').evaluate(el=>el.scrollHeight<=el.clientHeight&&el.scrollWidth<=el.clientWidth)).toBe(true);
@@ -43,7 +43,7 @@ test('V6.1 recipe and source pages agree on shape preferences',async({page})=>{
   await page.setViewportSize({width:402,height:760});
   await page.goto('/');
   await page.locator('#collection-button').click();
-  await page.locator('#collection-preview-all').check();
+  await enableCollectionPreview(page);
   await chooseSpecimen(page,'stone-tower:2');
   await page.locator('[data-detail-panel="recipe"]').click();
   await expect(page.locator('[data-recipe-for="stone-tower"]')).toContainText('强力度 · 67–100');
