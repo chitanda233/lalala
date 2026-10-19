@@ -121,8 +121,10 @@ export function createSuppliesView({ getSelection, onChange }) {
     $("#drink-summary").textContent = drink.name;
     $("#choose-drinks").setAttribute("aria-label", `${drink.name} ${selection.water} mL`);
     $("#drink-effect").textContent = drink.effectLabel;
-    $("#additive-summary").textContent = selection.additives.length ? selection.additives.map(id => additiveById[id].name).join("、") : "还没加料，原味也有惊喜";
-    $("#additive-count").textContent = `${selection.additives.length} / ${gameConfig.maxAdditives}`;
+    const additiveName = selection.additives.length ? selection.additives.map(id => additiveById[id].name).join("、") : "未添加";
+    $("#additive-summary").textContent = additiveName;
+    $("#additive-summary").title = additiveName;
+    $("#choose-additives").setAttribute("aria-label", `添加剂，当前：${additiveName}`);
     if (dialog.open) renderDialog();
   }
   function lock(value) {
