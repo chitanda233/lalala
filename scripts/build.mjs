@@ -6,6 +6,7 @@ import {
   rename,
   rm,
   stat,
+  writeFile,
 } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
@@ -97,10 +98,31 @@ async function verifyRuntimeImports(directory) {
   }
 }
 
+async function applyBasePath(directory, basePath) {
+  if (basePath === "/") return;
+  for (const file of await allFiles(directory)) {
+    if (![".js", ".html", ".css"].includes(path.extname(file))) continue;
+    const source = await readFile(file, "utf8");
+    let deployed = source.replace(
+      /(["'`])\/(assets\/|src\/|app\.js|bristol\.js|styles\.css)/g,
+      (_, quote, resource) => `${quote}${basePath}${resource}`,
+    );
+    if (path.basename(file) === "index.html")
+      deployed = deployed.replaceAll('href="/"', `href="${basePath}"`);
+    if (deployed !== source) await writeFile(file, deployed);
+  }
+}
+
 export async function buildRelease(
   destination = path.join(projectRoot, "dist"),
-  { sourceRoot = projectRoot } = {},
+  { sourceRoot = projectRoot, basePath = "/" } = {},
 ) {
+  if (
+    typeof basePath !== "string" ||
+    !/^\/(?:[A-Za-z0-9._~-]+\/)*$/.test(basePath) ||
+    basePath.split("/").some((part) => part === "." || part === "..")
+  )
+    throw new Error("发布路径必须以 / 开头和结尾，且不能包含相对路径段。");
   const sourceDirectory = path.resolve(sourceRoot);
   const target = path.resolve(destination);
   if (
@@ -131,6 +153,7 @@ export async function buildRelease(
       });
     }
     await verifyRuntimeImports(temporary);
+    await applyBasePath(temporary, basePath);
     await rm(target, { recursive: true, force: true });
     await rename(temporary, target);
     return target;
@@ -143,5 +166,6 @@ if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
-  console.log(`发布文件已生成 → ${await buildRelease()}`);
+  const basePath = process.argv.find((argument) => argument.startsWith("--base-path="))?.slice("--base-path=".length) || "/";
+  console.log(`发布文件已生成 → ${await buildRelease(undefined, { basePath })}`);
 }
