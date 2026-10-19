@@ -31,7 +31,7 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
       - name: 构建游戏
-        run: node scripts/build.mjs --base-path="$PAGES_BASE_PATH/"
+        run: node scripts/build.mjs --base-path="$PAGES_BASE_PATH/" --asset-version="$GITHUB_SHA"
         env:
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
       - name: 上传游戏产物

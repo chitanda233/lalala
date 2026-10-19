@@ -113,9 +113,26 @@ async function applyBasePath(directory, basePath) {
   }
 }
 
+async function versionRuntimeAssets(directory, assetVersion) {
+  if (!assetVersion) return;
+  const version = encodeURIComponent(assetVersion);
+  for (const file of await allFiles(directory)) {
+    const extension = path.extname(file);
+    if (![".js", ".html"].includes(extension)) continue;
+    const source = await readFile(file, "utf8");
+    const references = extension === ".js"
+      ? /(\b(?:import|export)\s+(?:[^;"']*?\s+from\s*)?["']|\bimport\s*\(\s*["'])([^"']+)(["'])/g
+      : /(\b(?:src|href)\s*=\s*["'])([^"']+\.(?:js|css))(["'])/g;
+    const deployed = source.replace(references, (_, prefix, resource, quote) =>
+      `${prefix}${resource}${resource.includes("?") ? "&" : "?"}v=${version}${quote}`,
+    );
+    if (deployed !== source) await writeFile(file, deployed);
+  }
+}
+
 export async function buildRelease(
   destination = path.join(projectRoot, "dist"),
-  { sourceRoot = projectRoot, basePath = "/" } = {},
+  { sourceRoot = projectRoot, basePath = "/", assetVersion = "" } = {},
 ) {
   if (
     typeof basePath !== "string" ||
@@ -154,6 +171,7 @@ export async function buildRelease(
     }
     await verifyRuntimeImports(temporary);
     await applyBasePath(temporary, basePath);
+    await versionRuntimeAssets(temporary, assetVersion);
     await rm(target, { recursive: true, force: true });
     await rename(temporary, target);
     return target;
@@ -167,5 +185,6 @@ if (
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
   const basePath = process.argv.find((argument) => argument.startsWith("--base-path="))?.slice("--base-path=".length) || "/";
-  console.log(`发布文件已生成 → ${await buildRelease(undefined, { basePath })}`);
+  const assetVersion = process.argv.find((argument) => argument.startsWith("--asset-version="))?.slice("--asset-version=".length) || "";
+  console.log(`发布文件已生成 → ${await buildRelease(undefined, { basePath, assetVersion })}`);
 }
