@@ -95,7 +95,7 @@ test("the recipe generates whole specimens and the forecast groups those same ou
   assert.ok(Math.abs(specialProbability(recipe) - 0.02) < 1e-12);
 });
 
-test("repeated species keeps only its newest individual and never merges meal imprints", () => {
+test("the same species retains different appearances without combining meal imprints", () => {
   const recipe = { foodIds: ["enoki", "corn"] };
   const save = normalizeSave();
   const first = createSession(recipe, { now: 1000, random: () => 0.5 });
@@ -116,21 +116,22 @@ test("repeated species keeps only its newest individual and never merges meal im
     foodById.enoki.attributes.retention = enoki;
     foodById.corn.attributes.retention = corn;
   }
-  assert.equal(save.individuals.length, 1);
+  assert.equal(save.individuals.length, 2);
   assert.notEqual(first.outcome.individualId, second.outcome.individualId);
   assert.equal(first.outcome.specimenId, second.outcome.specimenId);
   assert.deepEqual(original.marks, ["enoki"]);
-  assert.equal(save.individuals[0].id, second.id);
-  assert.equal(save.individuals[0].sequence, 2);
-  assert.deepEqual(save.individuals[0].marks, []);
-  assert.deepEqual(save.individuals[0].appearance.residues, []);
+  assert.deepEqual(save.individuals[0], original);
+  assert.equal(save.individuals[1].id, second.id);
+  assert.equal(save.individuals[1].sequence, 2);
+  assert.deepEqual(save.individuals[1].marks, []);
+  assert.deepEqual(save.individuals[1].appearance.residues, []);
   assert.deepEqual(save.discoveredSpecimens, [first.outcome.specimenId]);
   const reloaded = normalizeSave(JSON.parse(JSON.stringify(save)));
   assert.deepEqual(reloaded.individuals, save.individuals);
   reloaded.session = first;
   assert.equal(settleSession(reloaded, 10000), null);
   assert.equal(reloaded.total, 2);
-  assert.equal(reloaded.individuals.length, 1);
+  assert.equal(reloaded.individuals.length, 2);
 });
 
 test("incomplete records are rejected instead of reconstructing collectible history", () => {
@@ -147,4 +148,15 @@ test("incomplete records are rejected instead of reconstructing collectible hist
   assert.deepEqual(save.individuals, []);
   assert.equal(Object.hasOwn(save, "collection"), false);
   assert.equal(Object.hasOwn(save, "specimens"), false);
+});
+
+test("random seeds cannot rotate, shift or change the appearance of identical results", () => {
+  const appearance = rollOutcome({ foodIds: ["rice", "corn", "enoki"] }, () => .5).appearance;
+  const stableIds = svg => svg.replaceAll(/specimen-\d+/g, "specimen-test");
+  for (const id of ["classic", "corn-cannon"]) {
+    const character = characterById[id];
+    const render = variationSeed => stableIds(characterSvg(character, false, character.homeType,
+      "berry", ["enoki"], { ...appearance, variationSeed }));
+    assert.equal(render(1), render(999999));
+  }
 });

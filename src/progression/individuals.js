@@ -32,6 +32,10 @@ function normalizeIndividual(value, sequence) {
       Number.isSafeInteger(value.sequence) && value.sequence > 0
         ? value.sequence
         : sequence,
+    occurrenceCount:
+      Number.isSafeInteger(value.occurrenceCount) && value.occurrenceCount > 0
+        ? value.occurrenceCount
+        : 1,
     specimenId,
     characterId: value.characterId,
     type: value.type,
@@ -79,18 +83,43 @@ export function normalizeIndividuals(value) {
   return individuals;
 }
 
-// Keep the newest birth of each species, ordered from oldest to newest.
+function individualKey(entry) {
+  const { variationSeed, ...appearance } = entry.appearance;
+  return JSON.stringify([
+    entry.specimenId,
+    entry.colorId ?? null,
+    [...entry.marks].sort(),
+    {
+      ...appearance,
+      decorations: [...appearance.decorations].sort(),
+      visualEffects: [...appearance.visualEffects].sort(),
+      residues: [...appearance.residues].sort((a, b) => a.foodId.localeCompare(b.foodId)),
+    },
+  ]);
+}
+
+// Merge matching results, then keep seven distinct appearances per species.
+// A merge always uses the newest snapshot; marks and decorations are never combined.
 export function retainRecentIndividuals(individuals) {
-  const seen = new Set();
-  return [...individuals]
-    .sort((a, b) => a.sequence - b.sequence)
-    .reverse()
+  const merged = new Map();
+  for (const entry of [...individuals].sort((a, b) => a.sequence - b.sequence)) {
+    const key = individualKey(entry);
+    const previous = merged.get(key);
+    merged.set(key, {
+      ...entry,
+      occurrenceCount: Math.min(Number.MAX_SAFE_INTEGER,
+        (previous?.occurrenceCount || 0) + (entry.occurrenceCount || 1)),
+    });
+  }
+  const counts = new Map();
+  return [...merged.values()]
+    .sort((a, b) => b.sequence - a.sequence)
     .filter((entry) => {
-      if (seen.has(entry.specimenId)) return false;
-      seen.add(entry.specimenId);
+      const count = counts.get(entry.specimenId) || 0;
+      if (count >= gameConfig.maxIndividualsPerSpecimen) return false;
+      counts.set(entry.specimenId, count + 1);
       return true;
     })
-    .slice(0, gameConfig.maxIndividuals)
     .reverse();
 }
 
@@ -112,7 +141,7 @@ export function recordIndividual(save, session) {
     },
     sequence,
   );
-  if (individual)
-    save.individuals = retainRecentIndividuals([...save.individuals, individual]);
-  return individual;
+  if (!individual) return null;
+  save.individuals = retainRecentIndividuals([...save.individuals, individual]);
+  return save.individuals.find(entry => entry.id === individual.id);
 }

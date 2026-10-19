@@ -56,7 +56,7 @@ test("all seven concrete forms persist in one classification and can be paged wi
   }
 });
 
-test("same collectible replaces its prior individual while retaining total and discovery", async ({
+test("an identical result merges its prior record while retaining total and discovery", async ({
   page,
 }) => {
   await page.goto("/");
@@ -75,6 +75,7 @@ test("same collectible replaces its prior individual while retaining total and d
   expect(save.individuals).toHaveLength(1);
   expect(ids[0]).not.toBe(ids[1]);
   expect(save.individuals[0].id).toBe(ids[1]);
+  expect(save.individuals[0].occurrenceCount).toBe(2);
   await page.locator("#collection-button").click();
   await chooseSpecimen(page, "classic:4");
   await expect(page.locator("[data-individual]")).toHaveAttribute("data-individual", ids[1]);

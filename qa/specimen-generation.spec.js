@@ -48,11 +48,12 @@ test("each meal saves an independent visible specimen under exactly one morpholo
   await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 4000 });
   await expect(page.locator("#result-individual")).toContainText("#002");
   const save = await readSave(page);
-  expect(save.individuals).toHaveLength(1);
-  expect(save.individuals[0].id).not.toBe(first.id);
-  expect(save.individuals[0].specimenId).toBe(first.specimenId);
-  expect(save.individuals[0].sequence).toBe(2);
-  expect(save.individuals[0].marks).toEqual([]);
+  expect(save.individuals).toHaveLength(2);
+  expect(save.individuals[0]).toEqual(first);
+  expect(save.individuals[1].id).not.toBe(first.id);
+  expect(save.individuals[1].specimenId).toBe(first.specimenId);
+  expect(save.individuals[1].sequence).toBe(2);
+  expect(save.individuals[1].marks).toEqual([]);
   await page.locator("#play-again").click();
   await page.reload();
   await page.locator("#collection-button").click();
@@ -60,13 +61,19 @@ test("each meal saves an independent visible specimen under exactly one morpholo
   await expect(page.locator("#collection-detail")).toContainText("个体 #002");
   await expect(page.locator("[data-individual]")).toHaveAttribute(
     "data-individual",
-    save.individuals[0].id,
+    save.individuals[1].id,
   );
   await expect(page.locator(".individual-art > svg")).toHaveAttribute(
     "data-marks",
     "",
   );
-  await expect(page.locator("[data-individual-next]")).toHaveCount(0);
+  await expect(page.locator("[data-individual-next]")).toBeEnabled();
+  await page.locator("[data-individual-next]").click();
+  await expect(page.locator("[data-individual]")).toHaveAttribute("data-individual", first.id);
+  await expect(page.locator(".individual-art > svg")).toHaveAttribute("data-marks", "enoki");
+  await expect(page.locator("[data-individual-next]")).toBeDisabled();
+  await page.locator("[data-individual-prev]").click();
+  await expect(page.locator("[data-individual]")).toHaveAttribute("data-individual", save.individuals[1].id);
   await expect(page.locator("#collection-detail")).toContainText(
     "固定归类 4 型",
   );

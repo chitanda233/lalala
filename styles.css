@@ -1471,6 +1471,25 @@ input[type="range"] {
 .individual-card p {
   font-size: 16px;
 }
+.individual-history-nav {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+}
+.individual-history-nav button {
+  height: 42px;
+  border-radius: 9px;
+  background: #e4ecd6;
+  font-size: 24px;
+}
+.individual-history-nav strong {
+  font-size: 16px;
+  font-weight: 500;
+}
+.individual-history-nav small {
+  font-size: 14px;
+}
 .individual-nav {
   display: flex;
   align-items: center;

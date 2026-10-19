@@ -39,7 +39,7 @@ export function rollOutcome(input, random = Math.random) {
   let remaining = drawValue(random);
   const candidate =
     pool.find((entry) => (remaining -= entry.probability) < 0) || pool.at(-1);
-  // The second draw varies this individual's surface; it never rerolls its class.
+  // Record the seed without using it to rotate, shift or distinguish appearances.
   const variationSeed = Math.floor(drawValue(random) * 1000000);
   const character = characterById[candidate.characterId];
   const specimen = {

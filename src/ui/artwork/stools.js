@@ -121,14 +121,10 @@ function textureLayers(filename, id, appearance, palette, body = null) {
   const mask = `${id}-surface`;
   const definitions = surfaceMask(body || imageAsset(filename), id);
   let layers = "";
-  const phase =
-    appearance.variationSeed == null
-      ? 0
-      : ((appearance.variationSeed % 97) / 97) * 24;
   if (grain > 1) {
     const size = 44 - grain * 3,
       r = 0.6 + grain * 0.3;
-    layers += `<defs><pattern id="${id}-grain" width="${size}" height="${size}" patternUnits="userSpaceOnUse" patternTransform="translate(${phase} ${phase / 2})"><circle cx="7" cy="8" r="${r}" fill="${palette.color}"/><circle cx="${size * 0.7}" cy="${size * 0.7}" r="${r * 0.7}" fill="#715f48"/><ellipse cx="6" cy="7" rx="${r * 0.7}" ry="${r * 0.35}" fill="${palette.light}"/></pattern></defs><rect data-layer="grain" width="320" height="320" fill="url(#${id}-grain)" opacity="${0.18 + grain * 0.035}"/>`;
+    layers += `<defs><pattern id="${id}-grain" width="${size}" height="${size}" patternUnits="userSpaceOnUse"><circle cx="7" cy="8" r="${r}" fill="${palette.color}"/><circle cx="${size * 0.7}" cy="${size * 0.7}" r="${r * 0.7}" fill="#715f48"/><ellipse cx="6" cy="7" rx="${r * 0.7}" ry="${r * 0.35}" fill="${palette.light}"/></pattern></defs><rect data-layer="grain" width="320" height="320" fill="url(#${id}-grain)" opacity="${0.18 + grain * 0.035}"/>`;
   }
   if (porosity > 1) {
     const size = 58 - porosity * 3,
@@ -143,14 +139,14 @@ function textureLayers(filename, id, appearance, palette, body = null) {
     [135, 213],
     [186, 224],
   ];
-  residues.forEach((residue, foodIndex) => {
+  [...residues].sort((a, b) => a.foodId.localeCompare(b.foodId)).forEach((residue, foodIndex) => {
     const count = 1 + Math.floor((residue.retention - 2) / 2);
     const size = 10 + residue.retention * 2.2;
     const opacity = 0.25 + residue.retention * 0.085;
     for (let index = 0; index < count; index++) {
       const [x, y] =
         positions[
-          (index * 2 + foodIndex + Math.floor(phase / 4)) % positions.length
+          (index * 2 + foodIndex) % positions.length
         ];
       const mark = foodArt(residue.foodId).replace(
         "<svg ",
@@ -211,9 +207,5 @@ export function characterSvg(
       ? 1 + (appearance.elongation - 4) * 0.025
       : 1;
   const sculpture = `${body}${compatible ? imageAsset(`${filename}-decor`) : ""}${textureLayers(filename, id, appearance, palette)}${additiveDecorationLayers(imageAsset(filename), `${id}-decor`, appearance)}${signatures.map((mark) => `<g opacity="${appearance ? 0.25 + appearance.enokiRetention * 0.107 : 1}">${imageAsset(`${filename}-${mark}`)}</g>`).join("")}`;
-  const rotation =
-    appearance?.variationSeed == null
-      ? 0
-      : (appearance.variationSeed / 1000000 - 0.5) * 3;
-  return `<svg viewBox="0 0 320 320" role="img" aria-label="${safeText(specimenName({ characterId: character.id, type }))} · 布里斯托 ${type} 型${signatures.length ? ` · ${signatures.map((mark) => outcomeMarks[mark].name).join("、")}` : ""}" data-specimen="${safeText(character.id)}:${type}" data-material="${safeText(character.material || "普通")}" data-tint="${palette.color}" data-marks="${signatures.join(" ")}"><g transform="translate(${160 * (1 - stretch)} 0) scale(${stretch} 1) rotate(${rotation} 160 160)">${sculpture}</g></svg>`;
+  return `<svg viewBox="0 0 320 320" role="img" aria-label="${safeText(specimenName({ characterId: character.id, type }))} · 布里斯托 ${type} 型${signatures.length ? ` · ${signatures.map((mark) => outcomeMarks[mark].name).join("、")}` : ""}" data-specimen="${safeText(character.id)}:${type}" data-material="${safeText(character.material || "普通")}" data-tint="${palette.color}" data-marks="${signatures.join(" ")}"><g transform="translate(${160 * (1 - stretch)} 0) scale(${stretch} 1)">${sculpture}</g></svg>`;
 }
