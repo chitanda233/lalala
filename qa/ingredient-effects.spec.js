@@ -87,9 +87,10 @@ test("three-food enoki signature survives a running reload, pigment, decoration 
   );
   await expect(card.locator(".stool-art svg")).toHaveAttribute(
     "data-marks",
-    "enoki",
+    "",
   );
   await chooseSpecimen(page, before.outcome.specimenId);
+  await expect(page.locator(".individual-art > svg")).toHaveAttribute("data-marks", "enoki");
   await expect(page.locator("#collection-detail")).toContainText("金针菇印记");
   expect(errors).toEqual([]);
 });
