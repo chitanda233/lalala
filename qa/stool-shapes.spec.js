@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { chooseMeal, chooseDrink, armSpecimen, startRound, chooseSpecimen } from "./helpers.js";
+import { applyIdealRecipe, setCompletedRounds, armSpecimen, startRound, chooseSpecimen } from "./helpers.js";
 import { referenceStoolAssets } from "../src/content/stool-art-assets.js";
 import { stoolRecipeByCharacterId } from "../src/content/stool-recipes.js";
 
@@ -54,17 +54,10 @@ for (const [width, height] of [[320, 640], [402, 760]])
     page.on("pageerror", error => errors.push(error.message));
     page.on("response", response => { if (response.status() >= 400) errors.push(response.url()); });
     await page.goto("/");
+    await setCompletedRounds(page, 40);
     for (const id of ["pancake", "ink-black", "bubbly", "jet"]) {
-      const recipe=stoolRecipeByCharacterId[id];
-      const force={low:20,medium:50,high:90}[recipe.forceZone];
-      await chooseMeal(page, recipe.foodIds);
-      await chooseDrink(page, recipe.drinkId);
-      await page.evaluate(force => {
-        const save = JSON.parse(localStorage.getItem("lalala-dev"));
-        save.settings.force = force;
-        localStorage.setItem("lalala-dev", JSON.stringify(save));
-      }, force);
-      await armSpecimen(page, id, 7);
+      const { force } = await applyIdealRecipe(page, id);
+      await armSpecimen(page, id, 7, force);
       await startRound(page, force);
       await expect(page.locator("#result-dialog")).toBeVisible();
       await expect(page.locator("#result-character > svg")).toHaveAttribute("data-specimen", `${id}:7`);

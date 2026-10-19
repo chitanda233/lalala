@@ -32,10 +32,10 @@ export async function chooseAdditives(page, ids) {
   await page.locator('#confirm-supply').click();
 }
 
-export async function armSpecimen(page, characterId = null, type = null) {
+export async function armSpecimen(page, characterId = null, type = null, force = 50) {
   return page.evaluate(
-    async ({ characterId, type }) => {
-      const selection = JSON.parse(localStorage.getItem("lalala-dev")).settings;
+    async ({ characterId, type, force }) => {
+      const selection = { ...JSON.parse(localStorage.getItem("lalala-dev")).settings, force };
       const [
         { getOutcomePool },
         { classifySpecimen, specimenName },
@@ -73,7 +73,7 @@ export async function armSpecimen(page, characterId = null, type = null) {
         rarity: character.rarity,
       };
     },
-    { characterId, type },
+    { characterId, type, force },
   );
 }
 // Keep catalog regressions on a reproducible force zone; pointer timing has its own tests.
@@ -154,4 +154,33 @@ export async function chooseSpecimen(page, id) {
   await page.locator(`[data-type-filter="${id.split(":")[1]}"]`).click();
   await showPageItem(page, `[data-stool="${id}"]`, "collection");
   await page.locator(`[data-stool="${id}"]`).click();
+}
+
+export async function chooseDigestion(page, phase) {
+  await page.locator("#choose-digestion").click();
+  await page.locator(`[data-digestion="${phase}"]`).click();
+  await page.locator('[data-close="digestion-dialog"]').last().click();
+}
+
+// Exercise the actual input UI with the current complete recipe, including phase.
+export async function applyIdealRecipe(page, characterId, additiveIds = null) {
+  const recipe = await page.evaluate(async id => {
+    const { stoolRecipeByCharacterId } = await import("/src/content/stool-recipes.js");
+    const { rareThemeRecipeById } = await import("/src/content/rare-theme-recipes.js");
+    return stoolRecipeByCharacterId[id] || rareThemeRecipeById[id];
+  }, characterId);
+  await chooseMeal(page, recipe.foodIds);
+  await chooseDrink(page, recipe.drinkId);
+  await setWater(page, recipe.water);
+  await chooseDigestion(page, recipe.digestionTime);
+  await chooseAdditives(page, additiveIds || (recipe.requiredAdditive ? [recipe.requiredAdditive] : recipe.additiveId ? [recipe.additiveId] : []));
+  return { recipe, force: { low: 20, medium: 50, high: 90 }[recipe.forceZone] };
+}
+
+export async function expectedTint(page, outcome) {
+  return page.evaluate(async outcome => {
+    const { characterById } = await import("/src/content/catalog.js");
+    const { characterSvg } = await import("/src/ui/artwork/stools.js");
+    return new DOMParser().parseFromString(characterSvg(characterById[outcome.characterId], false, outcome.type, outcome.colorId, outcome.marks, outcome.appearance), "image/svg+xml").documentElement.getAttribute("data-tint");
+  }, outcome);
 }

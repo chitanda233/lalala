@@ -42,12 +42,16 @@ test("all seven modules retain drafts, save together, and reload into game-backe
   await open(page, "stools");
   await page.locator("#field-name").fill("后台编辑收藏");
   await page.locator("#field-properties-grain").fill("5");
-  await open(page, "recipes");
+  await page.locator('[data-go="recipes"][data-id="classic"]').click();
   await page.locator("#field-foodIds-0").selectOption("banana");
-  await expect(page.locator("#record-preview")).toContainText("78.4%");
+  await expect(page.locator("[data-target-probability]")).toHaveText("0.0%");
+  await expect(page.locator("[data-stabilized-probability]")).toHaveText("0.0%");
+  await expect(page.locator("[data-primary-result]")).not.toContainText("后台编辑收藏");
+  await expect(page.locator("#content-warnings")).toBeVisible();
   await page.locator('[data-try-recipe="classic"]').click();
   await expect(page.locator("#preview-recipe")).toContainText("熟香蕉");
-  await expect(page.locator("#preview-forecast")).toContainText("后台编辑收藏");
+  await expect(page.locator("#preview-forecast")).toContainText("当前主结果");
+  await expect(page.locator("#preview-forecast")).not.toContainText("后台编辑收藏");
   await page.locator("#attribute-influence").evaluate((input) => {
     input.value = input.value === "1" ? "7" : "1";
     input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -57,7 +61,7 @@ test("all seven modules retain drafts, save together, and reload into game-backe
   await open(page, "additives");
   await page.locator('[data-rare-target="gold"]').check();
   await page.locator("#field-propertyChanges-hardness").fill("-1");
-  await expect(page.locator("#record-preview")).toContainText("5%");
+  await expect(page.locator("#record-preview")).toContainText("20%");
   await open(page, "toilets");
   await page.locator('[data-record="comfort"]').click();
   await page.locator("#field-unlock-count").fill("11");
@@ -73,7 +77,7 @@ test("all seven modules retain drafts, save together, and reload into game-backe
   await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
   expect(submissions.map((item) => item.kind)).toEqual(["content", "foods"]);
   expect(submissions[0].data.content.stools[0].name).toBe("后台编辑收藏");
-  expect(submissions[0].data.content.recipes[0].foodIds).toEqual(["banana"]);
+  expect(submissions[0].data.content.recipes.find(recipe => recipe.characterId === "classic").foodIds).toEqual(["banana"]);
   await page.reload();
   await expect(page.locator("#save-foods")).toBeDisabled();
   await open(page, "stools");
@@ -84,16 +88,15 @@ test("all seven modules retain drafts, save together, and reload into game-backe
   expect(errors).toEqual([]);
 });
 
-test("conflicts and invalid recipes preserve drafts; reset affects only the selected record", async ({ page }) => {
+test("disk conflicts preserve drafts and reset affects only the selected record", async ({ page }) => {
   await mockApis(page, { conflict: true });
   await page.goto("/admin/#recipes");
   await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
-  await page.locator("#field-forceZone").selectOption("low");
-  await expect(page.locator("#save-status")).toContainText("冲突配方");
+  await page.locator("#field-water").selectOption("0");
   await page.locator("#save-foods").click();
-  await expect(page.locator("#save-status")).toContainText("冲突配方");
+  await expect(page.locator("#save-status")).toContainText("草稿已保留");
   await page.locator("#reset-record").click();
-  await expect(page.locator("#field-forceZone")).toHaveValue("medium");
+  await expect(page.locator("#field-water")).toHaveValue("250");
   await open(page, "stools");
   await page.locator("#field-name").fill("保留的草稿");
   await open(page, "drinks");
@@ -145,4 +148,23 @@ test("the unified navigation and editors fit a narrow admin window", async ({ pa
   await page.locator("#reset-record").click();
   await open(page, "gallery");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("a pigment-only food edit saves despite affected recipe sources and reloads its warning", async ({ page }) => {
+  const submissions = await mockApis(page);
+  await page.goto("/admin/#foods");
+  await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
+  await page.locator('[data-food-id="spinach"]').click();
+  await page.locator("#pigment-id").selectOption("");
+  await expect(page.locator("#content-warnings")).toBeVisible();
+  await page.locator("#content-warnings summary").click();
+  await expect(page.locator("#content-warnings")).toContainText("森林小精灵");
+  await page.locator("#save-foods").click();
+  await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
+  expect(submissions.map(s => s.kind)).toEqual(["foods"]);
+  expect(submissions[0].data.foods.spinach.pigmentId).toBeNull();
+  await page.reload();
+  await page.locator('[data-food-id="spinach"]').click();
+  await expect(page.locator("#pigment-id")).toHaveValue("");
+  await expect(page.locator("#content-warnings")).toBeVisible();
 });

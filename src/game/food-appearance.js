@@ -62,7 +62,7 @@ export function foodAppearance(selection, effects, colorStrength) {
   return normalizeAppearance({
     decorations: effects.decorations,
     visualEffects: effects.visualEffects,
-    grain: shape.grain,
+    grain: level(shape.grain + (effects.propertyChanges.grain || 0)),
     porosity: level(shape.porosity + effects.drinkPorosity + (effects.propertyChanges.porosity || 0)),
     cohesion: level(shape.cohesion + (effects.propertyChanges.cohesion || 0)),
     elongation: level(shape.elongation + (effects.propertyChanges.elongation || 0)),

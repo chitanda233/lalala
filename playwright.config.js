@@ -9,11 +9,9 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:4173",
     viewport: { width: 1440, height: 1000 },
-    launchOptions: {
-      executablePath:
-        process.env.LALALA_CHROME ||
-        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    },
+    launchOptions: process.env.LALALA_CHROME
+      ? { executablePath: process.env.LALALA_CHROME }
+      : {},
   },
   webServer: {
     command: "node server.mjs",

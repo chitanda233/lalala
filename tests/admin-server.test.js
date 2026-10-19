@@ -410,7 +410,7 @@ test("content admin saves every module, serializes edits, and preserves food tun
   assert.equal((await put(current)).status, 409);
 });
 
-test("content admin rejects conflicting recipes, invalid links, images and ranges without writing", async (t) => {
+test("content admin rejects invalid links, images and ranges without writing", async (t) => {
   const { get, put, contentFile } = await contentFixture(t);
   const current = await (await get()).json();
   const original = await readFile(contentFile, "utf8");
@@ -419,17 +419,13 @@ test("content admin rejects conflicting recipes, invalid links, images and range
     (content) => { content.stools[0].generation.sources.foods = ["missing"]; },
     (content) => { content.stools[0].generation.sources.pigment = "missing"; },
     (content) => { content.stools[0].generation.forceZone = "missing"; },
-    (content) => { const mud = content.stools.find(item => item.id === "mashed-potato"); mud.generation.identity = "potato-only"; mud.generation.base = false; mud.generation.sources.foods = ["potato"]; },
     (content) => { content.stools[0].homeType = 7; },
     (content) => { content.stools[0].name = '<img src=x>'; },
-    (content) => { content.recipes[1] = { ...content.recipes[0], characterId: content.recipes[1].characterId }; },
     (content) => { content.recipes[0].foodIds = ["rice", "rice"]; },
     (content) => { content.recipes[0].drinkId = "missing"; },
     (content) => { content.recipes[0].water = -250; },
     (content) => { content.recipes[0].water = 300; },
     (content) => { content.recipes[0].water = 2750; },
-    (content) => { content.recipes.find(recipe => recipe.characterId === "enoki-thread").foodIds = ["rice"]; },
-    (content) => { content.recipes.find(recipe => recipe.characterId === "enoki-jet").foodIds = ["burger"]; },
     (content) => { content.additives[0].rareTargets = ["classic"]; },
     (content) => { content.additives[0].functional = "true"; },
     (content) => { content.additives[0].visualEffect = "missing"; },
@@ -473,4 +469,20 @@ test("managed content is used by fresh game imports and survives release packagi
   `;
   const { stdout } = await execFile(process.execPath, ["--input-type=module", "--eval", script]);
   assert.deepEqual(JSON.parse(stdout), { name: "项目配置测试", wetnessBias: .2, rareTargets: ["gold"], unlock: 19, image: "/assets/stools/reference-v2/jet.png", forecast: "classic" });
+});
+
+test("content API persists manual gameplay inconsistencies without rewriting food tuning", async t => {
+  const { get, put, dataFile } = await contentFixture(t);
+  const beforeFood = await readFile(dataFile, "utf8");
+  const edited = await (await get()).json();
+  edited.content.recipes.find(r => r.characterId === "enoki-jet").foodIds = ["burger"];
+  edited.content.recipes[1] = { ...edited.content.recipes[0], characterId: edited.content.recipes[1].characterId };
+  for (const stool of edited.content.stools.filter(s => s.homeType === 6 && s.generation)) {
+    stool.generation.base = false;
+    stool.generation.sources.foods = ["enoki"];
+  }
+  const response = await put(edited);
+  assert.equal(response.status, 200, await response.text());
+  assert.deepEqual((await (await get()).json()).content, edited.content);
+  assert.equal(await readFile(dataFile, "utf8"), beforeFood);
 });

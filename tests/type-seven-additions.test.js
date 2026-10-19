@@ -43,10 +43,10 @@ test("ordinary type-7 additions have explicit recipes and rare additions are alw
     assert.ok(Math.abs(pool.find((entry) => entry.characterId === id).probability - 0.002) < 1e-12);
 });
 
-test("type-7 rare bonuses share the 5% total budget and never coat an ordinary species", () => {
+test("type-7 rare bonuses share the 20% target-group budget and never coat an ordinary species", () => {
   for (const additive of ["gold-leaf", "rainbow-sugar"]) {
     const input = { ...base, additives: [additive] };
-    assert.ok(Math.abs(specialProbability(input) - 0.05) < 1e-12);
+    assert.ok(Math.abs(specialProbability(input) - 0.20) < 1e-12);
     const pool = getOutcomePool(input);
     assert.ok(pool.every((entry) => entry.special === (characterById[entry.characterId].rarity === "special")));
     assert.ok(pool.every((entry) => !Object.hasOwn(entry, "materialId")));

@@ -54,7 +54,7 @@ test("ingredient attributes combine across three slots independently of order an
         toiletId: "golden",
       };
       assert.ok(Math.abs(chance(recipe, [1, 2, 3, 4, 5, 6, 7]) - 1) < 1e-12);
-      assert.ok(Math.abs(specialProbability(recipe) - 0.05) < 1e-12);
+      assert.ok(Math.abs(specialProbability(recipe) - 0.20) < 1e-12);
     }
 });
 
@@ -145,6 +145,6 @@ test("all eight rare materials can retain enoki without becoming guaranteed or c
     assert.equal(outcome.colorId, null);
     assert.deepEqual(outcome.marks, ["enoki"]);
     assert.equal(outcome.special, true);
-    assert.ok(Math.abs(specialProbability(input) - 0.05) < 1e-12);
+    assert.ok(Math.abs(specialProbability(input) - 0.20) < 1e-12);
   }
 });

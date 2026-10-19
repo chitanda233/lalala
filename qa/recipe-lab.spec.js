@@ -9,52 +9,38 @@ import {
   chooseDrink,
   chooseAdditives,
   armSpecimen,
+  expectedTint,
 } from "./helpers.js";
 const storageKey = "lalala-dev";
 
-test("eleven drinks and eighteen open additives support persistent selection with a three-item limit", async ({
-  page,
-}) => {
+test("drinks and optional single additive apply only on confirmation and persist", async ({ page }) => {
   const errors = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("pageerror", error => errors.push(error.message));
   await page.goto("/");
+  await chooseDrink(page, "prune-juice");
+  await expect(page.locator("#drink-summary")).toHaveText("西梅汁");
   await page.locator("#choose-drinks").click();
   await expect(page.locator("[data-drink]")).toHaveCount(11);
-  await showPageItem(page, '[data-drink="prune-juice"]');
-  await page.locator('[data-drink="prune-juice"]').click();
-  await expect(page.locator('[data-drink="prune-juice"]')).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("#supply-count")).not.toBeEmpty();
-  await expect(page.locator("#supply-count")).not.toContainText("西梅汁");
-  await page.screenshot({
-    path: "qa/drinks-desktop.png",
-    animations: "disabled",
-  });
+  await showPageItem(page, '[data-drink="coffee"]');
+  await page.locator('[data-drink="coffee"]').click();
+  await expect(page.locator("#supply-details")).toContainText("咖啡");
   await page.keyboard.press("Escape");
   await expect(page.locator("#drink-summary")).toHaveText("西梅汁");
-  await chooseAdditives(page, ["glitter", "gold-leaf", "crystal-seed"]);
+  await chooseAdditives(page, ["glitter"]);
   await page.locator("#choose-additives").click();
   await expect(page.locator(".additive-input")).toHaveCount(18);
-  await expect(page.locator(".additive-input:checked")).toHaveCount(3);
-  await expect(page.locator('[value="rainbow-sugar"]')).toBeDisabled();
+  await expect(page.locator(".additive-input:checked")).toHaveCount(1);
   await showPageItem(page, '[value="gold-leaf"]');
-  await page.locator('[value="gold-leaf"]').uncheck();
-  await expect(page.locator('[value="rainbow-sugar"]')).toBeEnabled();
-  await showPageItem(page, '[value="rainbow-sugar"]');
-  await page.locator('[value="rainbow-sugar"]').check();
-  await page.screenshot({
-    path: "qa/additives-desktop.png",
-    animations: "disabled",
-  });
-  await page.keyboard.press("Escape");
+  await page.locator('[value="gold-leaf"]').check();
+  await expect(page.locator(".additive-input:checked")).toHaveCount(1);
+  await expect(page.locator('[value="gold-leaf"]')).toBeChecked();
+  await page.locator("#confirm-supply").click();
   await page.reload();
-  const saved = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)),
-    storageKey,
-  );
-  expect(saved.settings.additives.sort()).toEqual(
-    ["glitter", "crystal-seed", "rainbow-sugar"].sort(),
-  );
+  const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), storageKey);
+  expect(saved.settings.additives).toEqual(["gold-leaf"]);
   expect(saved.settings.drinkId).toBe("prune-juice");
+  await chooseAdditives(page, []);
+  await expect(page.locator("#additive-summary")).toHaveText("未添加");
   expect(errors).toEqual([]);
 });
 
@@ -88,9 +74,7 @@ test("a purple glitter result keeps its color and explanation across an active r
   await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 6000 });
   await expect(page.locator("#result-name")).toHaveText("闪粉派对");
   await expect(page.locator("#result-rarity")).toContainText("蓝莓紫");
-  expect(await page.locator("#result-character").innerHTML()).toContain(
-    "#9b7ca6",
-  );
+  await expect(page.locator("#result-character svg")).toHaveAttribute("data-tint", await expectedTint(page, snapshot.outcome));
   await page.locator("#result-explanation summary").click();
   await expect(page.locator("#result-explanation summary")).toHaveText(
     "查看形态诊断",
@@ -111,7 +95,7 @@ test("a purple glitter result keeps its color and explanation across an active r
   );
 });
 
-test("fifty collectibles have one home classification and ten toilets display different equipment", async ({
+test("fifty-six collectibles have one home classification and ten toilets display different equipment", async ({
   page,
 }) => {
   await page.goto("/");
@@ -178,7 +162,7 @@ for (const [width, height] of [
     await page.setViewportSize({ width, height });
     await page.goto("/");
     await chooseDrink(page, "glow-soda");
-    await chooseAdditives(page, ["stardust", "amber-resin", "frost-salt"]);
+    await chooseAdditives(page, ["stardust"]);
     await page.locator("#choose-additives").click();
     expect(
       await page

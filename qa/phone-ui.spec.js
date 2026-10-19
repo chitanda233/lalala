@@ -168,7 +168,7 @@ test("all foods remain reachable without search and follow the available phone h
       .locator(".food-card:visible")
       .evaluateAll((items) =>
         items.map((item) => ({
-          id: item.dataset.food,
+          id: item.dataset.foodCard,
           locked: item.classList.contains("locked"),
         })),
       );

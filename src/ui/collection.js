@@ -60,19 +60,22 @@ export function createCollectionView(getSave) {
   function recipeDetail(characterId) {
     const recipe = stoolRecipeByCharacterId[characterId];
     if (!recipe) {
-      const forecast = getRecipeForecast({ additives: [] });
+      const baseline = rareBudget(null);
       const theme = rareThemeRecipeById[characterId];
       const boost = theme ? rareBudget(additiveById[theme.additiveId]) : null;
       const themed = theme ? `<p>${theme.foodIds.map(id => foodById[id].name).join("＋")}</p><p>${drinkById[theme.drinkId].name} ${theme.water} mL</p><p>阶段 ${theme.digestionTime} · ${forceZones.find(zone => zone.id === theme.forceZone).name}</p><p>主题添加剂：${additiveById[theme.additiveId].name}</p><br>` : "";
-      return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>稀有主题搭配</h3>${themed}<p>无关联组：全体稀有均分基础 ${(forecast.rareProbability * 100).toFixed(0)}%。</p>${boost?.targets.length ? `<p>对应添加剂：目标组共享20%，每款${Number((boost.targetProbability * 100 / boost.targets.length).toFixed(2))}%；组外稀有概率为0。</p>` : ""}<p>主题搭配不是出现门槛；稀有保留自身固定造型。</p></div></article>`;
+      const baseProbability = baseline.entries.find(entry => entry.characterId === characterId)?.probability || 0;
+      const boostedProbability = boost?.entries.find(entry => entry.characterId === characterId)?.probability || 0;
+      return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>稀有主题搭配</h3>${themed}<p>无关联组：全体稀有均分基础 ${(baseline.rareProbability * 100).toFixed(0)}%，本款 ${(baseProbability * 100).toFixed(2)}%。</p>${boost ? `<p>使用主题添加剂：本款 ${(boostedProbability * 100).toFixed(2)}%。${boost.targets.length ? `当前目标组共享20%，每款${Number((boost.targetProbability * 100 / boost.targets.length).toFixed(2))}%；组外稀有概率为0。${boost.targets.includes(characterId) ? "" : "本款不在当前目标组。"}` : "当前没有有效关联组，沿用基础稀有概率。"}</p>` : ""}<p>主题搭配不是出现门槛；稀有保留自身固定造型。</p></div></article>`;
     }
     const zone = forceZones.find((item) => item.id === recipe.forceZone);
-    const forecast = getRecipeForecast({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], force: zone.min });
-    const stabilized = getRecipeForecast({ ...recipe, additives: ["probiotic"], force: zone.min });
     const additiveText = recipe.requiredAdditive ? `必选${additiveById[recipe.requiredAdditive].name}，不能再加益生菌。` : "益生菌也能稳定自由组合。";
-    const probabilityText = recipe.requiredAdditive
-      ? `未中稀有后 ${(forecast.recipeConditionalProbability * 100).toFixed(0)}% · 整局 ${(forecast.recipeProbability * 100).toFixed(1)}%`
-      : `未中稀有：基础 ${(forecast.recipeConditionalProbability * 100).toFixed(0)}% · 益生菌 100%<br>整局：基础 ${(forecast.recipeProbability * 100).toFixed(1)}% · 益生菌 ${(stabilized.recipeProbability * 100).toFixed(0)}%`;
+    let probabilityText;
+    try {
+      const forecast = getRecipeForecast({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], force: zone.min }, characterId);
+      const stabilized = recipe.requiredAdditive ? null : getRecipeForecast({ ...recipe, additives: ["probiotic"], force: zone.min }, characterId);
+      probabilityText = `本款概率<br>未中稀有后 ${(forecast.targetConditionalProbability * 100).toFixed(0)}% · 整局 ${(forecast.targetProbability * 100).toFixed(1)}%${stabilized ? `<br>益生菌：普通分支 ${(stabilized.targetConditionalProbability * 100).toFixed(0)}% · 整局 ${(stabilized.targetProbability * 100).toFixed(0)}%` : ""}<br>当前主结果：${characterById[forecast.primaryCharacterId].name} · 整局 ${(forecast.primaryProbability * 100).toFixed(1)}%`;
+    } catch (error) { probabilityText = `预览暂不可用：${error.message}`; }
     return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>固定配方</h3><p>${recipe.foodIds.map((id) => foodById[id].name).join("＋")}</p><p>${drinkById[recipe.drinkId].name} ${recipe.water} mL</p><p>消化阶段 ${recipe.digestionTime}</p><strong>${zone.name} · ${zone.min}–${zone.max}</strong><p>${additiveText}</p><br><p>${probabilityText}</p></div></article>`;
   }
   function renderDetail() {

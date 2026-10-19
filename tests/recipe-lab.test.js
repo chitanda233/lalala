@@ -77,7 +77,7 @@ test("loadouts and diagnoses use the current snapshot schema and one additive", 
   delete incomplete.outcome.morphology;
   assert.equal(restoreSession(incomplete), null);
   const save = normalizeSave({ settings: { ...input, additives: ["glitter", "glitter", "gold-leaf", "gelatin", "stardust"] }, session });
-  assert.equal(save.version, 5);
+  assert.equal(save.version, 6);
   assert.equal(save.toilets.owned.length, 3);
   assert.deepEqual(save.settings.additives, ["glitter"]);
   assert.deepEqual(save.individuals, []);

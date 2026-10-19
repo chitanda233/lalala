@@ -8,6 +8,8 @@ import {
   chooseDrink,
   chooseAdditives,
   armSpecimen,
+  applyIdealRecipe,
+  setCompletedRounds,
 } from "./helpers.js";
 
 const storageKey = "lalala-dev";
@@ -27,11 +29,15 @@ test("desktop: recipe controls, quick result, collection, and saved progress", a
   await expect(page).toHaveTitle(/lalala/);
   await expect(page.locator("#time-options")).toHaveCount(0);
   await page.screenshot({ path: "qa/desktop.png", fullPage: true });
-  await chooseMeal(page, ["broccoli"]);
-  await setWater(page, "1750");
-  await chooseAdditives(page, ["probiotic"]);
+  await page.evaluate(() => {
+    const save = JSON.parse(localStorage.getItem("lalala-dev"));
+    save.foods.unlocked.push("spinach");
+    localStorage.setItem("lalala-dev", JSON.stringify(save));
+  });
+  await page.reload();
+  await applyIdealRecipe(page, "garden", ["probiotic"]);
 
-  await expect(page.locator("#water-value")).toContainText("1,750");
+  await expect(page.locator("#water-value")).toContainText("750");
   await startRound(page);
   await expect(page.locator("#start-button")).toBeDisabled();
   await expect(page.locator("#water")).toBeDisabled();
@@ -48,8 +54,8 @@ test("desktop: recipe controls, quick result, collection, and saved progress", a
   await expect(page.locator("#collection-summary")).toContainText("畅快 1 次");
   await page.keyboard.press("Escape");
   await page.reload();
-  await expect(page.locator("#meal-summary")).toContainText("西兰花");
-  await expect(page.locator("#water-value")).toContainText("1,750");
+  await expect(page.locator("#meal-summary")).toContainText("菠菜");
+  await expect(page.locator("#water-value")).toContainText("750");
   await expect(page.locator("#collection-count")).toHaveText("01");
   expect(errors).toEqual([]);
 });
@@ -79,36 +85,15 @@ test("quick rounds retain all eight discoveries and the fixed reveal delay", asy
   page,
 }) => {
   test.setTimeout(60000);
-  const cases = [
-    ["classic", "rice", 1500, []],
-    ["garden", "broccoli", 1500, []],
-    ["bread", "toast", 1500, []],
-    ["fire", "burger", 1500, ["chili"]],
-    ["coffee", "rice", 1500, ["coffee"]],
-    ["cloud", "rice", 2250, ["probiotic"]],
-    ["pebble", "rice", 500, []],
-    ["gold", "broccoli", 1750, ["probiotic"]],
-  ];
+  const cases = ["classic", "garden", "bread", "fire", "coffee", "cloud", "pebble", "gold"];
   await page.goto("/");
-  for (const [id, recipe, water, additives] of cases) {
-    await chooseMeal(page, [recipe]);
-    await setWater(page, String(water));
-    await chooseDrink(page, additives.includes("coffee") ? "coffee" : "water");
-    await chooseAdditives(
-      page,
-      additives.filter((id) => id !== "coffee"),
-    );
-
-    await armSpecimen(page, id);
-    await startRound(page);
+  await setCompletedRounds(page, 40);
+  for (const id of cases) {
+    const { force } = await applyIdealRecipe(page, id);
+    await armSpecimen(page, id, null, force);
+    await startRound(page, force);
     await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 4000 });
-    expect(
-      await page.evaluate(
-        (key) =>
-          JSON.parse(localStorage.getItem(key)).individuals.at(-1).characterId,
-        storageKey,
-      ),
-    ).toBe(id);
+    expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)).individuals.at(-1).characterId, storageKey)).toBe(id);
     await page.locator("#play-again").click();
   }
 
@@ -140,7 +125,7 @@ test("mobile: no horizontal overflow, all controls accessible, round works", asy
     ),
   ).toBe(true);
   await page.screenshot({ path: "qa/mobile.png", fullPage: true });
-  await chooseMeal(page, ["toast"]);
+  await applyIdealRecipe(page, "classic", ["probiotic"]);
 
   await startRound(page);
   await expect(page.locator("#result-dialog")).toBeVisible({ timeout: 5000 });

@@ -12,7 +12,9 @@
     "check": "node scripts/check.mjs",
     "test:unit": "node --test tests/*.test.js",
     "test:e2e": "playwright test",
-    "test": "npm run test:unit && npm run test:e2e"
+    "test": "npm run test:unit && npm run test:e2e",
+    "check:docs": "node scripts/generate-content-docs.mjs --check",
+    "verify": "npm run check && npm run check:docs && npm test"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0"

@@ -105,7 +105,7 @@ test("invalid saves and unrecognized content cannot leak into the game", () => {
   assert.equal(
     normalizeSelection({ foodIds: ["__proto__"], drinkId: "missing", water: 1 })
       .water,
-    250,
+    0,
   );
 });
 

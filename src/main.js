@@ -2,6 +2,7 @@ import { gameConfig } from "./config/game.js";
 import "./ui/viewport.js";
 import { characterById } from "./content/catalog.js";
 import { normalizeSelection } from "./game/selection.js";
+import { OutcomeConfigurationError } from "./game/outcome-pool.js";
 import { createAimingSession, sessionProgress } from "./game/session.js";
 import { oscillatingForce } from "./content/force.js";
 import { equipToilet } from "./progression/toilets.js";
@@ -15,6 +16,7 @@ import { bindDialogs } from "./ui/dialogs.js";
 import { $, $$ } from "./ui/dom.js";
 
 const store = createSaveStore();
+const savedNote = $("#saved-note").textContent;
 let save = store.read();
 let selection = normalizeSelection(save.settings);
 let frame;
@@ -45,8 +47,7 @@ const selectionView = createSelectionView({
 function persist() {
   save.settings = structuredClone(selection);
   store.write(save);
-  if (!store.available)
-    $("#saved-note").textContent = "本次进度仅在当前页面保留";
+  $("#saved-note").textContent = store.available ? savedNote : "本次进度仅在当前页面保留";
 }
 
 function startSession() {
@@ -80,6 +81,12 @@ async function stopForce() {
       sessionView.showRunning(save.session);
       audio.play([550, 440, 330], 0.06);
     } else sessionView.showIdle();
+  } catch (error) {
+    if (!(error instanceof OutcomeConfigurationError)) throw error;
+    save.session = null;
+    persist();
+    sessionView.showIdle();
+    $("#saved-note").textContent = `本次未生成：${error.message}`;
   } finally {
     finishing = false;
     selectionView.lock(Boolean(save.session));

@@ -381,7 +381,7 @@ test("extreme food parameters cannot change the independent rare roll or require
       withAttributes({ [id]: { softness, cohesion: 7, elongation: 7, grain: 7, retention: 7, colorStrength: 7, porosity: 7, lubricity: 7, influence: 7 } }, () => {
         const selection = { ...meal, foodIds: [id] };
         assert.ok(Math.abs(specialProbability(selection) - 0.02) < 1e-12);
-        assert.ok(Math.abs(specialProbability({ ...selection, additives: ["crystal-seed"] }) - 0.05) < 1e-12);
+        assert.ok(Math.abs(specialProbability({ ...selection, additives: ["crystal-seed"] }) - 0.20) < 1e-12);
         assert.ok(getDropPool(selection, 4).some((entry) => entry.characterId === "rainbow"));
       });
 });

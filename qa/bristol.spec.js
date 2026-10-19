@@ -6,6 +6,8 @@ import {
   armSpecimen,
   startRound,
   chooseSpecimen,
+  applyIdealRecipe,
+  setCompletedRounds,
 } from "./helpers.js";
 
 test.beforeEach(async ({ page }) => {
@@ -19,23 +21,15 @@ test("all seven concrete forms persist in one classification and can be paged wi
   test.setTimeout(60000);
   await page.setViewportSize({ width: 402, height: 874 });
   await page.goto("/");
-  const examples = [
-    [1, "rice", 500],
-    [2, "rice", 1000],
-    [3, "rice", 1250],
-    [4, "rice", 1500],
-    [5, "banana", 1500],
-    [6, "hotpot", 1500],
-    [7, "hotpot", 2250],
-  ];
+  await setCompletedRounds(page, 40);
+  const examples = ["pebble", "segmented", "cracked", "classic", "soft-pillows", "mashed-potato", "jet"];
   const recorded = [];
   const artwork = new Set();
-  for (const [type, food, water] of examples) {
-    await chooseMeal(page, [food]);
-    await chooseAdditives(page, type === 7 ? ["chili"] : []);
-    await setWater(page, water);
-    const candidate = await armSpecimen(page, null, type);
-    await startRound(page);
+  for (const [index, id] of examples.entries()) {
+    const type = index + 1;
+    const { force } = await applyIdealRecipe(page, id);
+    const candidate = await armSpecimen(page, id, type, force);
+    await startRound(page, force);
     await expect(page.locator("#result-dialog")).toBeVisible();
     await expect(page.locator("#result-type")).toContainText(`${type} 型`);
     artwork.add(await page.locator("#result-character").innerHTML());
@@ -62,33 +56,30 @@ test("all seven concrete forms persist in one classification and can be paged wi
   }
 });
 
-test("same collectible keeps independent records and paged individual identities after reload", async ({
+test("same collectible replaces its prior individual while retaining total and discovery", async ({
   page,
 }) => {
   await page.goto("/");
+  await applyIdealRecipe(page, "classic");
+  const ids = [];
   for (let i = 0; i < 2; i++) {
     await armSpecimen(page, "classic", 4);
     await startRound(page);
     await expect(page.locator("#result-dialog")).toBeVisible();
+    ids.push(await page.evaluate(() => JSON.parse(localStorage.getItem("lalala-dev")).individuals[0].id));
     await page.locator("#play-again").click();
   }
   await page.reload();
+  const save = await page.evaluate(() => JSON.parse(localStorage.getItem("lalala-dev")));
+  expect(save.total).toBe(2);
+  expect(save.individuals).toHaveLength(1);
+  expect(ids[0]).not.toBe(ids[1]);
+  expect(save.individuals[0].id).toBe(ids[1]);
   await page.locator("#collection-button").click();
   await chooseSpecimen(page, "classic:4");
-  await expect(page.locator("#collection-detail")).toContainText(
-    "1 / 2 个独立个体",
-  );
-  const latest = await page
-    .locator("[data-individual]")
-    .getAttribute("data-individual");
-  await page.locator("[data-individual-next]").click();
-  const first = await page
-    .locator("[data-individual]")
-    .getAttribute("data-individual");
-  expect(first).not.toBe(latest);
-  await expect(page.locator("#collection-detail")).toContainText(
-    "2 / 2 个独立个体",
-  );
+  await expect(page.locator("[data-individual]")).toHaveAttribute("data-individual", ids[1]);
+  await expect(page.locator("[data-individual-next]")).toHaveCount(0);
+
 });
 
 test("phone taxonomy filters are keyboard accessible and every unknown remains a silhouette", async ({

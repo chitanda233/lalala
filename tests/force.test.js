@@ -10,6 +10,7 @@ import {
 } from "../src/game/session.js";
 import { normalizeSave } from "../src/storage/model.js";
 import { createSaveStore } from "../src/storage/save.js";
+import { stoolRecipeByCharacterId } from "../src/content/stool-recipes.js";
 import { getRecipeForecast } from "../src/game/outcome-pool.js";
 
 const meal = { foodIds: ["rice", "enoki"] };
@@ -102,12 +103,15 @@ test("refresh and many complete swings do not change the measured force", () => 
   assert.equal(session.endsAt - session.lockedAt, 400);
 });
 
-test("force ranges choose fixed spiral and jet recipes at exact endpoints", () => {
-  const target = (foodIds, drinkId, force) => getRecipeForecast({ foodIds, drinkId, force }).matchedRecipe?.characterId;
-  assert.equal(target(["rice"], "water", 33), "spiral");
-  assert.equal(target(["rice"], "water", 34), "classic");
-  assert.equal(target(["burger"], "milk", 66), undefined);
-  assert.equal(target(["burger"], "milk", 67), "jet");
+test("force-zone endpoints match each current complete ideal recipe", () => {
+  for (const [id, endpoints] of [["spiral", [0, 33]], ["classic", [34, 66]], ["jet", [67, 100]]]) {
+    const recipe = stoolRecipeByCharacterId[id];
+    for (const force of endpoints) {
+      const forecast = getRecipeForecast({ ...recipe, force, additives: [] });
+      assert.equal(forecast.matchedRecipe?.characterId, id);
+      assert.equal(forecast.physicalState.type, id === "jet" ? 7 : 4);
+    }
+  }
 });
 
 test("aiming and running records require valid phase-specific timing and force", () => {

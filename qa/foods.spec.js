@@ -8,7 +8,7 @@ test("food library shows locks, descriptions and category filters", async ({
   await page.goto("/");
   await page.locator("#choose-foods").click();
   await expect(page.locator(".food-card")).toHaveCount(53);
-  await expect(page.locator(".food-card.unlocked")).toHaveCount(33);
+  await expect(page.locator(".food-card.unlocked")).toHaveCount(35);
   await expect(page.locator(".food-card.locked")).toHaveCount(18);
   await focusFood(page, "enoki");
   await expect(page.locator("#food-details")).toContainText("See you tomorrow");
@@ -124,7 +124,7 @@ test("finishing the third round unlocks new foods and keeps progress after reloa
   await page.locator("#play-again").click();
   await page.reload();
   await page.locator("#choose-foods").click();
-  await expect(page.locator(".food-card.unlocked")).toHaveCount(35);
+  await expect(page.locator(".food-card.unlocked")).toHaveCount(37);
   await expect(page.locator('[data-food="snail-noodles"]')).toHaveClass(
     /unlocked/,
   );

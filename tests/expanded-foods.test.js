@@ -64,7 +64,7 @@ test("new food pigments and rare rolls remain independent", () => {
   for (const food of expandedFoods) {
     const input = { ...meal, foodIds: [food.id] };
     assert.ok(Math.abs(specialProbability(input) - 0.02) < 1e-12);
-    assert.ok(Math.abs(specialProbability({ ...input, additives: ["gold-leaf"] }) - 0.05) < 1e-12);
+    assert.ok(Math.abs(specialProbability({ ...input, additives: ["gold-leaf"] }) - 0.20) < 1e-12);
     assert.equal(rollOutcome(input, () => 0.5).special, false);
   }
 });

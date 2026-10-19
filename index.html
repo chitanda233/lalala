@@ -584,7 +584,7 @@
       aria-labelledby="help-title"
     >
       <header class="dialog-heading">
-        <h2 id="help-title">快乐，三步搞定。</h2>
+        <h2 id="help-title">怎么玩，怎么搭配</h2>
         <button
           class="close-button"
           data-close="help-dialog"
@@ -593,24 +593,36 @@
           <svg class="icon"><use href="#i-close" /></svg>
         </button>
       </header>
-      <ol class="help-steps">
-        <li>
-          <strong>选这一餐</strong>
-          <p>添加最多三种食物，选择饮料，用拉条设置饮用量；添加剂最多一种，也可不加。</p>
-        </li>
-        <li>
-          <strong>选消化时间</strong>
-          <p>右侧的 2 / 4 / 8 / 随机，会改变产出形态的倾向。</p>
-        </li>
-        <li>
-          <strong>看准，停住</strong>
-          <p>
-            点击开始，指针左右摆动。再点停止锁定力度，约 0.4
-            秒揭晓，收进右上角图鉴。
-          </p>
-        </li>
-      </ol>
-      <p class="settings-note">所有配方与形态效果都是游戏设定。</p>
+      <div class="help-topics">
+        <details name="game-help" open>
+          <summary>先这样操作</summary>
+          <ol>
+            <li>选1～3种食物、1种饮料，可选1种添加剂；点卡片看介绍，点＋加入，再确认。</li>
+            <li>用拉条定饮用量，选择消化阶段。取消选择会保留原配方。</li>
+            <li>点开始启动力度指针，再点停止锁定，约0.4秒揭晓。</li>
+          </ol>
+        </details>
+        <details name="game-help">
+          <summary>食物、饮料和时间</summary>
+          <p>食物决定基础质地和食材残留；饮料影响软硬与颜色。饮用量0～1250 mL，每档250 mL；0 mL时不计饮料效果。</p>
+          <p>阶段2偏湿、4适中、8偏干；随机在开始时抽定一档。这是游戏消化阶段，不需要额外等待。</p>
+        </details>
+        <details name="game-help">
+          <summary>力度、配方与益生菌</summary>
+          <p>力度只改变同型造型，不能把硬便变成水样。想复现某款，可在图鉴看配方与来源；完整匹配通常有80%的普通分支命中率。</p>
+          <p>益生菌将最符合当前搭配的普通结果稳定为100%，仍可能出稀有；它占用唯一的添加剂位置。</p>
+        </details>
+        <details name="game-help">
+          <summary>其他添加剂与稀有</summary>
+          <p>添加剂按介绍影响物态、增加装饰或提升稀有机会。普通款上的闪粉、金箔等外观效果，不等于抽中了稀有款。</p>
+          <p>无关联组时，稀有合计2%；选有关联组的添加剂时，组内共享20%、平均分配，组外为0%，不叠加基础2%。</p>
+        </details>
+        <details name="game-help">
+          <summary>图鉴与进度保存</summary>
+          <p>56款图鉴按1～7型分类，可查看形态、配方和来源。“全部样式”只供预览，不增加收藏。</p>
+          <p>同款只留最新个体，最多保留最近7种；累计次数和已发现图鉴保留。进度自动存于当前浏览器，本地与线上存档各自独立。</p>
+        </details>
+      </div>
       <button class="food-confirm" data-close="help-dialog">知道啦</button>
     </dialog>
     <div class="toast" id="toast" role="status"></div>

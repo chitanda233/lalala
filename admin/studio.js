@@ -1,5 +1,5 @@
 import { foodAdmin } from "./admin.js";
-import { validateManagedContent, propertyLabels, decorationLabels, shapeLabels } from "./content-schema.js";
+import { validateManagedContent, managedContentWarnings, propertyLabels, decorationLabels, shapeLabels } from "./content-schema.js";
 import { contentValues } from "/src/content/managed-content.js";
 import { foods } from "/src/content/foods.js";
 import { characters, rarityLabels, refreshCharacterMetadata } from "/src/content/specimens.js";
@@ -26,7 +26,7 @@ const modules = [
   { id: "overview", name: "总览", symbol: "◫" },
   { id: "foods", name: "食物管理", symbol: "◒", description: "九项食物属性、颜色与完整配方试验。" },
   { id: "stools", name: "大便管理", symbol: "◆", description: "编辑收藏名称、描述、材质、配色和五项物态属性。" },
-  { id: "recipes", name: "大便配方", symbol: "⌘", description: "每款普通收藏的食物集合、饮料与饮用量、消化阶段及力度，保存时检查配方冲突。" },
+  { id: "recipes", name: "大便配方", symbol: "⌘", description: "配置食物、饮料与饮用量、消化阶段及力度；玩法冲突只提示，仍可保存。" },
   { id: "gallery", name: "图片展示", symbol: "▧", description: "查看全部造型、大图与透明边缘，也可替换项目内的主图。" },
   { id: "drinks", name: "饮料管理", symbol: "◡", description: "编辑饮料的软硬、蓬松、标签、配色和顺畅效果。" },
   { id: "additives", name: "添加剂管理", symbol: "✳", description: "配置物态修正、表面装饰、稳定强度与稀有目标。" },
@@ -75,6 +75,11 @@ function updateStatus() {
   status.textContent = error || (saving ? "正在保存到项目…" : busy ? "正在读取项目配置…" : count ? `${count} 个条目有未保存的调整` : "所有调整已保存到项目");
   status.classList.toggle("is-dirty", !error && count > 0);
   status.classList.toggle("is-error", Boolean(error));
+  const warnings = loaded && !validationMessage ? managedContentWarnings(draft) : [];
+  const notice = $("#content-warnings");
+  notice.hidden = !warnings.length;
+  notice.querySelector("summary").textContent = `配置提示 ${warnings.length} 项 · 不影响保存`;
+  notice.querySelector("ul").innerHTML = warnings.map(message => `<li>${esc(message)}</li>`).join("");
   $("#save-foods").disabled = busy || !loaded || !food.loaded || !count;
   $("#save-foods").textContent = saving ? "保存中…" : count ? `保存到项目 · ${count}` : "保存到项目";
   $("#reload-data").disabled = busy;
@@ -213,9 +218,13 @@ function renderInspector() {
     if (recipe) {
       const zone = forceZones.find((zone) => zone.id === recipe.forceZone);
       const selection = { ...recipe, force: (zone.min + zone.max) / 2, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], toiletId: "standard" };
-      const forecast = getRecipeForecast(selection);
-      const stabilized = recipe.requiredAdditive ? "需装饰剂" : `${(getRecipeForecast({ ...selection, additives: ["probiotic"] }).recipeProbability * 100).toFixed(1)}%`;
-      detail += `<div class="inspector-block"><h3>固定配方</h3><p>${esc(recipeText(recipe))}</p><p>湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型</p><div class="forecast-values"><span>整局目标概率<strong>${(forecast.recipeProbability * 100).toFixed(1)}%</strong></span><span>加益生菌后<strong>${stabilized}</strong></span></div><button class="button button-quiet" type="button" data-try-recipe="${esc(idOf(item))}">放进配方试验 ↗</button></div>`;
+      detail += `<div class="inspector-block"><h3>固定配方</h3><p>${esc(recipeText(recipe))}</p>`;
+      try {
+        const forecast = getRecipeForecast(selection, stool.id);
+        const stabilized = recipe.requiredAdditive ? "与必选剂互斥" : `${(getRecipeForecast({ ...selection, additives: ["probiotic"] }, stool.id).targetProbability * 100).toFixed(1)}%`;
+        detail += `<p>湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型</p><div class="forecast-values"><span>整局目标概率<strong data-target-probability>${(forecast.targetProbability * 100).toFixed(1)}%</strong></span><span>加益生菌后<strong data-stabilized-probability>${stabilized}</strong></span></div><p data-primary-result>当前主结果：${esc(characterById[forecast.primaryCharacterId].name)} · 整局 ${(forecast.primaryProbability * 100).toFixed(1)}%</p>`;
+      } catch (error) { detail += `<p class="field-note">预览暂不可用：${esc(error.message)} 配置仍可保存。</p>`; }
+      detail += `<button class="button button-quiet" type="button" data-try-recipe="${esc(idOf(item))}">放进配方试验 ↗</button></div>`;
     } else detail += '<p class="field-note">稀有收藏不设固定配方；每局均有机会出现。</p>';
     if (stool.generation) detail += `<div class="inspector-block"><h3>必需来源</h3><p>${esc(sourceRequirementText(stool))}</p><p>理想配方与必需来源分别配置。</p></div>`;
     detail += `<div class="inspector-block"><h3>物态属性</h3>${Object.entries(propertyLabels).map(([key, label]) => `<div class="property-meter"><span>${label}</span><meter min="1" max="7" value="${stool.properties[key]}"></meter><strong>${stool.properties[key]}</strong></div>`).join("")}</div><div class="inspector-links"><button class="text-button" type="button" data-art="${stool.id}">查看 / 调整大图 ↗</button>${active === "stools" && recipe ? `<button class="text-button" type="button" data-go="recipes" data-id="${stool.id}">编辑配方 ↗</button>` : `<button class="text-button" type="button" data-go="stools" data-id="${stool.id}">编辑大便资料 ↗</button>`}</div>`;

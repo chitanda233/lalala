@@ -7,6 +7,7 @@ import {
   chooseDrink,
   chooseAdditives,
   armSpecimen,
+  expectedTint,
 } from "./helpers.js";
 import { bristolTypes } from "../src/content/stools.js";
 const key = "lalala-dev";
@@ -52,7 +53,7 @@ test("three-food enoki signature survives a running reload, pigment, decoration 
   );
   await expect(page.locator("#result-character svg")).toHaveAttribute(
     "data-tint",
-    "#9b7ca6",
+    await expectedTint(page, before.outcome),
   );
   await expect(
     page.locator('#result-character image[href$="-enoki.png"]'),

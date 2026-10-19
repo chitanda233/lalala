@@ -5,13 +5,13 @@ import { contentValues } from "../src/content/managed-content.js";
 import { foods } from "../src/content/foods.js";
 import { stoolPropertyFields } from "../src/content/stool-properties.js";
 import { visualEffectLabels } from "../src/content/additive-effects.js";
+import { physicalState } from "../src/game/physical-state.js";
 
 const baseline = structuredClone(contentValues);
 const foodIds = new Set(foods.map((item) => item.id));
 const drinkIds = new Set(baseline.drinks.map((item) => item.id));
 const additiveIds = new Set(baseline.additives.map(item => item.id));
 const rareIds = new Set(baseline.stools.filter((item) => item.rarity === "special").map((item) => item.id));
-const sourceTags = new Set([...foods, ...baseline.drinks, ...baseline.additives].flatMap(item => item.tags));
 export const propertyLabels = Object.fromEntries(stoolPropertyFields.map((field) => [field.key, field.name]));
 export const decorationLabels = { "": "无装饰", glitter: "闪粉", "gold-flake": "金箔", silver: "银斑", petals: "花瓣", popping: "跳跳颗粒", charcoal: "炭粉" };
 export const shapeLabels = { seat: "经典坐便", royal: "皇冠", wood: "木纹", heated: "暖座", massage: "按摩", squat: "蹲坑", stones: "石头堆", vortex: "涡流", crystal: "水晶" };
@@ -54,13 +54,12 @@ function sourceIds(value, allowed, label, max = 3) {
 }
 function generation(value) {
   requireValue(value && typeof value === "object" && typeof value.identity === "string" && /^[a-z][a-z0-9-]{0,63}$/.test(value.identity), "请配置有效的生成身份分组。");
-  requireValue(typeof value.base === "boolean" && value.base === (value.identity === "base"), "基础造型必须使用 base 分组。");
+  requireValue(typeof value.base === "boolean", "请选择是否为基础造型。");
   requireValue(["low", "medium", "high"].includes(value.forceZone), "请选择造型偏好力度。");
   const rule = value.sources;
   requireValue(rule && typeof rule === "object" && Object.keys(rule).length === 4 && ["foods", "tags", "pigment", "additives"].every(key => Object.hasOwn(rule, key)), "来源条件需分别配置食物、标签、主色素和添加剂。");
   requireValue(rule.pigment === null || Object.hasOwn(stoolColors, rule.pigment), "主色素来源无效。");
-  const sources = { foods: sourceIds(rule.foods, foodIds, "必需食物"), tags: sourceIds(rule.tags, sourceTags, "来源标签"), pigment: rule.pigment, additives: sourceIds(rule.additives, additiveIds, "必需添加剂", 1) };
-  requireValue(!value.base || (!sources.foods.length && !sources.tags.length && !sources.pigment && !sources.additives.length), "通用基础造型不能配置来源门槛。");
+  const sources = { foods: sourceIds(rule.foods, foodIds, "必需食物"), tags: tags(rule.tags), pigment: rule.pigment, additives: sourceIds(rule.additives, additiveIds, "必需添加剂", 1) };
   return { identity: value.identity, base: value.base, sources, forceZone: value.forceZone };
 }
 export function validateManagedContent(value) {
@@ -90,8 +89,6 @@ export function validateManagedContent(value) {
     requireValue(!item.requiredAdditive || additiveIds.has(item.requiredAdditive), "必选添加剂无效。");
     return { characterId: original.characterId, foodIds: [...item.foodIds], drinkId: item.drinkId, water: item.water, digestionTime: item.digestionTime, forceZone: item.forceZone, requiredAdditive: item.requiredAdditive || null };
   });
-  const signatures = result.recipes.map((item) => `${[...item.foodIds].sort().join(",")}/${item.drinkId}/${item.water}/${item.digestionTime}/${item.forceZone}`);
-  requireValue(new Set(signatures).size === signatures.length, "两款大便的食物、饮料种类及饮用量、阶段和力度完全相同，请调整冲突配方。");
   result.drinks = entries(value.drinks, "drinks", "id", (item, original) => {
     requireValue(["drop", "coffee"].includes(item.icon), "饮料图标无效。");
     return { id: original.id, name: text(item.name, "名称", 60), category: text(item.category, "分类", 40), color: color(item.color), description: text(item.description, "描述"), effectLabel: text(item.effectLabel, "效果说明"), tags: tags(item.tags), wetnessBias: number(item.wetnessBias, "湿软偏置", -2, 2), porosity: number(item.porosity, "蓬松修正", 0, 6, true), effects: effects(item.effects), icon: item.icon, unlock: { kind: "open" } };
@@ -126,17 +123,32 @@ export function validateManagedContent(value) {
     requireValue(typeof item.path === "string" && (item.path === "" || /^\/assets\/stools\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(?:png|webp)$/.test(item.path)), "图片需选择项目 assets/stools 内的 PNG / WebP，或使用默认分层造型。");
     return { id: original.id, path: item.path };
   });
-  for (let type = 1; type <= 7; type++)
-    requireValue(result.stools.some(item => item.homeType === type && item.generation?.base), `第${type}型必须保留至少一个无来源门槛的基础造型。`);
-  const catalog = { foodById: Object.fromEntries(foods.map(food => [food.id, food])), drinkById: Object.fromEntries(result.drinks.map(item => [item.id, item])), additiveById: Object.fromEntries(result.additives.map(item => [item.id, item])) };
-  const anchors = new Map();
-  for (const recipe of result.recipes) {
-    const character = result.stools.find(item => item.id === recipe.characterId);
-    const sources = mealSources({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [] }, catalog);
-    requireValue(sourceAllowed(character, sources), `${character.name}的理想配方不满足其食材、主色素或添加剂来源。`);
-    const key = JSON.stringify([[...recipe.foodIds].sort(), recipe.drinkId, recipe.water, recipe.digestionTime]);
-    requireValue(!anchors.has(key) || anchors.get(key) === character.generation.identity, "不同来源身份不能仅靠力度区分，请调整食物、饮料、饮用量或阶段。");
-    anchors.set(key, character.generation.identity);
-  }
   return result;
+}
+
+// Gameplay inconsistencies are editable design choices, never save errors.
+export function managedContentWarnings(value) {
+  const warnings = [];
+  const unrestricted = item => {
+    const rule = item.generation?.sources;
+    return rule && !rule.foods.length && !rule.tags.length && !rule.pigment && !rule.additives.length;
+  };
+  for (let type = 1; type <= 7; type++)
+    if (!value.stools.some(item => item.homeType === type && item.generation?.base && unrestricted(item)))
+      warnings.push(`第${type}型没有无来源门槛的基础造型，部分餐盘可能无普通候选。`);
+  const catalog = { foodById: Object.fromEntries(foods.map(food => [food.id, food])), drinkById: Object.fromEntries(value.drinks.map(item => [item.id, item])), additiveById: Object.fromEntries(value.additives.map(item => [item.id, item])) };
+  const anchors = new Map();
+  for (const recipe of value.recipes) {
+    const character = value.stools.find(item => item.id === recipe.characterId);
+    const selection = { ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [] };
+    if (!sourceAllowed(character, mealSources(selection, catalog)))
+      warnings.push(`${character.name}的理想配方不满足其食材、主色素或添加剂来源，指定目标概率为0。`);
+    const state = physicalState(selection, catalog);
+    if (state.type !== character.homeType)
+      warnings.push(`${character.name}的理想配方算出第${state.type}型，与固定第${character.homeType}型不符，指定目标概率为0。`);
+    const key = JSON.stringify([[...recipe.foodIds].sort(), recipe.drinkId, recipe.water, recipe.digestionTime, recipe.forceZone, recipe.requiredAdditive]);
+    if (anchors.has(key)) warnings.push(`${character.name}与${anchors.get(key)}共用同一配方，概率由实际合法候选分配。`);
+    anchors.set(key, character.name);
+  }
+  return warnings;
 }

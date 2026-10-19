@@ -8,7 +8,7 @@ test("find banana, clay and twenty new foods through categories and pages", asyn
   await page.goto("/");
   await page.locator("#choose-foods").click();
   await expect(page.locator(".food-card")).toHaveCount(53);
-  await expect(page.locator(".food-card.unlocked")).toHaveCount(33);
+  await expect(page.locator(".food-card.unlocked")).toHaveCount(35);
   await focusFood(page, "banana");
   await expect(page.locator(".food-card")).toHaveCount(7);
   await expect(page.locator('[data-food="banana"]')).toHaveClass(/unlocked/);

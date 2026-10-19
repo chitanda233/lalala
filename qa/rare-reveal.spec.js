@@ -5,6 +5,8 @@ import {
   chooseDrink,
   chooseAdditives,
   armSpecimen,
+  applyIdealRecipe,
+  setCompletedRounds,
 } from "./helpers.js";
 
 const storageKey = "lalala-dev";
@@ -21,7 +23,7 @@ async function readSave(page) {
 
 async function prepareRecipe(
   page,
-  { drink = "water", additives = [], water = 1500 } = {},
+  { drink = "water", additives = [], water = 750 } = {},
 ) {
   await chooseDrink(page, drink);
   await chooseAdditives(page, additives);
@@ -61,7 +63,7 @@ const rareRecipes = [
   },
   {
     id: "luminous",
-    water: 2250,
+    water: 1250,
     drink: "glow-soda",
     additives: ["stardust"],
     motif: "orbit",
@@ -145,7 +147,7 @@ for (const recipe of rareRecipes)
       const collected = page.locator(`[data-stool="${expected.specimenId}"]`);
       await expect(collected).toHaveClass(/collected/);
       await expect(collected).toContainText(expected.name);
-      await expect(page.locator(".stool-card.uncollected")).toHaveCount(49);
+      await expect(page.locator(".stool-card.uncollected")).toHaveCount(55);
       const mysteries = await page
         .locator(".stool-card.uncollected")
         .evaluateAll((cards) =>
@@ -189,9 +191,9 @@ test("common and uncommon collectibles keep their regular result presentation", 
     ["classic", "common", []],
     ["glitter", "uncommon", ["glitter"]],
   ]) {
-    await prepareRecipe(page, { additives });
+    const { force } = await applyIdealRecipe(page, id, additives);
     const expected = await armOutcome(page, id);
-    await startRound(page);
+    await startRound(page, force);
     await expect(page.locator("#result-dialog")).toBeVisible({
       timeout: 4000,
     });
@@ -310,7 +312,7 @@ for (const [width, height] of [
     await expect(page.locator(".rare-particle")).toHaveCount(0);
     await expect(page.locator(".rare-reveal-motif")).toHaveCount(0);
     await expect(page.locator("#result-dialog")).not.toHaveClass(/rare-result/);
-    await prepareRecipe(page);
+    await applyIdealRecipe(page, "classic");
     await armOutcome(page, "classic");
     await startRound(page);
     await expect(page.locator("#rare-reveal")).toBeHidden();

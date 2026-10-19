@@ -1170,22 +1170,33 @@ input[type="range"] {
   color: var(--muted);
   opacity: 1;
 }
-.help-steps {
-  padding-left: 22px;
-  margin: 0;
+.help-topics {
   display: grid;
-  gap: 18px;
+  gap: 8px;
 }
-.help-steps strong {
-  font-size: 18px;
-  font-weight: 500;
+.help-topics details {
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--line);
 }
-.help-steps p {
+.help-topics summary {
+  cursor: pointer;
   font-size: 16px;
-  line-height: 1.6;
-  color: #647258;
-  margin: 7px 0 0;
+  font-weight: 600;
+  line-height: 1.5;
 }
+.help-topics ol {
+  padding-left: 22px;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 8px;
+}
+.help-topics p,
+.help-topics li {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #647258;
+}
+.help-topics p { margin: 8px 0 0; }
 .result-dialog[open] {
   text-align: center;
   justify-content: center;

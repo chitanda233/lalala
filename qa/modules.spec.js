@@ -8,6 +8,7 @@ import {
   chooseDrink,
   chooseAdditives,
   armSpecimen,
+  applyIdealRecipe,
 } from "./helpers.js";
 
 const storageKey = "lalala-dev";
@@ -22,11 +23,15 @@ test("food, drinks and toilet equipment survive a running-session reload", async
   await page.goto("/");
   await setCompletedRounds(page, 40);
   await expect(page.locator("#meal-summary .meal-summary-slot")).toHaveCount(3);
+  await page.locator("#choose-drinks").click();
   await expect(page.locator("[data-drink]")).toHaveCount(11);
+  await page.locator("#confirm-supply").click();
+  await page.locator("#choose-additives").click();
   await expect(page.locator(".additive-input")).toHaveCount(18);
+  await page.locator("#confirm-supply").click();
   await chooseMeal(page, ["rice"]);
   await setWater(page, "1250");
-  await setWater(page, "1500");
+  await setWater(page, "750");
   await chooseToilet(page, "comfort");
   await chooseToilet(page, "golden");
   await expect(page.locator("#bathroom-scene")).toHaveAttribute(
@@ -34,13 +39,13 @@ test("food, drinks and toilet equipment survive a running-session reload", async
     "golden",
   );
   await chooseDrink(page, "coffee");
-  await expect(page.locator('[data-drink="coffee"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#drink-summary")).toHaveText("一杯咖啡");
   await chooseDrink(page, "water");
 
   await armSpecimen(page, "gold", 4);
   await startRound(page);
   await expect(page.locator("#choose-toilet")).toBeDisabled();
-  await expect(page.locator('[data-drink="coffee"]')).toBeDisabled();
+  await expect(page.locator("#choose-drinks")).toBeDisabled();
   const session = await page.evaluate(
     (key) => JSON.parse(localStorage.getItem(key)).session,
     storageKey,
@@ -85,7 +90,7 @@ test("explicit coffee settings reload while mobile equipment stays usable", asyn
           settings: {
             foodIds: ["toast"],
             drinkId: "coffee",
-            water: 1500,
+            water: 750,
             additives: ["probiotic"],
           },
         }),
@@ -93,11 +98,8 @@ test("explicit coffee settings reload while mobile equipment stays usable", asyn
     storageKey,
   );
   await page.reload();
-  await expect(page.locator('[data-drink="coffee"]')).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(page.locator('[value="probiotic"]')).toBeChecked();
+  await expect(page.locator("#drink-summary")).toHaveText("一杯咖啡");
+  await expect(page.locator("#additive-summary")).toHaveText("益生菌");
   await expect(page.locator("#meal-summary")).toContainText("白吐司");
   await chooseToilet(page, "comfort");
   await page.reload();
@@ -106,7 +108,7 @@ test("explicit coffee settings reload while mobile equipment stays usable", asyn
     (key) => JSON.parse(localStorage.getItem(key)),
     storageKey,
   );
-  expect(saved.version).toBe(5);
+  expect(saved.version).toBe(6);
   expect(saved.settings.drinkId).toBe("coffee");
   expect(saved.settings.additives).toEqual(["probiotic"]);
   expect(saved.individuals).toEqual([]);
@@ -158,9 +160,7 @@ test("a matching green recipe with the golden toilet still usually produces an o
   });
   await page.goto("/");
   await setCompletedRounds(page, 40);
-  await chooseMeal(page, ["broccoli"]);
-  await setWater(page, "1750");
-  await chooseAdditives(page, ["probiotic"]);
+  await applyIdealRecipe(page, "garden", ["probiotic"]);
   await chooseToilet(page, "golden");
 
   await startRound(page);

@@ -27,6 +27,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+      - name: 安装依赖
+        run: npm ci
+      - name: 安装测试浏览器
+        run: npx playwright install --with-deps chromium
+      - name: 验证规则、文档与完整交互
+        run: npm run verify
       - name: 读取 Pages 配置
         id: pages
         uses: actions/configure-pages@v5

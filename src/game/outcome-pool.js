@@ -1,6 +1,6 @@
 import { gameConfig } from "../config/game.js";
 import { characters } from "../content/specimens.js";
-import { drinkById, additiveById } from "../content/catalog.js";
+import { drinkById, additiveById, characterById } from "../content/catalog.js";
 import { stoolRecipeByCharacterId } from "../content/stool-recipes.js";
 import { specimenBlueprintById } from "../content/specimen-blueprints.js";
 import { fixedDigestionTimes } from "../content/digestion.js";
@@ -16,6 +16,7 @@ const ordinary = characters.filter(item => item.rarity !== "special");
 const rare = characters.filter(item => item.rarity === "special");
 const clamp = value => Math.max(1, Math.min(7, value));
 const sameFoods = (a, b) => a.length === b.length && a.every(id => b.includes(id));
+export class OutcomeConfigurationError extends Error {}
 const shapeKeys = ["cohesion", "elongation", "grain", "porosity"];
 
 export function recipeProperties(input) {
@@ -73,7 +74,7 @@ function interpolate(items, template) {
 function ordinaryDistribution(selection, state, properties) {
   const sources = mealSources(selection), food = foodProfile(selection.foodIds).shape;
   const legal = ordinary.filter(character => character.homeType === state.type && sourceAllowed(character, sources));
-  if (!legal.length) throw new Error(`第${state.type}型缺少合法基础造型，请修复内容配置。`);
+  if (!legal.length) throw new OutcomeConfigurationError(`第${state.type}型没有满足来源条件的普通形态，请检查后台配置。`);
   const groups = new Map();
   for (const character of legal) {
     const recipe = stoolRecipeByCharacterId[character.id];
@@ -175,17 +176,24 @@ export function getOutcomePool(input) {
   return mergePools(evaluations(normalizeSelection(input)));
 }
 
-export function getRecipeForecast(input) {
+export function getRecipeForecast(input, targetCharacterId = null) {
   const selection = normalizeSelection(input), parts = evaluations(selection);
-  const phaseForecasts = parts.map(part => ({ digestionTime: part.selection.digestionTime, ...part.forecast }));
-  if (parts.length === 1) return { ...parts[0].forecast, phaseForecasts };
-  const primary = mergePools(parts).filter(item => !item.special).sort((a,b) => b.probability-a.probability || a.characterId.localeCompare(b.characterId))[0];
+  const withTarget = (forecast, pool) => {
+    const targetId = targetCharacterId || forecast.primaryCharacterId;
+    const targetProbability = pool.filter(entry => entry.characterId === targetId).reduce((sum, entry) => sum + entry.probability, 0);
+    return { ...forecast, targetCharacterId: targetId, targetProbability,
+      targetConditionalProbability: characterById[targetId]?.rarity === "special" ? 0 : targetProbability / (1 - forecast.rareProbability) };
+  };
+  const phaseForecasts = parts.map(part => ({ digestionTime: part.selection.digestionTime, ...withTarget(part.forecast, poolFor(part)) }));
+  if (parts.length === 1) return { ...phaseForecasts[0], phaseForecasts };
+  const pool = mergePools(parts);
+  const primary = pool.filter(item => !item.special).sort((a,b) => b.probability-a.probability || a.characterId.localeCompare(b.characterId))[0];
   const rareProbability = parts[0].forecast.rareProbability;
   const conditional = primary.probability / (1 - rareProbability);
-  return { matchedRecipe: null, suggestedRecipe: stoolRecipeByCharacterId[primary.characterId], primaryCharacterId: primary.characterId,
+  return { ...withTarget({ matchedRecipe: null, suggestedRecipe: stoolRecipeByCharacterId[primary.characterId], primaryCharacterId: primary.characterId,
     primaryConditionalProbability: conditional, primaryProbability: primary.probability,
     recipeConditionalProbability: conditional, recipeProbability: primary.probability, targetProbability: primary.probability,
-    rareProbability, similarity: null, properties: recipeProperties(selection), physicalState: null, phaseForecasts };
+    rareProbability, similarity: null, properties: recipeProperties(selection), physicalState: null }, pool), phaseForecasts };
 }
 
 export function conditionalDropPool(input, type) {

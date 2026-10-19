@@ -19,27 +19,21 @@ const materialArts = new Set([
   "meteor",
   "amber",
 ]);
-const tintableReferenceIds = new Set([
-  "classic", "spiral", "stacked-stones", "cracked", "soft-pillows",
-  "mashed-potato", "pancake", "jet", "bubbly",
-]);
-
 function referenceSpriteSvg(character, type, colorId, marks, appearance) {
   const signatures = normalizeMarks(marks);
   const id = `specimen-${++illustrationId}`;
   let palette = stoolColors[colorId] || character;
-  if (appearance && tintableReferenceIds.has(character.id)) {
+  const tintable = character.rarity !== "special";
+  if (appearance && tintable) {
     const amount = (appearance.colorStrength - 1) / 6;
     palette = {
       color: mixHex(stoolColors.classic.color, palette.color, amount),
       light: mixHex(stoolColors.classic.light, palette.light, amount),
     };
   }
-  // Plain brown sculptures can still take drink colors. Corn, ink, gold and other
-  // reference materials retain the deliberate colors of their source artwork.
-  const tinted = tintableReferenceIds.has(character.id) && colorId && colorId !== "classic";
+  const tinted = tintable && colorId && colorId !== "classic";
   const filter = tinted
-    ? `<defs>${tintFilter(`${id}-tint`, palette.color, palette.light, true)}</defs>`
+    ? `<defs>${tintFilter(`${id}-tint`, palette.color, palette.light, true, ["enoki-jet", "corn-cannon"].includes(character.id))}</defs>`
     : "";
   const body = `<image href="${referenceStoolAssets[character.id]}" x="12" y="12" width="296" height="296" preserveAspectRatio="xMidYMid meet"${tinted ? ` filter="url(#${id}-tint)"` : ""}/>`;
   const signature = signatures.map(mark => imageAsset(`type-${type}-${mark}`)).join("");
@@ -58,7 +52,7 @@ const safeText = (value) =>
 function channel(hex, index) {
   return parseInt(hex.slice(1 + index * 2, 3 + index * 2), 16) / 255;
 }
-function tintFilter(id, color, light, desaturate = false) {
+function tintFilter(id, color, light, desaturate = false, preserveFoodColors = false) {
   const functions = ["R", "G", "B"]
     .map((letter, index) => {
       const main = channel(color, index),
@@ -73,7 +67,9 @@ function tintFilter(id, color, light, desaturate = false) {
       return `<feFunc${letter} type="table" tableValues="${points.map((value) => value.toFixed(4)).join(" ")}"/>`;
     })
     .join("");
-  return `<filter id="${id}" color-interpolation-filters="sRGB">${desaturate ? '<feColorMatrix type="saturate" values="0"/>' : ""}<feComponentTransfer>${functions}<feFuncA type="identity"/></feComponentTransfer></filter>`;
+  // Recolour the brown liquid while keeping embedded yellow corn and pale enoki.
+  const foodMask = preserveFoodColors ? '<feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 8 -10.8 0 0 -0.25" result="body-mask"/><feComposite in="tinted" in2="body-mask" operator="in" result="liquid"/><feComposite in="SourceGraphic" in2="body-mask" operator="out" result="food"/><feMerge><feMergeNode in="liquid"/><feMergeNode in="food"/></feMerge>' : "";
+  return `<filter id="${id}" color-interpolation-filters="sRGB">${desaturate ? '<feColorMatrix type="saturate" values="0"/>' : ""}<feComponentTransfer result="tinted">${functions}<feFuncA type="identity"/></feComponentTransfer>${foodMask}</filter>`;
 }
 function imageAsset(filename, filter = "") {
   return `<image href="${assetRoot}${filename}.png" x="0" y="0" width="320" height="320"${filter ? ` filter="url(#${filter})"` : ""}/>`;

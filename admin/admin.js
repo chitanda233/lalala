@@ -256,6 +256,9 @@ function renderPreview() {
       foodById[selectedId],
     );
   } catch (error) {
+    $("#preview-forecast").textContent = `预览暂不可用：${error.message}`;
+    $("#specimen-preview").replaceChildren();
+    $("#type-chart").replaceChildren();
     $("#preview-features").textContent = `预览暂不可用：${error.message}`;
   }
 }
