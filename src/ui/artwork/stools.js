@@ -114,6 +114,19 @@ function mixHex(first, second, amount) {
   );
   return `#${parts.join("")}`;
 }
+// Saved seeds vary only surface details; they never rotate or move the body.
+function surfaceVariation(appearance, channel) {
+  if (appearance.variationSeed == null) return 0.5;
+  let value = Math.imul(appearance.variationSeed ^ channel, 0x45d9f3b);
+  value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
+  return ((value ^ (value >>> 16)) >>> 0) / 0x100000000;
+}
+function texturePattern(appearance, channel, baseSize) {
+  const size = baseSize * (0.88 + surfaceVariation(appearance, channel) * 0.24);
+  const x = (surfaceVariation(appearance, channel + 1) - 0.5) * size;
+  const y = (surfaceVariation(appearance, channel + 2) - 0.5) * size;
+  return `width="${size.toFixed(2)}" height="${size.toFixed(2)}" patternUnits="userSpaceOnUse" patternTransform="translate(${x.toFixed(2)} ${y.toFixed(2)})"`;
+}
 function textureLayers(filename, id, appearance, palette, body = null) {
   if (!appearance) return "";
   const { grain, porosity, residues } = appearance;
@@ -124,12 +137,12 @@ function textureLayers(filename, id, appearance, palette, body = null) {
   if (grain > 1) {
     const size = 44 - grain * 3,
       r = 0.6 + grain * 0.3;
-    layers += `<defs><pattern id="${id}-grain" width="${size}" height="${size}" patternUnits="userSpaceOnUse"><circle cx="7" cy="8" r="${r}" fill="${palette.color}"/><circle cx="${size * 0.7}" cy="${size * 0.7}" r="${r * 0.7}" fill="#715f48"/><ellipse cx="6" cy="7" rx="${r * 0.7}" ry="${r * 0.35}" fill="${palette.light}"/></pattern></defs><rect data-layer="grain" width="320" height="320" fill="url(#${id}-grain)" opacity="${0.18 + grain * 0.035}"/>`;
+    layers += `<defs><pattern id="${id}-grain" ${texturePattern(appearance, 1, size)}><circle cx="7" cy="8" r="${r}" fill="${palette.color}"/><circle cx="${size * 0.7}" cy="${size * 0.7}" r="${r * 0.7}" fill="#715f48"/><ellipse cx="6" cy="7" rx="${r * 0.7}" ry="${r * 0.35}" fill="${palette.light}"/></pattern></defs><rect data-layer="grain" width="320" height="320" fill="url(#${id}-grain)" opacity="${0.18 + grain * 0.035}"/>`;
   }
   if (porosity > 1) {
     const size = 58 - porosity * 3,
       r = 1 + porosity * 0.6;
-    layers += `<defs><pattern id="${id}-pores" width="${size}" height="${size}" patternUnits="userSpaceOnUse"><ellipse cx="15" cy="17" rx="${r}" ry="${r * 0.72}" fill="#776951" opacity=".48"/><path d="M${15 - r} 18q${r} ${r * 1.3} ${r * 2} 0" fill="none" stroke="${palette.light}" stroke-width="1.3" opacity=".7"/></pattern></defs><rect data-layer="porosity" width="320" height="320" fill="url(#${id}-pores)" opacity="${0.22 + porosity * 0.04}"/>`;
+    layers += `<defs><pattern id="${id}-pores" ${texturePattern(appearance, 4, size)}><ellipse cx="15" cy="17" rx="${r}" ry="${r * 0.72}" fill="#776951" opacity=".48"/><path d="M${15 - r} 18q${r} ${r * 1.3} ${r * 2} 0" fill="none" stroke="${palette.light}" stroke-width="1.3" opacity=".7"/></pattern></defs><rect data-layer="porosity" width="320" height="320" fill="url(#${id}-pores)" opacity="${0.22 + porosity * 0.04}"/>`;
   }
   const positions = [
     [119, 158],
@@ -140,14 +153,16 @@ function textureLayers(filename, id, appearance, palette, body = null) {
     [186, 224],
   ];
   [...residues].sort((a, b) => a.foodId.localeCompare(b.foodId)).forEach((residue, foodIndex) => {
-    const count = 1 + Math.floor((residue.retention - 2) / 2);
+    const channel = 10 + foodIndex * 20;
+    const baseCount = 1 + Math.floor((residue.retention - 2) / 2);
+    const count = Math.max(1, baseCount + Math.floor(surfaceVariation(appearance, channel) * 3) - 1);
+    const offset = Math.floor((surfaceVariation(appearance, channel + 1) - 0.5) * positions.length);
     const size = 10 + residue.retention * 2.2;
     const opacity = 0.25 + residue.retention * 0.085;
     for (let index = 0; index < count; index++) {
-      const [x, y] =
-        positions[
-          (index * 2 + foodIndex) % positions.length
-        ];
+      const position = positions[(index + foodIndex * 2 + offset + positions.length) % positions.length];
+      const x = position[0] + (surfaceVariation(appearance, channel + 2 + index * 2) - 0.5) * 18;
+      const y = position[1] + (surfaceVariation(appearance, channel + 3 + index * 2) - 0.5) * 18;
       const mark = foodArt(residue.foodId).replace(
         "<svg ",
         `<svg x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size * 0.9}" style="width:${size}px;height:${size * 0.9}px;margin:0;filter:none;display:block;overflow:hidden" `,

@@ -150,13 +150,35 @@ test("incomplete records are rejected instead of reconstructing collectible hist
   assert.equal(Object.hasOwn(save, "specimens"), false);
 });
 
-test("random seeds cannot rotate, shift or change the appearance of identical results", () => {
+test("saved seeds vary surface placement and density without moving or rotating the body", () => {
   const appearance = rollOutcome({ foodIds: ["rice", "corn", "enoki"] }, () => .5).appearance;
   const stableIds = svg => svg.replaceAll(/specimen-\d+/g, "specimen-test");
   for (const id of ["classic", "corn-cannon"]) {
     const character = characterById[id];
     const render = variationSeed => stableIds(characterSvg(character, false, character.homeType,
       "berry", ["enoki"], { ...appearance, variationSeed }));
-    assert.equal(render(1), render(999999));
+    const first = render(1), second = render(999999);
+    assert.equal(first, render(1), "reopening a saved result must retain its exact surface");
+    assert.notEqual(first, second);
+    const images = svg => [...svg.matchAll(/<image\b[^>]+>/g)].map(match => match[0]);
+    assert.deepEqual(images(first), images(second), "the body and food source layers cannot move");
+    assert.doesNotMatch(first + second, /rotate\(/);
+    assert.notEqual(first.match(/<pattern[^>]+-grain[^>]+>/)[0], second.match(/<pattern[^>]+-grain[^>]+>/)[0]);
+    const counts = new Set();
+    for (let seed = 0; seed < 64; seed++) {
+      const svg = render(seed);
+      const count = [...svg.matchAll(/data-food-residue="corn"/g)].length;
+      const base = 1 + Math.floor((appearance.residues.find(item => item.foodId === "corn").retention - 2) / 2);
+      assert.ok(count >= Math.max(1, base - 1) && count <= base + 1);
+      counts.add(count);
+      assert.doesNotMatch(svg, /data-food-residue="(?!corn|enoki)/);
+    }
+    assert.ok(counts.size > 1, "residue quantities should vary slightly between births");
   }
+  const character = characterById.classic;
+  const plain = characterSvg(character, false, character.homeType, "classic", [],
+    { ...appearance, grain: 1, porosity: 1, residues: [], variationSeed: 999999 });
+  assert.doesNotMatch(plain, /data-food-residue|data-layer="(?:grain|porosity)"/);
+  const cover = () => stableIds(characterSvg(character));
+  assert.equal(cover(), cover(), "standard covers cannot gain random texture");
 });
