@@ -24,17 +24,31 @@ export function createFoodPicker({
   function showMessage(message = "") {
     $("#food-picker-message").textContent = message;
   }
-  function addFood(id) {
-    const canReplace = activeSlot !== null && activeSlot < draft.length;
-    if (locked || !getInventory().unlocked.includes(id) || draft.includes(id) ||
-      (draft.length >= gameConfig.maxFoods && !canReplace)) return;
-    focusedId = id;
-    if (canReplace) draft[activeSlot] = id;
-    else draft.push(id);
+  function removeFood(index) {
+    draft.splice(index, 1);
     activeSlot = null;
-    showMessage(`已加入${foodById[id].name}。`);
+    showMessage(
+      draft.length
+        ? "已移除，可以选择别的食物。"
+        : "餐盘还是空的，请至少加入一种食物。",
+    );
+  }
+  function toggleFood(id) {
+    if (locked || !getInventory().unlocked.includes(id)) return;
+    const selectedIndex = draft.indexOf(id);
+    if (selectedIndex >= 0) {
+      removeFood(selectedIndex);
+    } else {
+      const canReplace = activeSlot !== null && activeSlot < draft.length;
+      if (draft.length >= gameConfig.maxFoods && !canReplace) return;
+      if (canReplace) draft[activeSlot] = id;
+      else draft.push(id);
+      activeSlot = null;
+      showMessage(`已加入${foodById[id].name}。`);
+    }
+    focusedId = id;
     renderDialog(true);
-    $(`#food-grid [data-food="${id}"]`)?.focus({ preventScroll: true });
+    $(`#food-grid [data-add-food="${id}"]`)?.focus({ preventScroll: true });
   }
   function renderSummary() {
     const ids = getSelection().foodIds;
@@ -86,7 +100,7 @@ export function createFoodPicker({
         const unlocked = unlockedIds.has(food.id);
         const selected = draft.includes(food.id);
         const full = draft.length >= gameConfig.maxFoods && activeSlot === null;
-        return `<article class="food-card ${unlocked ? "unlocked" : "locked"} ${food.id === focusedId ? "focused" : ""} ${selected ? "selected" : ""}" data-food-card="${food.id}"><button class="food-card-main ${unlocked ? "unlocked" : "locked"}" data-food="${food.id}" aria-pressed="${food.id === focusedId}" aria-label="${food.name}${unlocked ? "" : "，尚未解锁"}">${foodArt(food.id)}<strong>${food.name}</strong>${!unlocked ? `<span>${food.unlockAt} 次解锁</span>` : ""}</button><button class="card-action" data-add-food="${food.id}" aria-label="${selected ? `已加入${food.name}` : `加入${food.name}`}" ${!unlocked || selected || full ? "disabled" : ""}>${selected ? "✓" : "＋"}</button></article>`;
+        return `<article class="food-card ${unlocked ? "unlocked" : "locked"} ${food.id === focusedId ? "focused" : ""} ${selected ? "selected" : ""}" data-food-card="${food.id}"><button class="food-card-main ${unlocked ? "unlocked" : "locked"}" data-food="${food.id}" aria-pressed="${food.id === focusedId}" aria-label="${food.name}${unlocked ? "" : "，尚未解锁"}">${foodArt(food.id)}<strong>${food.name}</strong>${!unlocked ? `<span>${food.unlockAt} 次解锁</span>` : ""}</button><button class="card-action" data-add-food="${food.id}" aria-label="${selected ? `移除${food.name}` : `加入${food.name}`}" aria-pressed="${selected}" ${locked || !unlocked || (!selected && full) ? "disabled" : ""}>${selected ? "✓" : "＋"}</button></article>`;
       })
       .join("");
     $("#food-draft-count").textContent =
@@ -110,7 +124,7 @@ export function createFoodPicker({
     category = "all";
     page = 0;
     activeSlot = index !== null && index < draft.length ? index : null;
-    showMessage("点右上角加号加入餐盘，点食物看介绍。最多三种，不重复。");
+    showMessage("点右上角加号加入，再点勾选移除；点食物看介绍。最多三种，确认后生效。");
     dialog.showModal();
     renderDialog(true);
   }
@@ -128,8 +142,8 @@ export function createFoodPicker({
     $(`#food-filters [data-food-category="${category}"]`).focus();
   });
   $("#food-grid").addEventListener("click", (event) => {
-    const add = event.target.closest("[data-add-food]");
-    if (add) return addFood(add.dataset.addFood);
+    const toggle = event.target.closest("[data-add-food]");
+    if (toggle) return toggleFood(toggle.dataset.addFood);
     const button = event.target.closest("[data-food]");
     if (!button) return;
     focusedId = button.dataset.food;
@@ -140,13 +154,7 @@ export function createFoodPicker({
     const remove = event.target.closest("[data-remove-food]");
     const slot = event.target.closest("[data-slot-target]");
     if (remove) {
-      draft.splice(Number(remove.dataset.removeFood), 1);
-      activeSlot = null;
-      showMessage(
-        draft.length
-          ? "已移除，可以选择别的食物。"
-          : "餐盘还是空的，请至少加入一种食物。",
-      );
+      removeFood(Number(remove.dataset.removeFood));
     } else if (slot) {
       const index = Number(slot.dataset.slotTarget);
       activeSlot = index < draft.length ? index : null;
