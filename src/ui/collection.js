@@ -18,6 +18,17 @@ import { diagnoseOutcome } from "../game/explanation.js";
 import { characterSvg, mysterySvg } from "./artwork/stools.js";
 import { renderPage } from "./pagination.js";
 import { $, $$ } from "./dom.js";
+import { rareRevealTheme } from "./rare-reveal.js";
+
+function rareCardAttributes(character) {
+  const theme = rareRevealTheme(character);
+  return theme
+    ? `data-rare-card="${character.id}" data-rare-motif="${theme.motif}" style="--rare-accent:${theme.accent};--rare-glow:${theme.glow}"`
+    : "";
+}
+function individualArt(character, svg) {
+  return `<div class="individual-art${rareRevealTheme(character) ? " rare-collection-card" : ""}" ${rareCardAttributes(character)}>${svg}</div>`;
+}
 
 const artwork = (entry) =>
   characterSvg(
@@ -110,19 +121,19 @@ export function createCollectionView(getSave) {
     if (previewAll && !entry) {
       const character = characterById[blueprint.characterId];
       $("#collection-detail").innerHTML =
-        `<h3>${blueprint.name}<small>第 ${type} 型 · 样式预览</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-style-preview="${blueprint.id}"><div class="individual-art">${characterSvg(character, false, type)}</div><p>${character.description}</p></article>`}`;
+        `<h3>${blueprint.name}<small>第 ${type} 型 · 样式预览</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-style-preview="${blueprint.id}">${individualArt(character, characterSvg(character, false, type))}<p>${character.description}</p></article>`}`;
       return;
     }
     if (!entry) {
       const character = characterById[blueprint.characterId];
       $("#collection-detail").innerHTML =
-        `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-discovered="${blueprint.id}"><div class="individual-art">${characterSvg(character, false, type)}</div><p>${character.description}</p><p>暂无保留个体</p></article>`}`;
+        `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(character.id) : detailPanel === "source" ? sourceDetail(character.id) : `<article class="individual-card" data-discovered="${blueprint.id}">${individualArt(character, characterSvg(character, false, type))}<p>${character.description}</p><p>暂无保留个体</p></article>`}`;
       return;
     }
     const diagnosis = diagnoseOutcome(entry);
     const marks = entry.marks.map((mark) => outcomeMarks[mark].name).join("、");
     $("#collection-detail").innerHTML =
-      `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(entry.characterId) : detailPanel === "source" ? sourceDetail(entry.characterId) : `<article class="individual-card" data-individual="${entry.id}"><div class="individual-art">${artwork(entry)}</div>${individualNavigation(entry, entries.length)}<p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article>`}`;
+      `<h3>${blueprint.name} <small>固定归类 ${type} 型</small></h3>${detailTabs()}${detailPanel === "recipe" ? recipeDetail(entry.characterId) : detailPanel === "source" ? sourceDetail(entry.characterId) : `<article class="individual-card" data-individual="${entry.id}">${individualArt(characterById[entry.characterId], artwork(entry))}${individualNavigation(entry, entries.length)}<p>${stoolColors[entry.colorId]?.name || characterById[entry.characterId].material}${marks ? ` · ${marks}` : ""}</p><p>${diagnosis.summary}</p></article>`}`;
   }
   function render() {
     const save = getSave();
@@ -148,7 +159,9 @@ export function createCollectionView(getSave) {
     $("#bristol-grid").innerHTML = visible
       .map((blueprint) => {
         const known = discovered.has(blueprint.id);
-        return `<button class="stool-card ${known ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}" data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}"><span class="stool-art">${previewAll || known ? characterSvg(characterById[blueprint.characterId], false, classifySpecimen(blueprint)) : mysterySvg()}</span><span class="stool-title"><strong>${previewAll || known ? blueprint.name : "未发现的便便"}</strong><span>第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
+        const character = characterById[blueprint.characterId];
+        const rare = (previewAll || known) && rareRevealTheme(character);
+        return `<button class="stool-card ${known ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}${rare ? " rare-collection-card" : ""}" ${rare ? rareCardAttributes(character) : ""} data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}"><span class="stool-art">${previewAll || known ? characterSvg(character, false, classifySpecimen(blueprint)) : mysterySvg()}</span><span class="stool-title"><strong>${previewAll || known ? blueprint.name : "未发现的便便"}</strong><span>${rare ? "✦ 稀有 · " : ""}第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
       })
       .join("");
     $("#collection-dialog").classList.toggle("detail-open", detailOpen);
