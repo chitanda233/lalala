@@ -17,8 +17,9 @@ async function noScroll(page, selector = "html") {
     width: el.clientWidth,
     scrollWidth: el.scrollWidth,
   }));
-  expect(result.scrollHeight).toBeLessThanOrEqual(result.height + 1);
-  expect(result.scrollWidth).toBeLessThanOrEqual(result.width + 1);
+  const name = await target.evaluate(el => el.id || `${el.className} ${el.dataset.stool || ""}`);
+  expect(result.scrollHeight, `${name} 的内容不应超出容器高度`).toBeLessThanOrEqual(result.height + 1);
+  expect(result.scrollWidth, `${name} 的内容不应超出容器宽度`).toBeLessThanOrEqual(result.width + 1);
 }
 for (const [width, height] of [
   [402, 874],

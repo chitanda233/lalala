@@ -32,8 +32,13 @@ function unlockedAura(character, unlocked = true) {
     ? '<span class="rare-unlock-aura" aria-hidden="true"></span>'
     : "";
 }
+function rareCardEffects(character, unlocked = true) {
+  return rareRevealTheme(character)
+    ? `<span class="rare-card-sheen" aria-hidden="true"></span>${unlockedAura(character, unlocked)}`
+    : "";
+}
 function individualArt(character, svg) {
-  return `<div class="individual-art${rareRevealTheme(character) ? " rare-collection-card" : ""}" ${rareCardAttributes(character)}>${unlockedAura(character)}${svg}</div>`;
+  return `<div class="individual-art${rareRevealTheme(character) ? " rare-collection-card" : ""}" ${rareCardAttributes(character)}>${rareCardEffects(character)}${svg}</div>`;
 }
 
 const artwork = (entry) =>
@@ -190,7 +195,7 @@ export function createCollectionView(getSave) {
         const known = discovered.has(blueprint.id);
         const character = characterById[blueprint.characterId];
         const rare = rareRevealTheme(character);
-        return `<button class="stool-card ${known ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}${rare ? " rare-collection-card" : ""}" ${rare ? rareCardAttributes(character, previewAll || known) : ""} data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}">${unlockedAura(character, previewAll || known)}<span class="stool-art">${previewAll || known ? characterSvg(character, false, classifySpecimen(blueprint)) : mysterySvg()}</span><span class="stool-title"><strong>${previewAll || known ? blueprint.name : "未发现的便便"}</strong><span>${rare ? "✦ 稀有 · " : ""}第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
+        return `<button class="stool-card ${known ? "collected" : "uncollected"} ${focusedId === blueprint.id ? "focused" : ""}${rare ? " rare-collection-card" : ""}" ${rare ? rareCardAttributes(character, previewAll || known) : ""} data-stool="${blueprint.id}" aria-pressed="${focusedId === blueprint.id}">${rareCardEffects(character, previewAll || known)}<span class="stool-art">${previewAll || known ? characterSvg(character, false, classifySpecimen(blueprint)) : mysterySvg()}</span><span class="stool-title"><strong>${previewAll || known ? blueprint.name : "未发现的便便"}</strong><span>${rare ? "✦ 稀有 · " : ""}第 ${classifySpecimen(blueprint)} 型</span></span></button>`;
       })
       .join("");
     $("#collection-dialog").classList.toggle("detail-open", detailOpen);

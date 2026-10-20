@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { chooseSpecimen } from "./helpers.js";
+import { chooseSpecimen, enableCollectionPreview, showPageItem } from "./helpers.js";
 
 for (const [width, height] of [[320, 640], [402, 760]])
   test(`catalog details browse unlocked species, close one level and warn about debug preview at ${width}`, async ({ page }) => {
@@ -120,4 +120,60 @@ for (const [width, height] of [[320, 640], [402, 760]])
     await expect(page.locator("[data-specimen-next]")).toBeDisabled();
     await fits();
     expect(errors).toEqual([]);
+  });
+
+for (const [width, height] of [[320, 640], [402, 760]])
+  test(`rare catalog effects stay within cards throughout animation at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto("/");
+    const dialog = page.locator("#collection-dialog");
+    const card = page.locator('[data-stool="gold:4"]');
+    const checkBounds = async target => {
+      const frames = await target.evaluate(el => {
+        const animations = el.getAnimations({ subtree: true });
+        animations.forEach(animation => animation.pause());
+        return [0, .2, .4, .65, .85, .99].map(progress => {
+          animations.forEach(animation => {
+            animation.currentTime = Number(animation.effect.getTiming().duration) * progress;
+          });
+          return {
+            height: el.clientHeight, scrollHeight: el.scrollHeight,
+            width: el.clientWidth, scrollWidth: el.scrollWidth,
+          };
+        });
+      });
+      for (const frame of frames) {
+        expect(frame.scrollHeight).toBeLessThanOrEqual(frame.height + 1);
+        expect(frame.scrollWidth).toBeLessThanOrEqual(frame.width + 1);
+      }
+    };
+    await page.locator("#collection-button").click();
+    await showPageItem(page, '[data-stool="gold:4"]', "collection");
+    await expect(card).toContainText("未发现的便便");
+    await expect(card.locator(".rare-unlock-aura")).toHaveCount(0);
+    await checkBounds(card);
+
+    await enableCollectionPreview(page);
+    await expect(card.locator(".rare-unlock-aura")).toHaveCount(1);
+    await checkBounds(card);
+    await page.screenshot({ path: `qa/稀有卡片裁切-${width}.png`, animations: "disabled" });
+    await chooseSpecimen(page, "gold:4");
+    await checkBounds(page.locator(".individual-art"));
+    await checkBounds(dialog);
+
+    await page.evaluate(() => {
+      const save = JSON.parse(localStorage.getItem("lalala-dev"));
+      save.discoveredSpecimens = ["gold:4"];
+      localStorage.setItem("lalala-dev", JSON.stringify(save));
+    });
+    await page.reload();
+    await page.locator("#collection-button").click();
+    await showPageItem(page, '[data-stool="gold:4"]', "collection");
+    await expect(card).toHaveClass(/collected/);
+    await expect(card.locator(".rare-unlock-aura")).toHaveCount(1);
+    await checkBounds(card);
+    await chooseSpecimen(page, "gold:4");
+    await checkBounds(page.locator(".individual-art"));
+    await checkBounds(dialog);
+    await page.screenshot({ path: `qa/稀有详情裁切-${width}.png`, animations: "disabled" });
   });

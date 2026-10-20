@@ -1450,21 +1450,29 @@ input[type="range"] {
     inset 0 1px 0 #ffffff45,
     0 4px 15px color-mix(in srgb, var(--rare-accent) 25%, transparent);
 }
-.rare-collection-card::before,
-.rare-collection-card::after {
+.rare-card-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.rare-card-sheen::before,
+.rare-card-sheen::after {
   content: "";
   position: absolute;
   z-index: -1;
   pointer-events: none;
 }
-.rare-collection-card::before {
+.rare-card-sheen::before {
   inset: -42% -70% 42% -45%;
   border-radius: 50%;
   background: linear-gradient(150deg, #ffffff00 30%, #d4ecff0d 65%, #bdffed38);
   box-shadow: 0 1px 0 #ddfff275, 0 18px 38px #b9a0f71c;
   transform: rotate(-24deg);
 }
-.rare-collection-card::after {
+.rare-card-sheen::after {
   inset: -80%;
   background: linear-gradient(112deg, transparent 40%, #73ebda22 46%, #b99cff42 49%, #ffffff65 51%, #ffd89322 54%, transparent 62%);
   mix-blend-mode: screen;
