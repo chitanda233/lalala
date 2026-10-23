@@ -55,7 +55,9 @@ test("desktop: recipe controls, quick result, collection, and saved progress", a
   await page.keyboard.press("Escape");
   await page.reload();
   await expect(page.locator("#meal-summary")).toContainText("菠菜");
+  await page.locator("#choose-drinks").click();
   await expect(page.locator("#water-value")).toContainText(gardenRecipe.water.toLocaleString("en-US"));
+  await page.locator("#confirm-supply").click();
   await expect(page.locator("#collection-count")).toHaveText("01");
   expect(errors).toEqual([]);
 });
