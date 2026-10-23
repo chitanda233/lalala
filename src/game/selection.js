@@ -1,6 +1,5 @@
 import { gameConfig } from "../config/game.js";
 import { normalizeForce } from "../content/force.js";
-import { digestionById } from "../content/digestion.js";
 import {
   foodById,
   drinkById,
@@ -36,7 +35,6 @@ export function normalizeSelection(value = {}) {
       ...new Set(items.filter((id) => Object.hasOwn(additiveById, id))),
     ].slice(0, gameConfig.maxAdditives),
     force: normalizeForce(value.force),
-    digestionTime: Object.hasOwn(digestionById, value.digestionTime) ? value.digestionTime : "4",
     toiletId: Object.hasOwn(toiletById, value.toiletId)
       ? value.toiletId
       : "standard",

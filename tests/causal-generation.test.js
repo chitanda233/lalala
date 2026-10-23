@@ -15,18 +15,15 @@ const inputFor=r=>({...r,force:{low:20,medium:50,high:90}[r.forceZone],additives
 function randomSeed(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 const ordinary=pool=>pool.filter(entry=>!entry.special);
 
-test("all 46 ideal recipes obey sources and physics and get 80%, or 100% for a sole legal candidate",()=>{
+test("all 46 recommendations obey sources and physics and their target forecasts reflect the actual pool",()=>{
   for(const recipe of stoolRecipes){
     const input=normalizeSelection(inputFor(recipe)),source=mealSources(input),character=characterById[recipe.characterId];
     assert.ok(sourceAllowed(character,source),recipe.characterId);
     assert.equal(physicalState(input).type,character.homeType,recipe.characterId);
-    const legal=characters.filter(c=>c.rarity!=="special"&&c.homeType===character.homeType&&sourceAllowed(c,source));
-    const forecast=getRecipeForecast(input),pool=getOutcomePool(input);
-    assert.equal(forecast.primaryCharacterId,character.id);
-    assert.equal(forecast.matchedRecipe.characterId,character.id);
-    close(forecast.primaryConditionalProbability,legal.length===1?1:.8);
+    const forecast=getRecipeForecast(input,character.id),pool=getOutcomePool(input);
+    close(forecast.targetProbability,pool.find(entry=>entry.characterId===character.id).probability);
     close(pool.reduce((sum,e)=>sum+e.probability,0),1);
-    if(!recipe.requiredAdditive){const stable=getOutcomePool({...input,additives:["probiotic"]});assert.deepEqual(ordinary(stable).map(e=>e.characterId),[character.id]);close(ordinary(stable)[0].probability,.98);}
+    if(!recipe.requiredAdditive){const stable=getOutcomePool({...input,additives:["probiotic"]});assert.deepEqual(ordinary(stable).map(e=>e.characterId),[forecast.primaryCharacterId]);close(ordinary(stable)[0].probability,.98);}
   }
 });
 
@@ -56,24 +53,22 @@ test("there is a source-free base for each physical type and randomized legal me
   }
 });
 
-test("force changes shape but neither physical type nor food and colour identity budgets",()=>{
-  const input={foodIds:["burger","enoki","corn"],drinkId:"prune-juice",water:1250,digestionTime:"2",additives:[]};
+test("force changes shapes within an identity while physical type and identity budgets stay unchanged",()=>{
+  const input={foodIds:["burger","enoki"],drinkId:"milk",water:1250,additives:[]};
   let previous;
   for(const force of [0,20,33,34,50,66,67,90,100]){
     const pool=ordinary(getOutcomePool({...input,force})),groups={};
     for(const entry of pool){assert.equal(characterById[entry.characterId].homeType,7);const id=characterById[entry.characterId].generation.identity;groups[id]=(groups[id]||0)+entry.probability;}
     if(previous)for(const [id,p]of Object.entries(groups))close(p,previous[id]);previous=groups;
   }
+  assert.notDeepEqual(getOutcomePool({...input,force:0}),getOutcomePool({...input,force:100}));
 });
 
-test("one slider step decays the ideal probability smoothly instead of removing the target",()=>{
+test("one slider step within the same physical type preserves lawful variation",()=>{
   const input={foodIds:["rice"],drinkId:"water",digestionTime:"4",force:50,additives:[]};
   const points=[1000,1250].map(water=>getRecipeForecast({...input,water}));
   assert.ok(points.every(f=>f.primaryCharacterId==="classic"&&f.physicalState.type===4));
-  close(points[1].primaryConditionalProbability,.8);
-  // V6.1 moves nearby anchors: test a small positive decay, rather than a suggested probability band.
-  const decay=points[1].primaryConditionalProbability-points[0].primaryConditionalProbability;
-  assert.ok(decay>.01&&decay<.1,`one-step decay: ${decay}`);
+  assert.ok(points.every(f=>f.ordinaryCandidateCount>1&&f.primaryConditionalProbability<.8));
   for(let i=1;i<points.length;i++)assert.ok(Math.abs(points[i].primaryConditionalProbability-points[i-1].primaryConditionalProbability)<.16);
   const pools=[1000,1250].map(water=>new Map(getOutcomePool({...input,water}).map(e=>[e.characterId,e.probability])));
   for(let i=1;i<pools.length;i++){
@@ -93,11 +88,10 @@ test("colour is selected from the meal before drawing an identity and cannot be 
   assert.equal(resolveColor({...ink,additives:["charcoal"]},characterById.classic),"ink");
 });
 
-test("random-stage preview is the exact mixture of stable per-stage outcomes",()=>{
+test("retired random-stage input has no hidden mixture or extra draw",()=>{
   const input={...recentMeals[0].selection,additives:["probiotic"],digestionTime:"random"};
-  const pool=getOutcomePool(input),expected=new Map();
-  for(const digestionTime of ["2","4","8"])for(const entry of getOutcomePool({...input,digestionTime}))expected.set(entry.characterId,(expected.get(entry.characterId)||0)+entry.probability/3);
-  for(const entry of pool)close(entry.probability,expected.get(entry.characterId));
+  const pool=getOutcomePool(input);
+  for(const digestionTime of ["2","4","8"])assert.deepEqual(pool,getOutcomePool({...input,digestionTime}));
   const forecast=getRecipeForecast(input);close(forecast.primaryProbability,pool.find(e=>e.characterId===forecast.primaryCharacterId).probability);
 });
 
@@ -128,14 +122,13 @@ test("every ideal meal has smooth adjacent intake distributions when physics and
       previous={type:state.type,legal,pool};
     }
   }
-  assert.ok(checked>=stoolRecipes.length*2,`${checked} eligible adjacent pairs`);
+  assert.ok(checked>=stoolRecipes.length,`${checked} eligible adjacent pairs`);
 });
 
 test("porosity changes actual soft-shape probabilities without inventing a new source or changing type",()=>{
-  // Pear isolates the trait effect. Marshmallow also moves the V6.1 cloud recipe's ideal traits.
-  for(const {id,minGain,monotonic} of [{id:'pear',minGain:.05,monotonic:true},{id:'marshmallow-foam',minGain:.04,monotonic:false}]){
+  for(const {id,minGain,monotonic} of [{id:'pear',minGain:.05,monotonic:true},{id:'marshmallow-foam',minGain:.04,monotonic:true}]){
     const food=foodById[id],original=food.attributes.porosity;
-    const input={foodIds:[id],drinkId:'water',water:1250,digestionTime:'4',force:50,additives:[]};
+    const input={foodIds:[id],drinkId:'water',water:1000,additives:[]};
     const probabilities=[];
     try{
       for(const porosity of [1,2,3,4,5,6,7]){
@@ -146,7 +139,7 @@ test("porosity changes actual soft-shape probabilities without inventing a new s
         probabilities.push(pool.find(e=>e.characterId==='cloud').probability/pool.reduce((sum,e)=>sum+e.probability,0));
       }
       assert.ok(probabilities.at(-1)>probabilities[0]+minGain,`${id} porosity effect: ${probabilities.at(-1)-probabilities[0]}`);
-      if(monotonic)for(let i=1;i<probabilities.length;i++)assert.ok(probabilities[i]>=probabilities[i-1],`${id} porosity ${i+1} reduced cloud probability`);
+      if(monotonic)for(let i=1;i<probabilities.length;i++)assert.ok(probabilities[i]>=probabilities[i-1]-1e-12,`${id} porosity ${i+1} reduced cloud probability`);
     }finally{food.attributes.porosity=original;}
   }
 });

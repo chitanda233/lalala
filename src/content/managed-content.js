@@ -1608,10 +1608,9 @@ export const contentValues = {
         "egg"
       ],
       "drinkId": "water",
-      "water": 250,
-      "digestionTime": "8",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "water": 0,
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "marble-pebbles",
@@ -1621,9 +1620,8 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 250,
-      "digestionTime": "8",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "sesame-charcoal",
@@ -1634,9 +1632,8 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 250,
-      "digestionTime": "8",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "stacked-stones",
@@ -1645,10 +1642,9 @@ export const contentValues = {
         "egg"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "8",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "water": 500,
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "segmented",
@@ -1657,10 +1653,9 @@ export const contentValues = {
         "wholewheat"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "8",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "water": 500,
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "cocoa-truffle",
@@ -1670,9 +1665,8 @@ export const contentValues = {
       ],
       "drinkId": "coffee",
       "water": 250,
-      "digestionTime": "8",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "massage-beads",
@@ -1682,10 +1676,9 @@ export const contentValues = {
         "almonds"
       ],
       "drinkId": "water",
-      "water": 500,
-      "digestionTime": "8",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "water": 250,
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "stone-tower",
@@ -1696,9 +1689,8 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 500,
-      "digestionTime": "8",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "bread",
@@ -1708,9 +1700,8 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 500,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "cracked",
@@ -1719,10 +1710,9 @@ export const contentValues = {
         "egg"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "4",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "bran-log",
@@ -1732,9 +1722,8 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 750,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "beet-red",
@@ -1744,9 +1733,8 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 750,
-      "digestionTime": "4",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "amber-honey",
@@ -1756,9 +1744,8 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 750,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "oat-speckle",
@@ -1767,23 +1754,21 @@ export const contentValues = {
         "almonds"
       ],
       "drinkId": "water",
-      "water": 1000,
-      "digestionTime": "8",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "water": 500,
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "wood-grain",
       "foodIds": [
-        "wholewheat",
-        "brown-rice",
-        "egg"
+        "toast",
+        "cheese",
+        "konjac"
       ],
       "drinkId": "water",
       "water": 750,
-      "digestionTime": "4",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "classic",
@@ -1791,10 +1776,9 @@ export const contentValues = {
         "rice"
       ],
       "drinkId": "water",
-      "water": 1250,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "garden",
@@ -1803,10 +1787,9 @@ export const contentValues = {
         "spinach"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "enoki-thread",
@@ -1815,10 +1798,9 @@ export const contentValues = {
         "enoki"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "banana-curve",
@@ -1829,21 +1811,18 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 750,
-      "digestionTime": "4",
-      "forceZone": "low",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "low"
     },
     {
       "characterId": "spiral",
       "foodIds": [
-        "rice",
-        "okra"
+        "konjac"
       ],
       "drinkId": "water",
       "water": 750,
-      "digestionTime": "4",
-      "forceZone": "low",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "low"
     },
     {
       "characterId": "long-rope",
@@ -1852,22 +1831,19 @@ export const contentValues = {
         "konjac"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "4",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "ribbon",
       "foodIds": [
-        "oatmeal",
-        "okra"
+        "cheese"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "water": 1250,
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "red-dragon",
@@ -1876,10 +1852,9 @@ export const contentValues = {
         "dragon-fruit"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "glitter",
@@ -1889,9 +1864,8 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 1000,
-      "digestionTime": "2",
-      "forceZone": "medium",
-      "requiredAdditive": "glitter"
+      "requiredAdditive": "glitter",
+      "forceZone": "medium"
     },
     {
       "characterId": "gold-flake",
@@ -1900,10 +1874,9 @@ export const contentValues = {
         "black-sesame"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "2",
-      "forceZone": "medium",
-      "requiredAdditive": "gold-leaf"
+      "water": 1250,
+      "requiredAdditive": "gold-leaf",
+      "forceZone": "medium"
     },
     {
       "characterId": "silver-speckle",
@@ -1912,10 +1885,9 @@ export const contentValues = {
         "yogurt"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": "silver-dust"
+      "water": 1000,
+      "requiredAdditive": "silver-dust",
+      "forceZone": "medium"
     },
     {
       "characterId": "petal",
@@ -1924,10 +1896,9 @@ export const contentValues = {
         "rose-cake"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "warm-coil",
@@ -1937,22 +1908,18 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 750,
-      "digestionTime": "4",
-      "forceZone": "low",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "low"
     },
     {
       "characterId": "squat-spring",
       "foodIds": [
-        "rice",
-        "natto",
-        "okra"
+        "natto"
       ],
       "drinkId": "water",
-      "water": 750,
-      "digestionTime": "4",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "coffee",
@@ -1962,9 +1929,8 @@ export const contentValues = {
       ],
       "drinkId": "coffee",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "cloud",
@@ -1974,9 +1940,8 @@ export const contentValues = {
       ],
       "drinkId": "soda",
       "water": 1250,
-      "digestionTime": "4",
-      "forceZone": "low",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "low"
     },
     {
       "characterId": "corn-pebbles",
@@ -1987,9 +1952,8 @@ export const contentValues = {
       ],
       "drinkId": "water",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "soft-pillows",
@@ -1998,10 +1962,9 @@ export const contentValues = {
         "pumpkin"
       ],
       "drinkId": "water",
-      "water": 1250,
-      "digestionTime": "4",
-      "forceZone": "low",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "low"
     },
     {
       "characterId": "purple-berry",
@@ -2011,9 +1974,8 @@ export const contentValues = {
       ],
       "drinkId": "prune-juice",
       "water": 750,
-      "digestionTime": "4",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "milk-white",
@@ -2023,9 +1985,8 @@ export const contentValues = {
       ],
       "drinkId": "milk",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "low",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "low"
     },
     {
       "characterId": "fire",
@@ -2035,10 +1996,9 @@ export const contentValues = {
         "snail-noodles"
       ],
       "drinkId": "milk",
-      "water": 750,
-      "digestionTime": "2",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "water": 1000,
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "mashed-potato",
@@ -2046,36 +2006,34 @@ export const contentValues = {
         "potato",
         "pumpkin"
       ],
-      "drinkId": "water",
+      "drinkId": "milk",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "low",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "low"
     },
     {
       "characterId": "popping",
       "foodIds": [
         "banana",
-        "popping-chocolate"
+        "popping-chocolate",
+        "pear"
       ],
       "drinkId": "soda",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "pancake",
       "foodIds": [
-        "rice",
+        "banana",
         "pear",
         "prune"
       ],
       "drinkId": "prune-juice",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "low",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "low"
     },
     {
       "characterId": "jet",
@@ -2084,21 +2042,20 @@ export const contentValues = {
       ],
       "drinkId": "coffee",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "bubbly",
       "foodIds": [
         "pear",
-        "prune"
+        "prune",
+        "burger"
       ],
       "drinkId": "soda",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "medium",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "medium"
     },
     {
       "characterId": "ink-black",
@@ -2109,9 +2066,8 @@ export const contentValues = {
       ],
       "drinkId": "prune-juice",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "low",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "low"
     },
     {
       "characterId": "enoki-jet",
@@ -2121,9 +2077,8 @@ export const contentValues = {
       ],
       "drinkId": "milk",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "corn-cannon",
@@ -2133,9 +2088,8 @@ export const contentValues = {
       ],
       "drinkId": "prune-juice",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     },
     {
       "characterId": "glitter-galaxy",
@@ -2144,24 +2098,22 @@ export const contentValues = {
         "prune",
         "burger"
       ],
-      "drinkId": "soda",
+      "drinkId": "prism-soda",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "medium",
-      "requiredAdditive": "glitter"
+      "requiredAdditive": "glitter",
+      "forceZone": "medium"
     },
     {
       "characterId": "ink-fountain",
       "foodIds": [
         "squid-ink-pasta",
-        "pear",
+        "prune",
         "burger"
       ],
       "drinkId": "prune-juice",
       "water": 1250,
-      "digestionTime": "2",
-      "forceZone": "high",
-      "requiredAdditive": null
+      "requiredAdditive": null,
+      "forceZone": "high"
     }
   ],
   "drinks": [
@@ -2229,8 +2181,8 @@ export const contentValues = {
       "name": "鲜牛奶",
       "category": "乳糖反应",
       "color": "#e5e2cb",
-      "description": "乳糖主题的湿软作用更明显；搭配高致软主食和辣酱短时消化，还可能出现更稀的形态。",
-      "effectLabel": "湿软偏置 +0.50；与高致软食物、辣酱的短时组合可叠加",
+      "description": "乳糖主题的湿软作用更明显；搭配高致软主食和辣酱，还可能出现更稀的形态。",
+      "effectLabel": "湿软偏置 +0.50；与食物和功能添加剂的修正共同计算",
       "tags": [
         "milk",
         "lactose"

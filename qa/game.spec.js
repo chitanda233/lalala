@@ -35,10 +35,10 @@ test("desktop: recipe controls, quick result, collection, and saved progress", a
     localStorage.setItem("lalala-dev", JSON.stringify(save));
   });
   await page.reload();
-  await applyIdealRecipe(page, "garden", ["probiotic"]);
+  const { recipe: gardenRecipe, force: gardenForce } = await applyIdealRecipe(page, "garden", ["probiotic"]);
 
-  await expect(page.locator("#water-value")).toContainText("750");
-  await startRound(page);
+  await expect(page.locator("#water-value")).toContainText(gardenRecipe.water.toLocaleString("en-US"));
+  await startRound(page, gardenForce);
   await expect(page.locator("#start-button")).toBeDisabled();
   await expect(page.locator("#water")).toBeDisabled();
   await expect(page.locator("#force-meter")).toHaveClass(/locked/);
@@ -55,7 +55,7 @@ test("desktop: recipe controls, quick result, collection, and saved progress", a
   await page.keyboard.press("Escape");
   await page.reload();
   await expect(page.locator("#meal-summary")).toContainText("菠菜");
-  await expect(page.locator("#water-value")).toContainText("750");
+  await expect(page.locator("#water-value")).toContainText(gardenRecipe.water.toLocaleString("en-US"));
   await expect(page.locator("#collection-count")).toHaveText("01");
   expect(errors).toEqual([]);
 });
@@ -97,6 +97,8 @@ test("quick rounds retain all eight discoveries and the fixed reveal delay", asy
     await page.locator("#play-again").click();
   }
 
+  // Repeat a known discovery while measuring reveal timing; free meals can discover more species.
+  await armSpecimen(page, "gold", 4);
   await startRound(page);
   const seconds = await page.evaluate((key) => {
     const session = JSON.parse(localStorage.getItem(key)).session;

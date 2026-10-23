@@ -106,8 +106,8 @@ export function createCollectionView(getSave) {
   }
   function sourceDetail(characterId) {
     const character = characterById[characterId];
-    const zone = character.generation && forceZones.find(item => item.id === character.generation.forceZone);
-    return `<article class="individual-card" data-source-for="${characterId}"><div><h3>来源条件</h3><p>${sourceRequirementText(character)}</p>${zone ? `<p>普通物态：第${character.homeType}型</p><p>造型偏好：${zone.name}</p><p>力度只影响同身份内造型。</p><p>理想配方用于提高概率；必需来源始终要满足。</p>` : "<p>每轮独立抽稀有，不受普通物态或原料限制。</p>"}</div></article>`;
+    const zone = character.generation && forceZones.find(zone => zone.id === character.generation.forceZone);
+    return `<article class="individual-card" data-source-for="${characterId}"><div><h3>来源条件</h3><p>${sourceRequirementText(character)}</p>${zone ? `<p>普通物态：第${character.homeType}型 · 造型偏好：${zone.name}</p><p>力度在同型同身份内调整造型概率，身份预算不变。</p><p>推荐搭配仅供参考，可自由替换与加料。</p>` : "<p>每轮独立抽稀有，不受普通物态或原料限制。</p>"}</div></article>`;
   }
   function recipeDetail(characterId) {
     const recipe = stoolRecipeByCharacterId[characterId];
@@ -115,20 +115,22 @@ export function createCollectionView(getSave) {
       const baseline = rareBudget(null);
       const theme = rareThemeRecipeById[characterId];
       const boost = theme ? rareBudget(additiveById[theme.additiveId]) : null;
-      const themed = theme ? `<p>${theme.foodIds.map(id => foodById[id].name).join("＋")}</p><p>${drinkById[theme.drinkId].name} ${theme.water} mL</p><p>阶段 ${theme.digestionTime} · ${forceZones.find(zone => zone.id === theme.forceZone).name}</p><p>主题添加剂：${additiveById[theme.additiveId].name}</p><br>` : "";
+      const themeZone = theme && forceZones.find(zone => zone.id === theme.forceZone);
+      const themed = theme ? `<p>${theme.foodIds.map(id => foodById[id].name).join("＋")}</p><p>${drinkById[theme.drinkId].name} ${theme.water} mL</p><p>${themeZone.name} · ${themeZone.min}–${themeZone.max}</p><p>主题添加剂：${additiveById[theme.additiveId].name}</p><br>` : "";
       const baseProbability = baseline.entries.find(entry => entry.characterId === characterId)?.probability || 0;
       const boostedProbability = boost?.entries.find(entry => entry.characterId === characterId)?.probability || 0;
       return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>稀有主题搭配</h3>${themed}<p>无关联组：全体稀有均分基础 ${(baseline.rareProbability * 100).toFixed(0)}%，本款 ${(baseProbability * 100).toFixed(2)}%。</p>${boost ? `<p>使用主题添加剂：本款 ${(boostedProbability * 100).toFixed(2)}%。${boost.targets.length ? `当前目标组共享20%，每款${Number((boost.targetProbability * 100 / boost.targets.length).toFixed(2))}%；组外稀有概率为0。${boost.targets.includes(characterId) ? "" : "本款不在当前目标组。"}` : "当前没有有效关联组，沿用基础稀有概率。"}</p>` : ""}<p>主题搭配不是出现门槛；稀有保留自身固定造型。</p></div></article>`;
     }
-    const zone = forceZones.find((item) => item.id === recipe.forceZone);
+    const zone = forceZones.find(zone => zone.id === recipe.forceZone);
     const additiveText = recipe.requiredAdditive ? `必选${additiveById[recipe.requiredAdditive].name}，不能再加益生菌。` : "益生菌也能稳定自由组合。";
     let probabilityText;
     try {
-      const forecast = getRecipeForecast({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], force: zone.min }, characterId);
-      const stabilized = recipe.requiredAdditive ? null : getRecipeForecast({ ...recipe, additives: ["probiotic"], force: zone.min }, characterId);
-      probabilityText = `本款概率<br>未中稀有后 ${(forecast.targetConditionalProbability * 100).toFixed(0)}% · 整局 ${(forecast.targetProbability * 100).toFixed(1)}%${stabilized ? `<br>益生菌：普通分支 ${(stabilized.targetConditionalProbability * 100).toFixed(0)}% · 整局 ${(stabilized.targetProbability * 100).toFixed(0)}%` : ""}<br>当前主结果：${characterById[forecast.primaryCharacterId].name} · 整局 ${(forecast.primaryProbability * 100).toFixed(1)}%`;
+      const force = { low: 20, medium: 50, high: 90 }[recipe.forceZone];
+      const forecast = getRecipeForecast({ ...recipe, force, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [] }, characterId);
+      const stabilized = recipe.requiredAdditive ? null : getRecipeForecast({ ...recipe, force, additives: ["probiotic"] }, characterId);
+      probabilityText = `本款概率（按力度 ${force} 预览）<br>未中稀有后 ${(forecast.targetConditionalProbability * 100).toFixed(0)}% · 整局 ${(forecast.targetProbability * 100).toFixed(1)}%${stabilized ? `<br>益生菌：普通分支 ${(stabilized.targetConditionalProbability * 100).toFixed(0)}% · 整局 ${(stabilized.targetProbability * 100).toFixed(0)}%` : ""}<br>当前主结果：${characterById[forecast.primaryCharacterId].name} · 整局 ${(forecast.primaryProbability * 100).toFixed(1)}%`;
     } catch (error) { probabilityText = `预览暂不可用：${error.message}`; }
-    return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>固定配方</h3><p>${recipe.foodIds.map((id) => foodById[id].name).join("＋")}</p><p>${drinkById[recipe.drinkId].name} ${recipe.water} mL</p><p>消化阶段 ${recipe.digestionTime}</p><strong>${zone.name} · ${zone.min}–${zone.max}</strong><p>${additiveText}</p><br><p>${probabilityText}</p></div></article>`;
+    return `<article class="individual-card" data-recipe-for="${characterId}"><div><h3>推荐搭配</h3><p>${recipe.foodIds.map((id) => foodById[id].name).join("＋")}</p><p>${drinkById[recipe.drinkId].name} ${recipe.water} mL</p><strong>${zone.name} · ${zone.min}–${zone.max}</strong><p>同类替换、增减水量也有对应结果；来源与物态须满足。</p><p>${additiveText}</p><br><p>${probabilityText}</p></div></article>`;
   }
   function renderDetail() {
     $("#collection-dialog").classList.toggle("detail-open", detailOpen);

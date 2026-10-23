@@ -40,16 +40,19 @@ test("removing a food pigment remains savable while reporting affected source re
   } finally { foodById.spinach.attributes = original; }
 });
 
-test("target forecast reads the selected species' actual probability, including probiotic and random phases", () => {
+test("target forecast reads the selected species' actual probability, including probiotic and ignored legacy digestion values", () => {
   const recipe = stoolRecipeByCharacterId.classic;
   const original = structuredClone(recipe);
   try {
-    Object.assign(recipe, { water: 0, digestionTime: "8" });
+    Object.assign(recipe, { water: 0 });
     const input = { ...recipe, force: 50, additives: [] };
     for (const additives of [[], ["probiotic"]]) {
       const meal = { ...input, additives };
       const forecast = getRecipeForecast(meal, "classic");
-      assert.equal(forecast.primaryCharacterId, "massage-beads");
+      const ordinary = getOutcomePool(meal).filter(entry => !entry.special);
+      const primary = ordinary.reduce((highest, entry) => entry.probability > highest.probability ? entry : highest);
+      assert.equal(forecast.primaryCharacterId, primary.characterId);
+      assert.equal(characterById[primary.characterId].homeType, physicalState(meal).type);
       assert.equal(forecast.targetCharacterId, "classic");
       close(forecast.targetProbability, 0);
       close(forecast.targetConditionalProbability, 0);
@@ -60,6 +63,9 @@ test("target forecast reads the selected species' actual probability, including 
     const forecast = getRecipeForecast(randomMeal, "classic");
     const actual = getOutcomePool(randomMeal).find(e => e.characterId === "classic")?.probability || 0;
     close(forecast.targetProbability, actual);
+    const currentMeal = { ...randomMeal };
+    delete currentMeal.digestionTime;
+    assert.deepEqual(getRecipeForecast(currentMeal, "classic"), forecast);
   } finally { Object.assign(recipe, original); }
 });
 

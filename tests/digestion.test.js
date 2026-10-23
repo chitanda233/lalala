@@ -2,78 +2,68 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getOutcomePool } from "../src/game/outcome-pool.js";
+import { physicalState } from "../src/game/physical-state.js";
+import { collectEffects } from "../src/game/effects.js";
+import { rollOutcome } from "../src/game/drops.js";
 import { createAimingSession, lockSessionForce, restoreSession } from "../src/game/session.js";
 import { normalizeSelection } from "../src/game/selection.js";
+import { stoolRecipes } from "../src/content/stool-recipes.js";
+import { characterById } from "../src/content/catalog.js";
+import { mealSources, sourceAllowed } from "../src/game/source-conditions.js";
 
-const meal = { foodIds: ["rice", "enoki"], force: 50 };
+const meal = { foodIds: ["rice", "enoki"], drinkId: "water", water: 1000, force: 50, additives: [] };
 
-test("digestion changes ordinary physical types and keeps the rare budget fixed", () => {
-  const pools=["2","4","8"].map(digestionTime=>getOutcomePool({...meal,digestionTime}));
-  assert.notDeepEqual(pools[0],pools[2]);
-  for(const pool of pools) assert.ok(Math.abs(pool.filter(e=>e.special).reduce((sum,e)=>sum+e.probability,0)-.02)<1e-12);
-  assert.equal(normalizeSelection({digestionTime:"unknown"}).digestionTime,"4");
-});
-
-test("random preview is the exact equal mixture of all three digestion pools", () => {
-  const expected = new Map();
-  for (const digestionTime of ["2", "4", "8"])
-    for (const entry of getOutcomePool({ ...meal, digestionTime }))
-      expected.set(
-        entry.specimenId,
-        (expected.get(entry.specimenId) || 0) + entry.probability / 3,
-      );
-  const pool = getOutcomePool({ ...meal, digestionTime: "random" });
-  assert.ok(
-    Math.abs(pool.reduce((sum, entry) => sum + entry.probability, 0) - 1) <
-      1e-12,
-  );
-  for (const entry of pool)
-    assert.ok(
-      Math.abs(entry.probability - expected.get(entry.specimenId)) < 1e-12,
-    );
-  assert.ok(
-    pool
-      .filter((entry) => entry.special)
-      .reduce((sum, entry) => sum + entry.probability, 0) <=
-      0.02 + 1e-12,
-  );
-});
-
-test("random digestion is drawn once on start, restored, and never adds a result delay", () => {
-  for (const [draw, choice] of [
-    [0, "2"],
-    [0.5, "4"],
-    [0.999, "8"],
-  ]) {
-    let draws = 0;
-    const session = createAimingSession(
-      { ...meal, digestionTime: "random" },
-      {
-        now: 1000,
-        random: () => {
-          draws++;
-          return draw;
-        },
-      },
-    );
-    assert.equal(draws, 1);
-    assert.equal(session.digestionTime, choice);
-    assert.equal(session.outcome, null);
-    assert.deepEqual(
-      restoreSession(JSON.parse(JSON.stringify(session))),
-      session,
-    );
-    lockSessionForce(session, {
-      now: 1750,
-      random: () => {
-        draws++;
-        return 0.5;
-      },
-    });
-    assert.equal(draws, 3);
-    assert.equal(session.digestionTime, choice);
-    assert.equal(session.endsAt - session.lockedAt, 400);
-    assert.ok(session.outcome.marks.includes("enoki"));
-    assert.deepEqual(restoreSession(session), session);
+test("retired digestion values never enter current selections or affect physical state, residues or probabilities", () => {
+  const selection = normalizeSelection(meal);
+  const state = physicalState(meal), effects = collectEffects(meal), pool = getOutcomePool(meal);
+  for (const digestionTime of ["2", "4", "8", "random", "unknown"]) {
+    const input = { ...meal, digestionTime };
+    assert.deepEqual(normalizeSelection(input), selection);
+    assert.deepEqual(physicalState(input), state);
+    assert.deepEqual(collectEffects(input), effects);
+    assert.deepEqual(getOutcomePool(input), pool);
+    assert.deepEqual(rollOutcome(input, () => 0.5), rollOutcome(meal, () => 0.5));
   }
+  assert.equal(Object.hasOwn(selection, "digestionTime"), false);
+  assert.equal(Object.hasOwn(state, "timeBonus"), false);
+});
+
+test("starting a round draws no hidden digestion phase and locks only the final outcome and surface seed", () => {
+  let draws = 0;
+  const random = () => { draws++; return 0.5; };
+  const session = createAimingSession({ ...meal, digestionTime: "random" }, { now: 1000, random });
+  assert.equal(draws, 0);
+  assert.equal(Object.hasOwn(session, "digestionTime"), false);
+  assert.deepEqual(restoreSession(JSON.parse(JSON.stringify(session))), session);
+  assert.equal(lockSessionForce(session, { now: 1750, random }), true);
+  assert.equal(draws, 2);
+  assert.equal(session.endsAt - session.lockedAt, 400);
+  assert.ok(session.outcome.marks.includes("enoki"));
+  assert.deepEqual(restoreSession(JSON.parse(JSON.stringify(session))), session);
+});
+
+test("all 46 revised recommendation examples satisfy their target physical state and source conditions without digestion requirements", () => {
+  assert.equal(stoolRecipes.length, 46);
+  const examples = new Set();
+  for (const recipe of stoolRecipes) {
+    assert.equal(Object.hasOwn(recipe, "digestionTime"), false, recipe.characterId);
+    assert.ok(["low", "medium", "high"].includes(recipe.forceZone), recipe.characterId);
+    const selection = normalizeSelection({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [] });
+    const character = characterById[recipe.characterId];
+    assert.equal(physicalState(selection).type, character.homeType, recipe.characterId);
+    assert.equal(sourceAllowed(character, mealSources(selection)), true, recipe.characterId);
+    assert.ok(getOutcomePool(selection).some(entry => entry.characterId === character.id && entry.probability > 0), recipe.characterId);
+    const key = JSON.stringify([[...recipe.foodIds].sort(), recipe.drinkId, recipe.water, recipe.requiredAdditive]);
+    assert.equal(examples.has(key), false, recipe.characterId);
+    examples.add(key);
+  }
+});
+
+test("the single drink intake slider spans dry to wet and ignores drink identity at zero intake", () => {
+  const dry = physicalState({ foodIds: ["rice"], water: 0 });
+  const wet = physicalState({ foodIds: ["rice"], water: 1250 });
+  assert.equal(dry.waterBonus, -2);
+  assert.equal(wet.waterBonus, 0.5);
+  assert.ok(dry.type < wet.type);
+  assert.deepEqual(physicalState({ ...meal, water: 0, drinkId: "water" }), physicalState({ ...meal, water: 0, drinkId: "prune-juice" }));
 });

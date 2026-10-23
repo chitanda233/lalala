@@ -85,9 +85,8 @@ export function validateManagedContent(value) {
     requireValue(["low", "medium", "high"].includes(item.forceZone), "请选择有效力度区间。");
     const intake = gameConfig.water;
     requireValue(Number.isInteger(item.water) && item.water >= intake.min && item.water <= intake.max && item.water % intake.step === 0, `饮用量请选择 ${intake.min}–${intake.max} mL，每段 ${intake.step} mL。`);
-    requireValue(["2", "4", "8"].includes(item.digestionTime), "固定配方需指定 2 / 4 / 8 阶段。");
     requireValue(!item.requiredAdditive || additiveIds.has(item.requiredAdditive), "必选添加剂无效。");
-    return { characterId: original.characterId, foodIds: [...item.foodIds], drinkId: item.drinkId, water: item.water, digestionTime: item.digestionTime, forceZone: item.forceZone, requiredAdditive: item.requiredAdditive || null };
+    return { characterId: original.characterId, foodIds: [...item.foodIds], drinkId: item.drinkId, water: item.water, forceZone: item.forceZone, requiredAdditive: item.requiredAdditive || null };
   });
   result.drinks = entries(value.drinks, "drinks", "id", (item, original) => {
     requireValue(["drop", "coffee"].includes(item.icon), "饮料图标无效。");
@@ -142,11 +141,11 @@ export function managedContentWarnings(value) {
     const character = value.stools.find(item => item.id === recipe.characterId);
     const selection = { ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [] };
     if (!sourceAllowed(character, mealSources(selection, catalog)))
-      warnings.push(`${character.name}的理想配方不满足其食材、主色素或添加剂来源，指定目标概率为0。`);
+      warnings.push(`${character.name}的推荐搭配不满足其食材、主色素或添加剂来源，指定目标概率为0。`);
     const state = physicalState(selection, catalog);
     if (state.type !== character.homeType)
-      warnings.push(`${character.name}的理想配方算出第${state.type}型，与固定第${character.homeType}型不符，指定目标概率为0。`);
-    const key = JSON.stringify([[...recipe.foodIds].sort(), recipe.drinkId, recipe.water, recipe.digestionTime, recipe.forceZone, recipe.requiredAdditive]);
+      warnings.push(`${character.name}的推荐搭配算出第${state.type}型，与固定第${character.homeType}型不符，指定目标概率为0。`);
+    const key = JSON.stringify([[...recipe.foodIds].sort(), recipe.drinkId, recipe.water, recipe.forceZone, recipe.requiredAdditive]);
     if (anchors.has(key)) warnings.push(`${character.name}与${anchors.get(key)}共用同一配方，概率由实际合法候选分配。`);
     anchors.set(key, character.name);
   }

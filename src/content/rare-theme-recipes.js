@@ -8,9 +8,8 @@ export const rareThemeRecipes = [
     ],
     "drinkId": "water",
     "water": 250,
-    "digestionTime": "8",
-    "forceZone": "high",
-    "additiveId": "stardust"
+    "additiveId": "stardust",
+    "forceZone": "high"
   },
   {
     "characterId": "frost-crystal",
@@ -19,10 +18,9 @@ export const rareThemeRecipes = [
       "yogurt"
     ],
     "drinkId": "milk",
-    "water": 750,
-    "digestionTime": "8",
-    "forceZone": "high",
-    "additiveId": "frost-salt"
+    "water": 250,
+    "additiveId": "frost-salt",
+    "forceZone": "high"
   },
   {
     "characterId": "crystal",
@@ -32,9 +30,8 @@ export const rareThemeRecipes = [
     ],
     "drinkId": "mineral-tonic",
     "water": 750,
-    "digestionTime": "4",
-    "forceZone": "medium",
-    "additiveId": "crystal-seed"
+    "additiveId": "crystal-seed",
+    "forceZone": "medium"
   },
   {
     "characterId": "amber-fossil",
@@ -44,9 +41,8 @@ export const rareThemeRecipes = [
     ],
     "drinkId": "bubble-tea",
     "water": 750,
-    "digestionTime": "4",
-    "forceZone": "medium",
-    "additiveId": "amber-resin"
+    "additiveId": "amber-resin",
+    "forceZone": "medium"
   },
   {
     "characterId": "gold",
@@ -55,10 +51,9 @@ export const rareThemeRecipes = [
       "pumpkin"
     ],
     "drinkId": "water",
-    "water": 1250,
-    "digestionTime": "4",
-    "forceZone": "medium",
-    "additiveId": "gold-leaf"
+    "water": 1000,
+    "additiveId": "gold-leaf",
+    "forceZone": "medium"
   },
   {
     "characterId": "rainbow",
@@ -67,10 +62,9 @@ export const rareThemeRecipes = [
       "dragon-fruit"
     ],
     "drinkId": "prism-soda",
-    "water": 1250,
-    "digestionTime": "4",
-    "forceZone": "medium",
-    "additiveId": "rainbow-sugar"
+    "water": 1000,
+    "additiveId": "rainbow-sugar",
+    "forceZone": "medium"
   },
   {
     "characterId": "jelly",
@@ -80,22 +74,20 @@ export const rareThemeRecipes = [
     ],
     "drinkId": "grass-jelly",
     "water": 1250,
-    "digestionTime": "2",
-    "forceZone": "low",
-    "additiveId": "gelatin"
+    "additiveId": "gelatin",
+    "forceZone": "low"
   },
   {
     "characterId": "luminous",
     "foodIds": [
       "oatmeal",
-      "yogurt",
+      "pear",
       "banana"
     ],
     "drinkId": "glow-soda",
     "water": 1250,
-    "digestionTime": "2",
-    "forceZone": "low",
-    "additiveId": "stardust"
+    "additiveId": "stardust",
+    "forceZone": "low"
   },
   {
     "characterId": "golden-juice",
@@ -105,9 +97,8 @@ export const rareThemeRecipes = [
     ],
     "drinkId": "prune-juice",
     "water": 1250,
-    "digestionTime": "2",
-    "forceZone": "low",
-    "additiveId": "gold-leaf"
+    "additiveId": "gold-leaf",
+    "forceZone": "low"
   },
   {
     "characterId": "rainbow-falls",
@@ -118,9 +109,8 @@ export const rareThemeRecipes = [
     ],
     "drinkId": "prism-soda",
     "water": 1250,
-    "digestionTime": "2",
-    "forceZone": "high",
-    "additiveId": "rainbow-sugar"
+    "additiveId": "rainbow-sugar",
+    "forceZone": "high"
   }
 ];
 export const rareThemeRecipeById = Object.fromEntries(rareThemeRecipes.map(recipe => [recipe.characterId, recipe]));

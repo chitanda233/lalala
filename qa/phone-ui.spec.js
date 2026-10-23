@@ -37,10 +37,9 @@ for (const [width, height] of [
     const toilet = await page.locator("#bathroom-scene").boundingBox();
     const start = await page.locator("#start-button").boundingBox();
     const food = await page.locator("#choose-foods").boundingBox();
-    const time = await page.locator("#choose-digestion").boundingBox();
+    await expect(page.locator("#choose-digestion, #digestion-dialog")).toHaveCount(0);
     expect(start.y).toBeGreaterThan(toilet.y + toilet.height);
     expect(food.x + food.width).toBeLessThan(toilet.x + toilet.width / 2);
-    expect(time.x).toBeGreaterThan(toilet.x + toilet.width / 2);
     expect(start.y + start.height).toBeLessThan(height);
     await page.locator(".bathroom-illustration").click();
     await expect(page.locator("#equipment-dialog")).toBeVisible();
@@ -75,7 +74,7 @@ for (const [width, height] of [
     await noScroll(page);
   });
 
-test("food, drinks, additives, digestion, equipment and catalog use complete paged phone surfaces", async ({
+test("food, drinks, additives, equipment and catalog use complete paged phone surfaces", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 402, height: 760 });
@@ -99,11 +98,7 @@ test("food, drinks, additives, digestion, equipment and catalog use complete pag
   await page.locator("#choose-additives").click();
   await noScroll(page, "#supply-dialog");
   await page.keyboard.press("Escape");
-  await page.locator("#choose-digestion").click();
-  await page.locator('[data-digestion="8"]').click();
-  await noScroll(page, "#digestion-dialog");
-  await page.locator('[data-close="digestion-dialog"]').first().click();
-  await expect(page.locator("#digestion-summary")).toContainText("8");
+  await expect(page.locator("#choose-digestion, #digestion-dialog")).toHaveCount(0);
   await page.locator("#choose-toilet").click();
   await noScroll(page, "#equipment-dialog");
   await page.keyboard.press("Escape");
@@ -222,7 +217,6 @@ test("larger type and cards remain readable on a compact phone", async ({
     ["#choose-foods", "#food-dialog", ".food-card:visible"],
     ["#choose-drinks", "#supply-dialog", "#drink-options .supply-card:visible"],
     ["#choose-additives", "#supply-dialog", "#additive-options .supply-card:visible"],
-    ["#choose-digestion", "#digestion-dialog"],
     ["#choose-toilet", "#equipment-dialog"],
     ["#collection-button", "#collection-dialog", ".stool-card:visible"],
     ["#help-button", "#help-dialog"],

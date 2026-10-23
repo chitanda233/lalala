@@ -8,7 +8,6 @@ import {
 import { stoolColors } from "../content/colors.js";
 import { normalizeMarks, outcomeMarks } from "../content/marks.js";
 import { forceZone } from "../content/force.js";
-import { digestionById } from "../content/digestion.js";
 import { bristolTypes } from "../content/stools.js";
 import { diagnoseOutcome } from "../game/explanation.js";
 import { specimenName } from "../game/specimen.js";
@@ -101,7 +100,7 @@ export function createSessionView() {
       : "本次标本";
     $("#result-description").textContent = diagnosis.summary;
     $("#result-additives").textContent =
-      `${session.additives.length ? session.additives.map((id) => additiveById[id].name).join("、") : "原味无添加"} · 消化 ${digestionById[session.digestionTime].label} · 力度 ${session.force}/100 · ${forceZone(session.force).name}`;
+      `${session.additives.length ? session.additives.map((id) => additiveById[id].name).join("、") : "原味无添加"} · 力度 ${session.force}/100 · ${forceZone(session.force).name}`;
     $("#result-explanation").hidden = false;
     $("#result-explanation").open = false;
     $("#result-reasons").replaceChildren(

@@ -23,7 +23,7 @@ test('five intervals expose six stops, clamp current input and retain zero', () 
 });
 
 test('zero intake has no drink moisture, pigment, tags, bubbles, score or species effects', () => {
-  const input={foodIds:['rice'],water:0,digestionTime:'4',force:50,additives:[]};
+  const input={foodIds:['rice'],water:0,force:50,additives:[]};
   const reference={...input,drinkId:'water'};
   const expectedPool=getOutcomePool(reference), expectedEffects=collectEffects(reference);
   for (const drink of drinks) {

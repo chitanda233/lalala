@@ -1,13 +1,12 @@
 import { gameConfig } from "../config/game.js";
 import { characters } from "../content/specimens.js";
-import { drinkById, additiveById, characterById } from "../content/catalog.js";
+import { foodById, drinkById, additiveById, characterById } from "../content/catalog.js";
 import { stoolRecipeByCharacterId } from "../content/stool-recipes.js";
 import { specimenBlueprintById } from "../content/specimen-blueprints.js";
-import { fixedDigestionTimes } from "../content/digestion.js";
-import { forceZone, forceZones } from "../content/force.js";
+import { forceZones } from "../content/force.js";
 import { normalizeSelection } from "./selection.js";
 import { foodProfile } from "./food-profile.js";
-import { physicalState, timeWetness } from "./physical-state.js";
+import { physicalState } from "./physical-state.js";
 import { mealSources, sourceAllowed } from "./source-conditions.js";
 import { functionalChanges } from "../content/additive-effects.js";
 import { rareBudget } from "./rare-probabilities.js";
@@ -15,16 +14,11 @@ import { rareBudget } from "./rare-probabilities.js";
 const ordinary = characters.filter(item => item.rarity !== "special");
 const rare = characters.filter(item => item.rarity === "special");
 const clamp = value => Math.max(1, Math.min(7, value));
-const sameFoods = (a, b) => a.length === b.length && a.every(id => b.includes(id));
+const shapeKeys = ["hardness", "cohesion", "elongation", "grain", "porosity"];
 export class OutcomeConfigurationError extends Error {}
-const shapeKeys = ["cohesion", "elongation", "grain", "porosity"];
 
 export function recipeProperties(input) {
   const selection = normalizeSelection(input);
-  if (selection.digestionTime === "random") {
-    const phases = fixedDigestionTimes.map(digestionTime => recipeProperties({ ...selection, digestionTime }));
-    return Object.fromEntries(Object.keys(phases[0]).map(key => [key, phases.reduce((sum, value) => sum + value[key], 0) / phases.length]));
-  }
   const food = foodProfile(selection.foodIds).shape;
   const state = physicalState(selection);
   const drink = drinkById[selection.drinkId];
@@ -38,162 +32,114 @@ export function recipeProperties(input) {
   };
 }
 
-// Source/colour identity never reads force. Trait similarity supplements actual food overlap.
-function identityDistance(recipe, selection, food) {
-  const shared = recipe.foodIds.filter(id => selection.foodIds.includes(id)).length;
-  const union = new Set([...recipe.foodIds, ...selection.foodIds]).size;
-  const ideal = foodProfile(recipe.foodIds).shape;
-  const traitDifference = ["softness", ...shapeKeys].reduce((sum, key) => sum + Math.abs(food[key] - ideal[key]), 0) / 30;
-  const drink = drinkById[selection.drinkId], idealDrink = drinkById[recipe.drinkId];
-  const drinkDifference = selection.water === 0 || recipe.drinkId === selection.drinkId ? 0 :
-    .15 + Math.abs(drink.wetnessBias - idealDrink.wetnessBias) * .2 + Math.abs(drink.porosity - idealDrink.porosity) * .05;
-  return (1 - shared / union) * 1.6 + traitDifference * .8 + drinkDifference +
-    Math.abs(recipe.water - selection.water) / 1500 * .9 +
-    Math.abs(timeWetness[recipe.digestionTime] - timeWetness[selection.digestionTime]) / 1.6 * .35;
+// Recommendations describe broad food families, never an exact ingredient key.
+// Replacing an ingredient with another of the same category/tags preserves its fit.
+function foodFamilies(ids) {
+  const categories = new Map(), tags = new Map();
+  const foods = [...ids].sort().map(id => foodById[id]);
+  const weights = foods.map(food => food.attributes.influence * (food.category === "staple" ? 2 : 1));
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  foods.forEach((food, index) => {
+    const share = weights[index] / total;
+    categories.set(food.category, (categories.get(food.category) || 0) + share);
+    for (const tag of food.tags)
+      tags.set(tag, (tags.get(tag) || 0) + share / food.tags.length);
+  });
+  return { categories, tags };
+}
+const overlap = (a, b) => [...a].reduce((sum, [key, share]) => sum + Math.min(share, b.get(key) || 0), 0);
+const familyFit = (current, example) => .6 * overlap(current.categories, example.categories) +
+  .4 * (current.tags.size || example.tags.size ? overlap(current.tags, example.tags) : 1);
+
+// A quarter of each group is shared evenly: unusual meals still get variety.
+// There is no zero-distance anchor, exact-match bonus, or failure branch.
+function shares(items, weight) {
+  const weights = items.map(weight), total = weights.reduce((sum, value) => sum + value, 0);
+  return items.map((item, index) => ({ item, probability:
+    gameConfig.ordinaryVarietyShare / items.length + (1 - gameConfig.ordinaryVarietyShare) * weights[index] / total,
+  }));
+}
+function hasSource(character) {
+  const source = character.generation.sources;
+  return source.foods.length || source.tags.length || source.additives.length || source.pigment;
 }
 
-const forceDistance = (force, zoneId) => {
+function forceFit(force, zoneId) {
   const zone = forceZones.find(zone => zone.id === zoneId);
-  return Math.max(zone.min - force, 0, force - zone.max) / 33;
-};
-
-// Inverse-square interpolation is continuous at recipe anchors as well as between them.
-// Each anchor reserves 80% for itself and distributes the rest only to other legal entries.
-function interpolate(items, template) {
-  const nearest = Math.min(...items.map(item => item.distance));
-  const weights = items.map(item => nearest < 1e-12 ? Number(item.distance < 1e-12) : (nearest / item.distance) ** 2);
-  const total = weights.reduce((sum, weight) => sum + weight, 0);
-  const result = new Map();
-  items.forEach((item, index) => {
-    if (!weights[index]) return;
-    for (const [id, probability] of template(item)) result.set(id, (result.get(id) || 0) + probability * weights[index] / total);
-  });
-  return result;
+  const distance = Math.max(zone.min - force, 0, force - zone.max) / 33;
+  return Math.exp(-1.5 * distance);
 }
 
 function ordinaryDistribution(selection, state, properties) {
-  const sources = mealSources(selection), food = foodProfile(selection.foodIds).shape;
+  const sources = mealSources(selection), family = foodFamilies(selection.foodIds);
   const legal = ordinary.filter(character => character.homeType === state.type && sourceAllowed(character, sources));
   if (!legal.length) throw new OutcomeConfigurationError(`第${state.type}型没有满足来源条件的普通形态，请检查后台配置。`);
   const groups = new Map();
   for (const character of legal) {
     const recipe = stoolRecipeByCharacterId[character.id];
-    const item = { character, recipe, distance: identityDistance(recipe, selection, food) };
-    const identity = character.generation.identity;
-    if (!groups.has(identity)) groups.set(identity, { id: identity, members: [], distance: Infinity });
-    const group = groups.get(identity);
-    group.members.push(item); group.distance = Math.min(group.distance, item.distance);
+    const similarity = familyFit(family, foodFamilies(recipe.foodIds));
+    const structureDistance = shapeKeys.reduce((sum, key) => sum + Math.abs(properties[key] - character.properties[key]), 0) / shapeKeys.length;
+    const weight = Math.exp(2 * similarity - structureDistance / 1.5);
+    const themed = Boolean(hasSource(character));
+    const key = `${themed ? "theme" : "base"}:${character.generation.identity}`;
+    if (!groups.has(key)) groups.set(key, { themed, members: [], weight: 0 });
+    const group = groups.get(key);
+    group.members.push({ character, weight: weight * forceFit(selection.force, character.generation.forceZone), similarity });
+    // Force affects shapes within an identity, never that identity's total budget.
+    // Adding another shape must not inflate the identity's budget either.
+    group.weight = Math.max(group.weight, weight);
   }
-  const identities = [...groups.values()];
-  const identityProbabilities = interpolate(identities, group => {
-    if (identities.length === 1) return [[group.id, 1]];
-    // Multi-shape identities keep their 20% variation inside that identity.
-    const primary = group.members.length > 1 ? 1 : gameConfig.recipeHitProbability;
-    const other = identities.filter(item => item !== group);
-    const total = other.reduce((sum, item) => sum + 1 / (1 + item.distance) ** 2, 0);
-    return [[group.id, primary], ...other.map(item => [item.id, (1 - primary) / (1 + item.distance) ** 2 / total])];
-  });
+  const all = [...groups.values()], themes = all.filter(group => group.themed), bases = all.filter(group => !group.themed);
+  const themeBudget = themes.length ? (bases.length ? gameConfig.ordinaryThemeShare : 1) : 0;
   const result = [];
-  for (const group of identities) {
-    const identityProbability = identityProbabilities.get(group.id) || 0;
-    if (!identityProbability) continue;
-    const nearestForce = Math.min(...group.members.map(item => forceDistance(selection.force, item.recipe.forceZone)));
-    const members = group.members.map(item => {
-      const ideal = recipeProperties({ ...item.recipe, additives: item.recipe.requiredAdditive ? [item.recipe.requiredAdditive] : [] });
-      const deviation = values => shapeKeys.reduce((sum, key) => sum + Math.abs(values[key] - item.character.properties[key]), 0) / shapeKeys.length;
-      // Trait fit adjusts shape proximity even when an identity has only two shapes.
-      // The ideal's own deviation is the reference, so every ideal anchor stays at zero.
-      const shapeScale = (6 + deviation(properties)) / (6 + deviation(ideal));
-      return { ...item,
-        distance: item.distance * shapeScale + forceDistance(selection.force, item.recipe.forceZone) - nearestForce,
-        fit: Math.exp(-deviation(properties) / 3 - forceDistance(selection.force, item.character.generation.forceZone)),
-      };
-    });
-    const shapes = interpolate(members, item => {
-      if (members.length === 1) return [[item.character.id, 1]];
-      const others = members.filter(other => other !== item);
-      const total = others.reduce((sum, other) => sum + other.fit, 0);
-      return [[item.character.id, gameConfig.recipeHitProbability], ...others.map(other => [other.character.id, (1 - gameConfig.recipeHitProbability) * other.fit / total])];
-    });
-    for (const item of members) {
-      const probability = identityProbability * (shapes.get(item.character.id) || 0);
-      if (probability > 0) result.push({ character: item.character, probability, distance: item.distance });
+  for (const [bucket, budget] of [[themes, themeBudget], [bases, 1 - themeBudget]]) {
+    if (!bucket.length) continue;
+    for (const { item: group, probability: groupShare } of shares(bucket, group => group.weight)) {
+      for (const { item, probability } of shares(group.members, item => item.weight))
+        result.push({ ...item, probability: budget * groupShare * probability });
     }
   }
-  return result.sort((a,b) => b.probability-a.probability || a.character.id.localeCompare(b.character.id));
+  return result.sort((a, b) => b.probability - a.probability || a.character.id.localeCompare(b.character.id));
 }
 
-function rareProbabilities(selection) {
-  return rareBudget(additiveById[selection.additives[0]]).entries.map(entry => ({
-    character: rare.find(character => character.id === entry.characterId), probability: entry.probability,
-  }));
-}
-
-function fixedEvaluation(selection) {
-  const state = physicalState(selection), properties = recipeProperties(selection);
+function evaluate(input) {
+  const selection = normalizeSelection(input), state = physicalState(selection), properties = recipeProperties(selection);
   const distribution = ordinaryDistribution(selection, state, properties);
   const primary = distribution[0];
-  const stabilized = selection.additives.includes("probiotic");
-  const ordinaryEntries = stabilized ? [{ ...primary, probability: 1 }] : distribution;
-  const recipe = stoolRecipeByCharacterId[primary.character.id];
-  const matchedRecipe = sameFoods(recipe.foodIds, selection.foodIds) && recipe.drinkId === selection.drinkId &&
-    recipe.water === selection.water && recipe.digestionTime === selection.digestionTime && recipe.forceZone === forceZone(selection.force).id &&
-    (!recipe.requiredAdditive || selection.additives.includes(recipe.requiredAdditive)) ? recipe : null;
-  const rares = rareProbabilities(selection), rareProbability = rares.reduce((sum, item) => sum + item.probability, 0);
-  const conditional = ordinaryEntries[0].probability;
-  return { selection, ordinaryEntries, rares, forecast: {
-    matchedRecipe, suggestedRecipe: recipe, primaryCharacterId: primary.character.id,
+  const entries = selection.additives.includes("probiotic") ? [{ ...primary, probability: 1 }] : distribution;
+  const rares = rareBudget(additiveById[selection.additives[0]]).entries;
+  const rareProbability = rares.reduce((sum, entry) => sum + entry.probability, 0);
+  const candidate = (character, probability) => {
+    const specimenId = `${character.id}:${character.homeType}`;
+    return { characterId: character.id, specimenId,
+      morphology: { ...specimenBlueprintById[specimenId].morphology },
+      special: character.rarity === "special", probability, weight: probability };
+  };
+  const pool = [
+    ...rares.map(entry => candidate(rare.find(character => character.id === entry.characterId), entry.probability)),
+    ...entries.map(entry => candidate(entry.character, entry.probability * (1 - rareProbability))),
+  ].filter(entry => entry.probability > 0);
+  const conditional = entries[0].probability;
+  return { pool, forecast: {
+    suggestedRecipe: stoolRecipeByCharacterId[primary.character.id], primaryCharacterId: primary.character.id,
     primaryConditionalProbability: conditional, primaryProbability: (1 - rareProbability) * conditional,
     recipeConditionalProbability: conditional, recipeProbability: (1 - rareProbability) * conditional,
-    targetProbability: (1 - rareProbability) * conditional, rareProbability,
-    similarity: Math.exp(-primary.distance), properties, physicalState: state,
+    rareProbability, similarity: primary.similarity, properties, physicalState: state,
+    ordinaryCandidateCount: distribution.length,
   } };
 }
 
-function candidate(character, probability) {
-  const specimenId = `${character.id}:${character.homeType}`;
-  return { characterId: character.id, specimenId,
-    morphology: { ...specimenBlueprintById[specimenId].morphology },
-    special: character.rarity === "special", probability, weight: probability };
-}
-const poolFor = evaluation => [
-  ...evaluation.rares.map(item => candidate(item.character, item.probability)),
-  ...evaluation.ordinaryEntries.map(item => candidate(item.character, item.probability * (1 - evaluation.forecast.rareProbability))),
-].filter(item => item.probability > 0);
-const evaluations = selection => (selection.digestionTime === "random" ? fixedDigestionTimes.map(digestionTime => ({ ...selection, digestionTime })) : [selection]).map(fixedEvaluation);
-function mergePools(parts) {
-  const merged = new Map();
-  for (const part of parts) for (const entry of poolFor(part)) {
-    const existing = merged.get(entry.specimenId);
-    if (existing) existing.probability += entry.probability / parts.length;
-    else merged.set(entry.specimenId, { ...entry, probability: entry.probability / parts.length });
-  }
-  return [...merged.values()].map(entry => ({ ...entry, weight: entry.probability }));
-}
-
-// Preview, conditional inspection and gameplay all consume this single final distribution.
+// Gameplay, the catalogue and the editor inspect the exact same final pool.
 export function getOutcomePool(input) {
-  return mergePools(evaluations(normalizeSelection(input)));
+  return evaluate(input).pool;
 }
 
 export function getRecipeForecast(input, targetCharacterId = null) {
-  const selection = normalizeSelection(input), parts = evaluations(selection);
-  const withTarget = (forecast, pool) => {
-    const targetId = targetCharacterId || forecast.primaryCharacterId;
-    const targetProbability = pool.filter(entry => entry.characterId === targetId).reduce((sum, entry) => sum + entry.probability, 0);
-    return { ...forecast, targetCharacterId: targetId, targetProbability,
-      targetConditionalProbability: characterById[targetId]?.rarity === "special" ? 0 : targetProbability / (1 - forecast.rareProbability) };
-  };
-  const phaseForecasts = parts.map(part => ({ digestionTime: part.selection.digestionTime, ...withTarget(part.forecast, poolFor(part)) }));
-  if (parts.length === 1) return { ...phaseForecasts[0], phaseForecasts };
-  const pool = mergePools(parts);
-  const primary = pool.filter(item => !item.special).sort((a,b) => b.probability-a.probability || a.characterId.localeCompare(b.characterId))[0];
-  const rareProbability = parts[0].forecast.rareProbability;
-  const conditional = primary.probability / (1 - rareProbability);
-  return { ...withTarget({ matchedRecipe: null, suggestedRecipe: stoolRecipeByCharacterId[primary.characterId], primaryCharacterId: primary.characterId,
-    primaryConditionalProbability: conditional, primaryProbability: primary.probability,
-    recipeConditionalProbability: conditional, recipeProbability: primary.probability, targetProbability: primary.probability,
-    rareProbability, similarity: null, properties: recipeProperties(selection), physicalState: null }, pool), phaseForecasts };
+  const { pool, forecast } = evaluate(input);
+  const targetId = targetCharacterId || forecast.primaryCharacterId;
+  const targetProbability = pool.filter(entry => entry.characterId === targetId).reduce((sum, entry) => sum + entry.probability, 0);
+  return { ...forecast, targetCharacterId: targetId, targetProbability,
+    targetConditionalProbability: characterById[targetId]?.rarity === "special" ? 0 : targetProbability / (1 - forecast.rareProbability) };
 }
 
 export function conditionalDropPool(input, type) {

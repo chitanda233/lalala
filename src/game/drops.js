@@ -8,7 +8,6 @@ import { foodAppearance } from "./food-appearance.js";
 import { classifySpecimen } from "./specimen.js";
 import { explainOutcome } from "./explanation.js";
 import { smoothness } from "./smoothness.js";
-import { fixedDigestionTimes } from "../content/digestion.js";
 
 export { getOutcomePool } from "./outcome-pool.js";
 
@@ -32,8 +31,6 @@ function drawValue(random) {
 
 export function rollOutcome(input, random = Math.random) {
   const selection = normalizeSelection(input);
-  if (selection.digestionTime === "random")
-    selection.digestionTime = fixedDigestionTimes[Math.floor(drawValue(random) * fixedDigestionTimes.length)];
   const effects = collectEffects(selection);
   const pool = getOutcomePool(selection);
   let remaining = drawValue(random);

@@ -50,7 +50,7 @@ export const foodAttributeFields = [
     label: "蓬松度",
     low: "紧实",
     high: "蓬松多孔",
-    description: "控制气孔纹理，并影响自由组合对蓬松形态的接近程度；不改变固定配方概率。",
+    description: "控制气孔纹理，并影响普通产出对蓬松形态的倾向。",
     advanced: true,
   },
   {
@@ -58,7 +58,7 @@ export const foodAttributeFields = [
     label: "顺滑度",
     low: "阻滞",
     high: "顺滑",
-    description: "影响顺畅评分；不改变固定配方命中率。",
+    description: "影响顺畅评分，不参与产出概率。",
     advanced: true,
   },
   {

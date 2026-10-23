@@ -35,7 +35,9 @@ test("every configured additive uses its own exclusive 20% group, never just gol
     for(const entry of rares)close(entry.probability,.2/additive.rareTargets.length);
     close(sum(rares),.2);close(sum(pool.filter(e=>!e.special)),.8);close(sum(pool),1);
     const forecast=getRecipeForecast({...input,additives:[additive.id]});
-    close(forecast.rareProbability,.2);close(forecast.primaryProbability,.64);
+    close(forecast.rareProbability,.2);
+    close(forecast.primaryProbability,pool.find(entry=>entry.characterId===forecast.primaryCharacterId).probability);
+    close(forecast.primaryProbability,forecast.primaryConditionalProbability*.8);
     assert.ok(pool.some(e=>!e.special));
   }
 });

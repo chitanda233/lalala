@@ -11,7 +11,10 @@ for(const [width,height] of [[320,640],[402,760]])test(`shared rare groups and v
     return {pool:getOutcomePool(input),forecast:getRecipeForecast(input)};
   });
   expect(forecast.pool.filter(e=>e.special).map(e=>[e.characterId,e.probability])).toEqual([['crystal',.2]]);
-  expect(forecast.forecast.primaryProbability).toBeCloseTo(.64,12);
+  const ordinary = forecast.pool.filter(entry => !entry.special);
+  expect(ordinary.reduce((sum, entry) => sum + entry.probability, 0)).toBeCloseTo(.8,12);
+  expect(ordinary.length).toBeGreaterThan(1);
+  expect(forecast.forecast.primaryProbability).toBeCloseTo(Math.max(...ordinary.map(entry => entry.probability)),12);
   await expect(page.locator('.action-area')).not.toContainText(/概率|主结果|[%％]/);
   await armSpecimen(page,'classic',4);await startRound(page,50);
   await expect(page.locator('#result-name')).toHaveText('顺畅小能手');

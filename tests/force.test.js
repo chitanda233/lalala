@@ -11,7 +11,9 @@ import {
 import { normalizeSave } from "../src/storage/model.js";
 import { createSaveStore } from "../src/storage/save.js";
 import { stoolRecipeByCharacterId } from "../src/content/stool-recipes.js";
-import { getRecipeForecast } from "../src/game/outcome-pool.js";
+import { getOutcomePool } from "../src/game/outcome-pool.js";
+import { characterById } from "../src/content/catalog.js";
+import { physicalState } from "../src/game/physical-state.js";
 
 const meal = { foodIds: ["rice", "enoki"] };
 
@@ -103,13 +105,29 @@ test("refresh and many complete swings do not change the measured force", () => 
   assert.equal(session.endsAt - session.lockedAt, 400);
 });
 
-test("force-zone endpoints match each current complete ideal recipe", () => {
-  for (const [id, endpoints] of [["spiral", [0, 33]], ["classic", [34, 66]], ["jet", [67, 100]]]) {
-    const recipe = stoolRecipeByCharacterId[id];
-    for (const force of endpoints) {
-      const forecast = getRecipeForecast({ ...recipe, force, additives: [] });
-      assert.equal(forecast.matchedRecipe?.characterId, id);
-      assert.equal(forecast.physicalState.type, id === "jet" ? 7 : 4);
+test("force changes same-identity shapes while preserving identity budgets, rare odds and physical class", () => {
+  const input = { ...stoolRecipeByCharacterId.spiral, additives: [] };
+  const low = getOutcomePool({ ...input, force: 20 }), high = getOutcomePool({ ...input, force: 90 });
+  const probability = (pool, id) => pool.find(entry => entry.characterId === id)?.probability || 0;
+  assert.ok(probability(low, "spiral") > probability(high, "spiral"));
+  assert.ok(probability(high, "squat-spring") > probability(low, "squat-spring"));
+  const budgets = pool => {
+    const result = new Map();
+    for (const entry of pool) {
+      const character = characterById[entry.characterId];
+      const key = entry.special ? `rare:${character.id}` : character.generation.identity;
+      result.set(key, (result.get(key) || 0) + entry.probability);
+    }
+    return result;
+  };
+  for (const meal of [input, { foodIds: ["rice", "enoki"], drinkId: "water", water: 1000, additives: [] }]) {
+    const expected = budgets(getOutcomePool({ ...meal, force: 20 }));
+    for (const force of [0, 33, 34, 66, 67, 100]) {
+      const pool = getOutcomePool({ ...meal, force }), actual = budgets(pool);
+      assert.equal(physicalState({ ...meal, force }).type, physicalState(meal).type);
+      assert.deepEqual([...actual.keys()].sort(), [...expected.keys()].sort());
+      for (const [identity, budget] of expected)
+        assert.ok(Math.abs(actual.get(identity) - budget) < 1e-12, `${identity}: force ${force}`);
     }
   }
 });

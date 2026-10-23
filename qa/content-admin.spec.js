@@ -92,11 +92,12 @@ test("disk conflicts preserve drafts and reset affects only the selected record"
   await mockApis(page, { conflict: true });
   await page.goto("/admin/#recipes");
   await expect(page.locator("#save-status")).toHaveText("所有调整已保存到项目");
-  await page.locator("#field-water").selectOption("0");
+  const originalWater = await page.locator("#field-water").inputValue();
+  await page.locator("#field-water").selectOption(originalWater === "0" ? "250" : "0");
   await page.locator("#save-foods").click();
   await expect(page.locator("#save-status")).toContainText("草稿已保留");
   await page.locator("#reset-record").click();
-  await expect(page.locator("#field-water")).toHaveValue("250");
+  await expect(page.locator("#field-water")).toHaveValue(originalWater);
   await open(page, "stools");
   await page.locator("#field-name").fill("保留的草稿");
   await open(page, "drinks");

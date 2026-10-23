@@ -11,20 +11,12 @@ import { specimenBlueprint } from "./specimen.js";
 import { normalizeSelection } from "./selection.js";
 import { rollOutcome } from "./drops.js";
 import { oscillatingForce } from "../content/force.js";
-import { fixedDigestionTimes } from "../content/digestion.js";
 
 export function createAimingSession(
   input,
-  { now = Date.now(), random = Math.random } = {},
+  { now = Date.now() } = {},
 ) {
   const selection = normalizeSelection(input);
-  if (selection.digestionTime === "random") {
-    const draw = random();
-    if (!Number.isFinite(draw) || draw < 0 || draw >= 1)
-      throw new RangeError("Invalid digestion draw");
-    selection.digestionTime =
-      fixedDigestionTimes[Math.floor(draw * fixedDigestionTimes.length)];
-  }
   const id = globalThis.crypto.randomUUID();
   return {
     ...selection,
@@ -93,7 +85,6 @@ export function restoreSession(value) {
     new Set(ids).size !== ids.length ||
     !ids.every((id) => Object.hasOwn(foodById, id)) ||
     !Number.isFinite(value.startedAt) ||
-    !fixedDigestionTimes.includes(value.digestionTime) ||
     !Number.isFinite(value.water) ||
     !Array.isArray(value.additives)
   )

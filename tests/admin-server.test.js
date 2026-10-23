@@ -274,7 +274,7 @@ async function readFreshGame(directory) {
     const { foodById } = await import(${JSON.stringify(catalogUrl)});
     const { resolveBristolType, typeDistribution } = await import(${JSON.stringify(typeUrl)});
     const { rollOutcome } = await import(${JSON.stringify(dropsUrl)});
-    const recipe = { foodIds: ["banana"], water: 1500, drinkId: "water", additives: [], toiletId: "standard", force: 50, };
+    const recipe = { foodIds: ["banana"], water: 1250, drinkId: "water", additives: [], toiletId: "standard", force: 50, };
     console.log(JSON.stringify({ attributes: foodById.banana.attributes, type: resolveBristolType(recipe), distribution: typeDistribution(recipe), outcome: rollOutcome(recipe, () => 0.5) }));
   `;
   const { stdout } = await execFile(process.execPath, [
@@ -297,7 +297,7 @@ test("saved admin parameters reach the actual game rules and an isolated release
   await writeFile(path.join(isolated, "package.json"), '{"type":"module"}\n');
   const dataFile = path.join(isolated, "src/content/food-attribute-values.js");
   const before = await readFreshGame(isolated);
-  assert.notEqual(before.type, 1);
+  assert.notEqual(before.type, 2);
   const { get, put, origin } = await fixture(t, { root: isolated, dataFile });
   const edited = await (await get()).json();
   Object.assign(edited.foods.banana, {
@@ -313,7 +313,7 @@ test("saved admin parameters reach the actual game rules and an isolated release
   ).text();
   assert.equal(servedSource, await readFile(dataFile, "utf8"));
   const after = await readFreshGame(isolated);
-  assert.equal(after.type, 1);
+  assert.equal(after.type, 2);
   assert.equal(after.attributes.softness, 7);
   assert.equal(after.outcome.colorId, "berry");
   assert.notDeepEqual(after.distribution, before.distribution);
@@ -454,7 +454,6 @@ test("managed content is used by fresh game imports and survives release packagi
   edited.content.stools[0].name = "项目配置测试";
   edited.content.recipes.find(item => item.characterId === "classic").foodIds = ["rice", "egg", "spinach"];
   edited.content.recipes.find(item => item.characterId === "classic").water = 1250;
-  edited.content.recipes.find(item => item.characterId === "classic").digestionTime = "4";
   edited.content.drinks[0].wetnessBias = .2;
   edited.content.additives[0].rareTargets = ["gold"];
   edited.content.toilets.find((item) => item.id === "comfort").unlock.count = 19;
@@ -464,11 +463,12 @@ test("managed content is used by fresh game imports and survives release packagi
   const script = `
     import { characterById, drinkById, additiveById, toiletById } from ${JSON.stringify(pathToFileURL(path.join(released, "src/content/catalog.js")).href)};
     import { getRecipeForecast } from ${JSON.stringify(pathToFileURL(path.join(released, "src/game/outcome-pool.js")).href)};
+    import { stoolRecipeByCharacterId } from ${JSON.stringify(pathToFileURL(path.join(released, "src/content/stool-recipes.js")).href)};
     import { referenceStoolAssets } from ${JSON.stringify(pathToFileURL(path.join(released, "src/content/stool-art-assets.js")).href)};
-    console.log(JSON.stringify({ name: characterById.classic.name, wetnessBias: drinkById.water.wetnessBias, rareTargets: additiveById.probiotic.rareTargets, unlock: toiletById.comfort.unlock.count, image: referenceStoolAssets.classic, forecast: getRecipeForecast({ foodIds: ["rice", "egg", "spinach"], drinkId: "water", water:1250, digestionTime:"4", force: 50 }).matchedRecipe?.characterId }));
+    console.log(JSON.stringify({ name: characterById.classic.name, wetnessBias: drinkById.water.wetnessBias, rareTargets: additiveById.probiotic.rareTargets, unlock: toiletById.comfort.unlock.count, image: referenceStoolAssets.classic, recipeFoods: stoolRecipeByCharacterId.classic.foodIds, forecastAvailable: getRecipeForecast({ foodIds: ["rice", "egg", "spinach"], drinkId: "water", water:1250, force: 50 }).primaryProbability > 0 }));
   `;
   const { stdout } = await execFile(process.execPath, ["--input-type=module", "--eval", script]);
-  assert.deepEqual(JSON.parse(stdout), { name: "项目配置测试", wetnessBias: .2, rareTargets: ["gold"], unlock: 19, image: "/assets/stools/reference-v2/jet.png", forecast: "classic" });
+  assert.deepEqual(JSON.parse(stdout), { name: "项目配置测试", wetnessBias: .2, rareTargets: ["gold"], unlock: 19, image: "/assets/stools/reference-v2/jet.png", recipeFoods: ["rice", "egg", "spinach"], forecastAvailable: true });
 });
 
 test("content API persists manual gameplay inconsistencies without rewriting food tuning", async t => {

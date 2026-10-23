@@ -27,7 +27,7 @@ for (const [width, height] of [[320, 640], [402, 760]])
           porosity: 1 + Math.floor(variant / 7), variationSeed: sequence,
           decorations: ["glitter"], residues: [{ foodId: "corn", retention: 5 }] },
         recipe: { foodIds: ["rice", "corn", "enoki"], drinkId: "water", water: 1250,
-          digestionTime: "4", force: 50, additives: ["glitter"], toiletId: "standard" },
+          force: 50, additives: ["glitter"], toiletId: "standard" },
       });
       save.individuals = [
         ...Array.from({ length: 8 }, (_, i) => item(primary, i + 1, i)),
@@ -66,7 +66,7 @@ for (const [width, height] of [[320, 640], [402, 760]])
     await page.locator("[data-individual-prev]").click();
     await expect(page.locator("[data-individual]")).toHaveAttribute("data-individual", "history-4");
     await page.locator('[data-detail-panel="recipe"]').click();
-    await expect(page.locator("[data-recipe-for]")).toContainText("固定配方");
+    await expect(page.locator("[data-recipe-for]")).toContainText("推荐搭配");
     await page.locator('[data-detail-panel="art"]').click();
     await expect(page.locator("[data-individual]")).toHaveAttribute("data-individual", "history-4");
     expect(await page.locator("#collection-dialog").evaluate(el => el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth)).toBe(true);

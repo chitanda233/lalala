@@ -3,11 +3,14 @@ import { enableCollectionPreview, chooseSpecimen, chooseMeal, startRound } from 
 
 test("collection shows zero for an unreachable ordinary target and a rare removed from its theme group", async ({ page }) => {
   await page.goto("/");
-  await page.evaluate(async () => {
+  const expectedPrimary = await page.evaluate(async () => {
     const { stoolRecipeByCharacterId } = await import("/src/content/stool-recipes.js");
     const { additiveById } = await import("/src/content/catalog.js");
-    Object.assign(stoolRecipeByCharacterId.classic, { water: 0, digestionTime: "8" });
+    Object.assign(stoolRecipeByCharacterId.classic, { water: 0 });
     additiveById["gold-leaf"].rareTargets = ["crystal"];
+    const { getRecipeForecast } = await import("/src/game/outcome-pool.js");
+    const { characterById } = await import("/src/content/catalog.js");
+    return characterById[getRecipeForecast({ ...stoolRecipeByCharacterId.classic, force: 50, additives: [] }, "classic").primaryCharacterId].name;
   });
   await page.locator("#collection-button").click();
   await enableCollectionPreview(page);
@@ -16,7 +19,7 @@ test("collection shows zero for an unreachable ordinary target and a rare remove
   const ordinary = page.locator('[data-recipe-for="classic"]');
   await expect(ordinary).toContainText("未中稀有后 0% · 整局 0.0%");
   await expect(ordinary).toContainText("益生菌：普通分支 0% · 整局 0%");
-  await expect(ordinary).toContainText("当前主结果：按摩珠珠串");
+  await expect(ordinary).toContainText(`当前主结果：${expectedPrimary}`);
   await chooseSpecimen(page, "gold:4");
   await page.locator('[data-detail-panel="recipe"]').click();
   await expect(page.locator('[data-recipe-for="gold"]')).toContainText("使用主题添加剂：本款 0.00%");

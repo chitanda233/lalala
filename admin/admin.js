@@ -1,5 +1,4 @@
 import { foods, foodCategories } from "/src/content/foods.js";
-import { digestionOptions } from "/src/content/digestion.js";
 import {
   foodAttributeFields,
   validateFoodAttributes,
@@ -157,7 +156,6 @@ function currentSelection() {
     drinkId: $("#preview-drink").value,
     water: Number($("#preview-water").value),
     force: Number($("#preview-force").value),
-    digestionTime: $("#preview-digestion").value,
     toiletId: $("#preview-toilet").value,
     additives: $("#preview-additive").value ? [$("#preview-additive").value] : [],
   };
@@ -172,10 +170,7 @@ function calculatePreview(selection) {
         !best || entry.probability > best.probability ? entry : best,
       null,
     );
-  const previewSelection = selection.digestionTime === "random"
-    ? ["2", "4", "8"].map(digestionTime => ({ ...selection, digestionTime }))
-      .sort((a, b) => (getOutcomePool(b).find(entry => entry.characterId === representative.characterId)?.probability || 0) - (getOutcomePool(a).find(entry => entry.characterId === representative.characterId)?.probability || 0))[0]
-    : selection;
+  const previewSelection = selection;
   const previewPool = getOutcomePool(previewSelection);
   const index = previewPool.findIndex(entry => entry.characterId === representative.characterId);
   // Preview the most likely ordinary individual from the production pool.
@@ -187,6 +182,7 @@ function calculatePreview(selection) {
     0.5,
   ];
   return {
+    previewForce: selection.force,
     distribution,
     outcome: rollOutcome(previewSelection, () => draws.shift() ?? 0),
     forecast: getRecipeForecast(selection),
@@ -203,15 +199,15 @@ function specimenCard(label, data, after = false) {
 }
 function recipeForecast(data) {
   const { forecast, pool } = data;
-  const recipe = forecast.matchedRecipe || forecast.suggestedRecipe;
-  if (!recipe) return `<p>${forecast.physicalState ? `湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型` : `随机三档综合：${forecast.phaseForecasts.map(phase=>`${phase.digestionTime}→${phase.physicalState.type}型`).join("、")}`}</p><p>按当前物态、力度与配方距离生成普通形态。</p>`;
+  const recipe = forecast.suggestedRecipe;
+  if (!recipe) return `<p>湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型</p><p>按当前来源、物态和食材结构生成普通形态。</p>`;
   const target = characterById[recipe.characterId];
-  const zone = forceZones.find((item) => item.id === recipe.forceZone);
+  const zone = forceZones.find(item => item.id === recipe.forceZone);
   const actualProbability = pool
     .filter((entry) => entry.characterId === recipe.characterId)
     .reduce((sum, entry) => sum + entry.probability, 0);
-  const stateText = forecast.physicalState ? `湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型` : `随机阶段综合：${forecast.phaseForecasts.map(phase => `${phase.digestionTime}→${phase.physicalState.type}型`).join("、")}`;
-  return `<strong>${forecast.matchedRecipe ? "固定配方已匹配" : "当前主结果"} · ${escapeText(target.name)}</strong><p>${recipe.foodIds.map((id) => escapeText(foodById[id].name)).join(" + ")} + ${escapeText(drinks.find((item) => item.id === recipe.drinkId).name)} · ${zone.name} ${zone.min}–${zone.max}</p><p>${recipeLiquidText(recipe)}${recipe.requiredAdditive ? ` · 需${escapeText(additives.find(item => item.id === recipe.requiredAdditive).name)}` : ""}</p><p>${stateText}</p><div class="forecast-values"><span>目标实际概率<strong>${formatPercent(actualProbability)}</strong></span><span>稀有合计<strong>${formatPercent(forecast.rareProbability)}</strong></span></div><p>${forecast.matchedRecipe ? `未中稀有后，普通主结果命中 ${formatPercent(forecast.recipeConditionalProbability)}；整局命中 ${formatPercent(forecast.recipeProbability)}。` : "来源与物态先过滤，再平滑计算主结果；益生菌稳定每个已确定阶段的普通主结果。"}</p>`;
+  const stateText = `湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型 · 按力度 ${data.previewForce} 预览`;
+  return `<strong>当前主结果 · ${escapeText(target.name)}</strong><p>参考搭配：${recipe.foodIds.map((id) => escapeText(foodById[id].name)).join(" + ")} + ${escapeText(drinks.find((item) => item.id === recipe.drinkId).name)}</p><p>${recipeLiquidText(recipe)} · ${zone.name} ${zone.min}–${zone.max}${recipe.requiredAdditive ? ` · 需${escapeText(additives.find(item => item.id === recipe.requiredAdditive).name)}` : ""}</p><p>${stateText}</p><div class="forecast-values"><span>当前主结果概率<strong>${formatPercent(actualProbability)}</strong></span><span>稀有合计<strong>${formatPercent(forecast.rareProbability)}</strong></span></div><p>来源与物态先过滤，再按食材和结构分配概率；力度只在同型同身份内调整造型。推荐搭配没有额外命中奖励，益生菌稳定当前普通主结果。</p>`;
 }
 function renderPreview() {
   previewFrame = null;
@@ -230,7 +226,6 @@ function renderPreview() {
       .map((id) => foodById[id].name)
       .concat(
         `${drinks.find((item) => item.id === selection.drinkId).name} ${selection.water} mL`,
-        `阶段 ${selection.digestionTime}`,
         selection.additives.length
           ? additives.find((item) => item.id === selection.additives[0]).name
           : "无添加剂",
@@ -350,7 +345,6 @@ $("#pigment-id").innerHTML =
     .join("");
 $("#preview-drink").innerHTML = optionList(drinks, "water");
 $("#preview-additive").innerHTML = optionList(additives, "", "无添加剂");
-$("#preview-digestion").innerHTML = optionList(digestionOptions, "4");
 $("#preview-toilet").innerHTML = optionList(toilets, "standard");
 $("#preview-water").innerHTML = Array.from(
   { length: (gameConfig.water.max - gameConfig.water.min) / gameConfig.water.step + 1 },
@@ -434,9 +428,7 @@ export const foodAdmin = {
     $("#preview-drink").value = recipe.drinkId;
     $("#preview-additive").value = recipe.requiredAdditive || additiveId;
     $("#preview-water").value = recipe.water;
-    $("#preview-digestion").value = recipe.digestionTime;
-    const zone = forceZones.find((item) => item.id === recipe.forceZone);
-    $("#preview-force").value = Math.round((zone.min + zone.max) / 2);
+    $("#preview-force").value = { low: 20, medium: 50, high: 90 }[recipe.forceZone];
     schedulePreview();
   },
 };

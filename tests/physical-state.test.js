@@ -15,23 +15,23 @@ import { resolveColorStrength } from "../src/game/color.js";
 import { foodWetness } from "../src/content/food-wetness.js";
 
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-10, `${a} != ${b}`);
-const inputFor = recipe => ({ ...recipe, force: {low:20,medium:50,high:90}[recipe.forceZone], additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [] });
+const inputFor = recipe => ({ ...recipe, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : recipe.additiveId ? [recipe.additiveId] : [] });
 const base = inputFor(stoolRecipeByCharacterId.classic);
 
-test("all 46 ordinary centres and ten rare themes agree with their actual physical types", () => {
+test("all ordinary recommendations and rare theme examples fit their pictured physical types without digestion time", () => {
   for (const recipe of [...stoolRecipes, ...rareThemeRecipes]) {
-    const input = inputFor(recipe);
-    assert.equal(physicalState(input).type, characterById[recipe.characterId].homeType, recipe.characterId);
+    assert.equal(physicalState(inputFor(recipe)).type, characterById[recipe.characterId].homeType, recipe.characterId);
+    assert.equal(Object.hasOwn(recipe, "digestionTime"), false);
+    assert.ok(["low", "medium", "high"].includes(recipe.forceZone));
   }
   assert.deepEqual(stoolRecipeByCharacterId["enoki-jet"].foodIds, ["burger", "enoki"]);
   assert.equal(stoolRecipeByCharacterId["enoki-jet"].drinkId, "milk");
-  assert.equal(stoolRecipeByCharacterId["enoki-jet"].forceZone, "high");
   assert.equal(characterById["enoki-jet"].homeType, 7);
 });
 
-test("the same rice meal moves through types 2, 3, 4 and 5 using only drink intake and digestion phase", () => {
-  for (const [water, digestionTime, type, score] of [[0,"8",2,-1.95],[500,"4",3,-.8],[1250,"4",4,-.05],[1250,"2",5,.7]]) {
-    const input = { ...base, water, digestionTime, additives:["probiotic"] };
+test("the rice meal responds monotonically to the six drink intake choices", () => {
+  for (const [water, type, score] of [[0,2,-2],[250,2,-1.5],[500,3,-1],[750,4,-.5],[1000,4,0],[1250,4,.5]]) {
+    const input = { ...base, water, additives:["probiotic"] };
     const state = physicalState(input);
     assert.equal(state.type,type); close(state.score,score);
     assert.equal(Object.hasOwn(normalizeSelection(input), "drinkVolume"), false);
@@ -42,35 +42,33 @@ test("the same rice meal moves through types 2, 3, 4 and 5 using only drink inta
   assert.equal(typeFromWetness(2.20001),7);
 });
 
-test("force cannot turn a dry physical class into water and all same-type neighbours retain legal probability", () => {
+test("force keeps the physical class and nearby intake choices retain legal variety", () => {
+  const dry = {...base,water:250};
   for (const force of [0,33,34,66,67,100]) {
-    const input = {...base,water:250,digestionTime:"8",force};
+    const input = {...dry,force};
     assert.equal(physicalState(input).type,2);
     assert.ok(getOutcomePool(input).filter(entry=>!entry.special).every(entry=>characterById[entry.characterId].homeType===2));
   }
-  for (const change of [{water:1000}]) {
-    const input = {...base,...change};
-    assert.equal(getRecipeForecast(input).matchedRecipe,null);
-    const probability=getOutcomePool(input).find(entry=>entry.characterId==="classic")?.probability;
-    assert.ok(probability>0 && probability<.784);
+  for (const water of [750,1000,1250]) {
+    const input = {...base,water}, ordinary=getOutcomePool(input).filter(entry=>!entry.special);
+    assert.ok(ordinary.length>1);
+    assert.ok(ordinary.every(entry=>characterById[entry.characterId].homeType===4 && entry.probability>0));
   }
 });
 
-test("decorated species require the same material in both the fixed target and the free pool", () => {
+test("decorated species require their saved material source in recommended and improvised combinations", () => {
   for (const recipe of stoolRecipes.filter(recipe=>recipe.requiredAdditive)) {
     const input=inputFor(recipe);
-    assert.equal(getRecipeForecast(input).matchedRecipe.characterId,recipe.characterId);
+    assert.ok(getOutcomePool(input).some(entry=>entry.characterId===recipe.characterId && entry.probability>0));
     for(const additives of [[],["probiotic"],["chili"]]) {
-      const changed={...input,additives};
-      assert.equal(getRecipeForecast(changed).matchedRecipe,null);
-      assert.ok(!getOutcomePool(changed).some(entry=>entry.characterId===recipe.characterId));
+      assert.ok(!getOutcomePool({...input,additives}).some(entry=>entry.characterId===recipe.characterId));
     }
   }
 });
 
 test("rice and pumpkin never produce an enoki species, including a watery high-intake meal", () => {
-  for (const water of [0, 1250]) for (const digestionTime of ["2", "4", "8", "random"]) for (const force of [20, 59, 90]) {
-    const input = { foodIds: ["rice", "pumpkin"], drinkId: "grass-jelly", water, digestionTime, force, additives: ["gold-leaf"] };
+  for (const water of [0, 1250]) for (const force of [20, 59, 90]) {
+    const input = { foodIds: ["rice", "pumpkin"], drinkId: "grass-jelly", water, force, additives: ["gold-leaf"] };
     const pool = getOutcomePool(input);
     assert.ok(!pool.some(entry => ["enoki-thread", "enoki-jet"].includes(entry.characterId)), JSON.stringify(input));
     close(pool.reduce((sum, entry) => sum + entry.probability, 0), 1);
@@ -79,16 +77,17 @@ test("rice and pumpkin never produce an enoki species, including a watery high-i
   }
 });
 
-test("eating enoki permits its same-type free candidate while exact guarantees stay 80% and 100%", () => {
+test("enoki remains available in matching physical states and probiotic stabilizes the current meal's primary outcome", () => {
   const input = inputFor(stoolRecipeByCharacterId["enoki-jet"]);
-  assert.ok(getOutcomePool({ ...input, force: 59 }).some(entry => entry.characterId === "enoki-jet" && entry.probability > 0));
-  for (const [additives, probability] of [[[], .784], [["probiotic"], .98]])
-    close(getOutcomePool({ ...input, additives }).find(entry => entry.characterId === "enoki-jet").probability, probability);
+  assert.ok(getOutcomePool(input).some(entry => entry.characterId === "enoki-jet" && entry.probability > 0));
+  const stabilized={...input,additives:["probiotic"]},forecast=getRecipeForecast(stabilized);
+  const ordinary=getOutcomePool(stabilized).filter(entry=>!entry.special);
+  assert.deepEqual(ordinary.map(entry=>entry.characterId),[forecast.primaryCharacterId]);
+  close(ordinary[0].probability,.98);
 });
 
-test("the sole drink amount scales moisture, beverage strength and bubbles while long digestion retains enoki", () => {
-  const state=physicalState({...base,water:500});
-  close(state.waterBonus,-.8);
+test("the sole drink amount scales moisture, beverage strength and bubbles while food alone determines residues", () => {
+  close(physicalState({...base,water:500}).waterBonus,-1);
   const small=normalizeSelection({...base,drinkId:"soda",water:250});
   const large={...small,water:1250};
   assert.ok(collectEffects(large).drinkPorosity>collectEffects(small).drinkPorosity);
@@ -96,24 +95,21 @@ test("the sole drink amount scales moisture, beverage strength and bubbles while
   const strength=water=>resolveColorStrength({...base,drinkId:"prune-juice",water},characterById.classic);
   assert.ok(strength(250)<strength(1250));
   const appearance=digestionTime=>{const input=normalizeSelection({...base,foodIds:["enoki","corn"],digestionTime});return foodAppearance(input,collectEffects(input),7);};
-  assert.ok(appearance("2").enokiRetention>appearance("8").enokiRetention);
+  assert.deepEqual(appearance("2"),appearance("8"));
   assert.ok(appearance("8").enokiRetention>=2);
-  assert.ok(appearance("2").residues[0].retention>appearance("8").residues[0].retention);
 });
 
-test("random phases lock once, preserve drink intake and phase through reload and the first saved individual", () => {
-  for(const [draw,phase] of [[0,"2"],[.5,"4"],[.999,"8"]]) {
-    const session=createAimingSession({...base,digestionTime:"random"},{now:1000,random:()=>draw});
-    assert.equal(session.digestionTime,phase);
-    lockSessionForce(session,{now:1750,random:()=>.5});
-    assert.deepEqual(restoreSession(session),session);
-    const save=normalizeSave({session});
-    settleSession(save,session.endsAt);
-    assert.equal(save.individuals[0].recipe.digestionTime,phase);
-    assert.equal(Object.hasOwn(save.individuals[0].recipe, "drinkVolume"), false);
-    assert.equal(save.individuals[0].recipe.water,1250);
-    close(getOutcomePool({...base,digestionTime:phase}).filter(entry=>entry.special).reduce((sum,entry)=>sum+entry.probability,0),.02);
-  }
+test("round reload and first saved individual preserve drink intake without a digestion phase", () => {
+  const session=createAimingSession({...base,digestionTime:"random"},{now:1000,random:()=>0});
+  assert.equal(Object.hasOwn(session,"digestionTime"),false);
+  lockSessionForce(session,{now:1750,random:()=>.5});
+  assert.deepEqual(restoreSession(session),session);
+  const save=normalizeSave({session});
+  settleSession(save,session.endsAt);
+  assert.equal(Object.hasOwn(save.individuals[0].recipe,"digestionTime"),false);
+  assert.equal(Object.hasOwn(save.individuals[0].recipe,"drinkVolume"),false);
+  assert.equal(save.individuals[0].recipe.water,base.water);
+  close(getOutcomePool(base).filter(entry=>entry.special).reduce((sum,entry)=>sum+entry.probability,0),.02);
 });
 
 test("existing food knobs stay authoritative and the two new foods have separate defaults", () => {

@@ -163,13 +163,7 @@ export async function enableCollectionPreview(page) {
     await notice.getByRole("button", { name: "知道了" }).click();
 }
 
-export async function chooseDigestion(page, phase) {
-  await page.locator("#choose-digestion").click();
-  await page.locator(`[data-digestion="${phase}"]`).click();
-  await page.locator('[data-close="digestion-dialog"]').last().click();
-}
-
-// Exercise the actual input UI with the current complete recipe, including phase.
+// Exercise the current recommended meal and preserve its suggested force zone.
 export async function applyIdealRecipe(page, characterId, additiveIds = null) {
   const recipe = await page.evaluate(async id => {
     const { stoolRecipeByCharacterId } = await import("/src/content/stool-recipes.js");
@@ -179,9 +173,8 @@ export async function applyIdealRecipe(page, characterId, additiveIds = null) {
   await chooseMeal(page, recipe.foodIds);
   await chooseDrink(page, recipe.drinkId);
   await setWater(page, recipe.water);
-  await chooseDigestion(page, recipe.digestionTime);
   await chooseAdditives(page, additiveIds || (recipe.requiredAdditive ? [recipe.requiredAdditive] : recipe.additiveId ? [recipe.additiveId] : []));
-  return { recipe, force: { low: 20, medium: 50, high: 90 }[recipe.forceZone] };
+  return { recipe, force: { low: 20, medium: 50, high: 90 }[recipe.forceZone] ?? 50 };
 }
 
 export async function expectedTint(page, outcome) {

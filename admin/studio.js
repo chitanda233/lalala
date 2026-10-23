@@ -9,7 +9,6 @@ import { additives } from "/src/content/additives.js";
 import { toilets } from "/src/content/toilets.js";
 import { referenceStoolAssets } from "/src/content/stool-art-assets.js";
 import { characterById, foodById } from "/src/content/catalog.js";
-import { forceZones } from "/src/content/force.js";
 import { characterSvg } from "/src/ui/artwork/stools.js";
 import { toiletSvg } from "/src/ui/artwork/toilets.js";
 import { getRecipeForecast } from "/src/game/outcome-pool.js";
@@ -18,6 +17,7 @@ import { stoolColors } from "/src/content/colors.js";
 import { gameConfig } from "/src/config/game.js";
 import { additiveRoles, visualEffectLabels } from "/src/content/additive-effects.js";
 import { rareBudget } from "/src/game/rare-probabilities.js";
+import { forceZones } from "/src/content/force.js";
 
 const $ = (selector) => document.querySelector(selector);
 const copy = (value) => structuredClone(value);
@@ -26,7 +26,7 @@ const modules = [
   { id: "overview", name: "总览", symbol: "◫" },
   { id: "foods", name: "食物管理", symbol: "◒", description: "九项食物属性、颜色与完整配方试验。" },
   { id: "stools", name: "大便管理", symbol: "◆", description: "编辑收藏名称、描述、材质、配色和五项物态属性。" },
-  { id: "recipes", name: "大便配方", symbol: "⌘", description: "配置食物、饮料与饮用量、消化阶段及力度；玩法冲突只提示，仍可保存。" },
+  { id: "recipes", name: "大便配方", symbol: "⌘", description: "配置推荐食物、饮料、饮用量、力度与添加剂；玩法冲突只提示，仍可保存。" },
   { id: "gallery", name: "图片展示", symbol: "▧", description: "查看全部造型、大图与透明边缘，也可替换项目内的主图。" },
   { id: "drinks", name: "饮料管理", symbol: "◡", description: "编辑饮料的软硬、蓬松、标签、配色和顺畅效果。" },
   { id: "additives", name: "添加剂管理", symbol: "✳", description: "配置物态修正、表面装饰、稳定强度与稀有目标。" },
@@ -164,8 +164,8 @@ function renderForm() {
   let fields = "";
   if (active === "recipes") {
     const volumeOptions = values => values.map(value => ({ id: String(value), name: `${value} mL` }));
-    fields = group("食物集合 · 1–3 种，不分顺序", [0, 1, 2].map((index) => select(`foodIds.${index}`, `食物 ${index + 1}${index === 0 ? " · 必选" : ""}`, foods, item.foodIds[index] || "", index ? "不添加" : undefined)).join("")) + group("液体、阶段与力度", select("drinkId", "饮料", drinks, item.drinkId) + select("water", "饮用量", volumeOptions(Array.from({ length: (gameConfig.water.max - gameConfig.water.min) / gameConfig.water.step + 1 }, (_, i) => gameConfig.water.min + i * gameConfig.water.step)), String(item.water)) + select("digestionTime", "消化阶段", ["2", "4", "8"].map(id => ({ id, name: `阶段 ${id}` })), item.digestionTime) + select("forceZone", "力度区间", forceZones.map((zone) => ({ id: zone.id, name: `${zone.name} ${zone.min}–${zone.max}` })), item.forceZone) + select("requiredAdditive", "必选添加剂", additives, item.requiredAdditive || "", "不限，益生菌可选"));
-    fields += '<p class="field-note">理想配方普通分支为 80%，只有一个合法候选时为 100%；偏离后平滑变化。益生菌也能稳定自由组合。必需来源始终要满足。</p>';
+    fields = group("食物集合 · 1–3 种，不分顺序", [0, 1, 2].map((index) => select(`foodIds.${index}`, `食物 ${index + 1}${index === 0 ? " · 必选" : ""}`, foods, item.foodIds[index] || "", index ? "不添加" : undefined)).join("")) + group("饮料、水量、力度与添加剂", select("drinkId", "饮料", drinks, item.drinkId) + select("water", "饮用量", volumeOptions(Array.from({ length: (gameConfig.water.max - gameConfig.water.min) / gameConfig.water.step + 1 }, (_, i) => gameConfig.water.min + i * gameConfig.water.step)), String(item.water)) + select("forceZone", "推荐力度", forceZones.map(zone => ({ id: zone.id, name: `${zone.name} ${zone.min}–${zone.max}` })), item.forceZone) + select("requiredAdditive", "必选添加剂", additives, item.requiredAdditive || "", "不限，益生菌可选"));
+    fields += '<p class="field-note">推荐搭配只是示例，不提供额外命中奖励。可替换食物与调整水量，按来源、物态和结构获得对应结果。益生菌稳定当前普通主结果。</p>';
   } else {
     fields = group("基本资料", input("name", "名称", item.name, { maxLength: 60 }) + (item.category ? input("category", "分类", item.category, { maxLength: 40 }) : "") + area("description", "描述", item.description) + (item.effectLabel ? area("effectLabel", "效果说明", item.effectLabel) : ""));
     if (active === "stools") {
@@ -180,7 +180,7 @@ function renderForm() {
         const sourceTags = [...new Set([...foods, ...drinks, ...additives].flatMap(source => source.tags))].sort().map(id => ({ id, name: tagNames[id] || id }));
         fields += group("生成身份与造型偏好", select("generation.identity", "身份分组", identities, item.generation.identity) + select("generation.forceZone", "造型偏好力度", forceZones, item.generation.forceZone));
         fields += group("必需来源 · 所有已选条件都要满足", [0,1,2].map(index => select(`generation.sources.foods.${index}`, `必需食物 ${index+1}`, foods, rule.foods[index] || "", "不限定食物")).join("") + [0,1,2].map(index => select(`generation.sources.tags.${index}`, `来源标签 ${index+1}`, sourceTags, rule.tags[index] || "", "不限定标签")).join("") + select("generation.sources.pigment", "实际主色素", Object.entries(stoolColors).map(([id,color])=>({id,name:color.name})), rule.pigment || "", "不限定主色") + select("generation.sources.additives.0", "必需添加剂", additives, rule.additives[0] || "", "不限定添加剂"));
-        fields += '<p class="field-note">来源条件独立于理想配方；基础造型不设来源门槛。每一型都必须保留基础候选。</p>';
+        fields += '<p class="field-note">来源条件独立于推荐搭配；每一型建议保留无来源门槛的基础候选。力度只在同型同身份内调整造型概率，不改变身份总预算。</p>';
       }
     }
     if (active === "drinks") {
@@ -205,8 +205,8 @@ function renderForm() {
   renderInspector(); updateStatus();
 }
 function recipeText(recipe) {
-  const zone = forceZones.find((zone) => zone.id === recipe.forceZone);
-  return `${recipe.foodIds.map((id) => foodById[id]?.name || "未选食物").join(" ＋ ")} ＋ ${record("drinks", recipe.drinkId)?.name || "未选饮料"} ${recipe.water} mL · 阶段 ${recipe.digestionTime} · ${zone?.name || "未选力度"} ${zone?.min ?? ""}–${zone?.max ?? ""}${recipe.requiredAdditive ? ` · 需${record("additives", recipe.requiredAdditive)?.name}` : ""}`;
+  const zone = forceZones.find(zone => zone.id === recipe.forceZone);
+  return `${recipe.foodIds.map((id) => foodById[id]?.name || "未选食物").join(" ＋ ")} ＋ ${record("drinks", recipe.drinkId)?.name || "未选饮料"} ${recipe.water} mL · ${zone.name} ${zone.min}–${zone.max}${recipe.requiredAdditive ? ` · 需${record("additives", recipe.requiredAdditive)?.name}` : ""}`;
 }
 function renderInspector() {
   const item = record(active, selected[active]);
@@ -216,22 +216,21 @@ function renderInspector() {
   if (active === "stools" || active === "recipes") {
     const recipe = record("recipes", idOf(item));
     if (recipe) {
-      const zone = forceZones.find((zone) => zone.id === recipe.forceZone);
-      const selection = { ...recipe, force: (zone.min + zone.max) / 2, additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], toiletId: "standard" };
-      detail += `<div class="inspector-block"><h3>固定配方</h3><p>${esc(recipeText(recipe))}</p>`;
+      const selection = { ...recipe, force: { low: 20, medium: 50, high: 90 }[recipe.forceZone], additives: recipe.requiredAdditive ? [recipe.requiredAdditive] : [], toiletId: "standard" };
+      detail += `<div class="inspector-block"><h3>推荐搭配</h3><p>${esc(recipeText(recipe))}</p>`;
       try {
         const forecast = getRecipeForecast(selection, stool.id);
         const stabilized = recipe.requiredAdditive ? "与必选剂互斥" : `${(getRecipeForecast({ ...selection, additives: ["probiotic"] }, stool.id).targetProbability * 100).toFixed(1)}%`;
-        detail += `<p>湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型</p><div class="forecast-values"><span>整局目标概率<strong data-target-probability>${(forecast.targetProbability * 100).toFixed(1)}%</strong></span><span>加益生菌后<strong data-stabilized-probability>${stabilized}</strong></span></div><p data-primary-result>当前主结果：${esc(characterById[forecast.primaryCharacterId].name)} · 整局 ${(forecast.primaryProbability * 100).toFixed(1)}%</p>`;
+        detail += `<p>湿软指数 ${forecast.physicalState.score.toFixed(2)} · 基础 ${forecast.physicalState.type} 型 · 按力度 ${selection.force} 预览</p><div class="forecast-values"><span>整局目标概率<strong data-target-probability>${(forecast.targetProbability * 100).toFixed(1)}%</strong></span><span>加益生菌后<strong data-stabilized-probability>${stabilized}</strong></span></div><p data-primary-result>当前主结果：${esc(characterById[forecast.primaryCharacterId].name)} · 整局 ${(forecast.primaryProbability * 100).toFixed(1)}%</p>`;
       } catch (error) { detail += `<p class="field-note">预览暂不可用：${esc(error.message)} 配置仍可保存。</p>`; }
       detail += `<button class="button button-quiet" type="button" data-try-recipe="${esc(idOf(item))}">放进配方试验 ↗</button></div>`;
-    } else detail += '<p class="field-note">稀有收藏不设固定配方；每局均有机会出现。</p>';
-    if (stool.generation) detail += `<div class="inspector-block"><h3>必需来源</h3><p>${esc(sourceRequirementText(stool))}</p><p>理想配方与必需来源分别配置。</p></div>`;
+    } else detail += '<p class="field-note">稀有收藏不设原料门槛；每局按当前稀有预算抽取。</p>';
+    if (stool.generation) detail += `<div class="inspector-block"><h3>必需来源</h3><p>${esc(sourceRequirementText(stool))}</p><p>推荐搭配与必需来源分别配置。</p></div>`;
     detail += `<div class="inspector-block"><h3>物态属性</h3>${Object.entries(propertyLabels).map(([key, label]) => `<div class="property-meter"><span>${label}</span><meter min="1" max="7" value="${stool.properties[key]}"></meter><strong>${stool.properties[key]}</strong></div>`).join("")}</div><div class="inspector-links"><button class="text-button" type="button" data-art="${stool.id}">查看 / 调整大图 ↗</button>${active === "stools" && recipe ? `<button class="text-button" type="button" data-go="recipes" data-id="${stool.id}">编辑配方 ↗</button>` : `<button class="text-button" type="button" data-go="stools" data-id="${stool.id}">编辑大便资料 ↗</button>`}</div>`;
   }
   if (active === "drinks") {
     const recipes = draft.recipes.filter((recipe) => recipe.drinkId === item.id);
-    detail = `<div class="inspector-block"><h3>物态效果</h3><p>湿软偏置 ${item.wetnessBias} · 蓬松 +${item.porosity}</p><p>顺畅评分 ${item.effects.smoothnessBonus || 0}</p></div><div class="inspector-block"><h3>关联配方 · ${recipes.length} 款</h3><div class="related-links">${recipes.map((recipe) => `<button type="button" class="text-button" data-go="recipes" data-id="${recipe.characterId}">${esc(nameOf("recipes", recipe))} ↗</button>`).join("") || '<p class="field-note">暂无固定配方使用这款饮料。</p>'}</div></div>`;
+    detail = `<div class="inspector-block"><h3>物态效果</h3><p>湿软偏置 ${item.wetnessBias} · 蓬松 +${item.porosity}</p><p>顺畅评分 ${item.effects.smoothnessBonus || 0}</p></div><div class="inspector-block"><h3>关联配方 · ${recipes.length} 款</h3><div class="related-links">${recipes.map((recipe) => `<button type="button" class="text-button" data-go="recipes" data-id="${recipe.characterId}">${esc(nameOf("recipes", recipe))} ↗</button>`).join("") || '<p class="field-note">暂无推荐搭配使用这款饮料。</p>'}</div></div>`;
   }
   if (active === "additives") {
     const budget = rareBudget(item);

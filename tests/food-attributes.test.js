@@ -140,22 +140,21 @@ test("attribute validation rejects incomplete, nonnumeric, out-of-range and unsa
     assert.throws(() => validateFoodAttributes({ ...baseline, pigmentId }));
 });
 
-test("larger food hardness values increase the profile and recheck the fixed recipe physical type", () => {
+test("larger food hardness values increase the profile and recheck the recommendation target's physical type", () => {
   let previous = 0;
   for (let softness = 1; softness <= 7; softness++)
     withAttributes({ rice: { softness } }, () => {
       const hardness = recipeProperties(meal).hardness;
       assert.ok(hardness > previous);
       previous = hardness;
-      const forecast = getRecipeForecast(meal);
-      if (forecast.physicalState.type === 4) {
-        assert.equal(forecast.matchedRecipe.characterId, "classic");
-        assert.ok(Math.abs(forecast.recipeProbability - 0.784) < 1e-12);
-      } else {
-        assert.equal(forecast.matchedRecipe, null);
-        assert.ok(forecast.primaryProbability > 0);
-        assert.equal(characterById[forecast.primaryCharacterId].homeType, forecast.physicalState.type);
-      }
+      const forecast = getRecipeForecast(meal, "classic");
+      assert.equal(forecast.properties.hardness, hardness);
+      assert.ok(forecast.primaryProbability > 0);
+      assert.equal(characterById[forecast.primaryCharacterId].homeType, forecast.physicalState.type);
+      if (forecast.physicalState.type === characterById.classic.homeType)
+        assert.ok(forecast.targetProbability > 0 && forecast.targetProbability <= 1 - forecast.rareProbability);
+      else
+        assert.equal(forecast.targetProbability, 0);
     });
 });
 
@@ -187,18 +186,23 @@ test("hardness labels, generated defaults and the recipe profile agree on 1 soft
   );
 });
 
-test("cohesion and elongation adjust separate attributes without overriding a fixed shape", () => {
-  const profiles = {};
+test("cohesion and elongation stay independent and forecasts reflect the changed structure", () => {
+  const profiles = {}, probabilities = {};
   for (const key of ["cohesion", "elongation"])
     for (const level of [1, 7])
       withAttributes({ rice: { [key]: level } }, () => {
         profiles[key + level] = recipeProperties(meal);
-        assert.equal(getRecipeForecast(meal).matchedRecipe.characterId, "classic");
+        const forecast = getRecipeForecast(meal, "classic");
+        assert.deepEqual(forecast.properties, profiles[key + level]);
+        assert.equal(forecast.physicalState.type, 4);
+        assert.ok(forecast.targetProbability > 0);
+        probabilities[key + level] = forecast.targetProbability;
       });
   assert.ok(profiles.cohesion7.cohesion > profiles.cohesion1.cohesion);
   assert.equal(profiles.cohesion7.elongation, profiles.cohesion1.elongation);
   assert.ok(profiles.elongation7.elongation > profiles.elongation1.elongation);
   assert.equal(profiles.elongation7.cohesion, profiles.elongation1.cohesion);
+  assert.notEqual(probabilities.elongation1, probabilities.elongation7);
 });
 
 test("grain and porosity change rendered texture independently and remain in the result snapshot", () => {

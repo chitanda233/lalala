@@ -102,7 +102,7 @@ test("admin edits nine intuitive attributes with an actual seven-type preview, t
   await page.locator("#companion-1").selectOption("enoki");
   await page.locator("#companion-2").selectOption("burger");
   await expect(page.locator("#preview-recipe")).toHaveText(
-    "熟香蕉 ＋ 金针菇 ＋ 华莱士汉堡 ＋ 清水 750 mL ＋ 阶段 4 ＋ 无添加剂",
+    "熟香蕉 ＋ 金针菇 ＋ 华莱士汉堡 ＋ 清水 750 mL ＋ 无添加剂",
   );
   await page.locator("#preview-water").selectOption("1250");
   await page.locator("#preview-drink").selectOption("coffee");
@@ -151,13 +151,11 @@ test("softness runs from very soft 1 to very hard 7 while Bristol taxonomy keeps
   await setAttribute(page, "cohesion", 4);
   await setAttribute(page, "elongation", 4);
   await page.locator("#preview-water").selectOption("1250");
-  await page.locator("#preview-digestion").selectOption("2");
   await setAttribute(page, "softness", 1);
   await expect(page.locator(".specimen.after")).toContainText(
     "7 型 · 无固体水样型",
   );
   await page.locator("#preview-water").selectOption("0");
-  await page.locator("#preview-digestion").selectOption("8");
   await setAttribute(page, "softness", 7);
   await expect(page.locator(".specimen.after")).toContainText(
     "1 型 · 颗粒硬块型",

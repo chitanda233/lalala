@@ -217,18 +217,6 @@
           </button>
           <span class="sr-only" id="floating-note"></span>
         </section>
-        <nav class="side-tools right-tools" aria-label="消化时间">
-          <button
-            id="choose-digestion"
-            class="tool-button"
-            aria-haspopup="dialog"
-            aria-controls="digestion-dialog"
-          >
-            <span class="tool-art time-tool"
-              ><svg class="icon"><use href="#i-clock" /></svg></span
-            ><strong>消化时间</strong><small id="digestion-summary">4 · 适中</small>
-          </button>
-        </nav>
         <section class="action-area" aria-label="开始排便">
           <div class="action-copy">
             <span class="ready-tag" id="ready-tag">食物已就位</span>
@@ -417,38 +405,6 @@
       </footer>
     </dialog>
     <dialog
-      id="digestion-dialog"
-      class="settings-dialog"
-      aria-labelledby="digestion-title"
-    >
-      <header class="dialog-heading">
-        <div>
-          <span class="eyebrow">LET IT TAKE ITS TIME</span>
-          <h2 id="digestion-title">消化时间</h2>
-        </div>
-        <button
-          class="close-button"
-          data-close="digestion-dialog"
-          aria-label="关闭消化时间设置"
-        >
-          <svg class="icon"><use href="#i-close" /></svg>
-        </button>
-      </header>
-      <p class="dialog-intro">短时偏湿，较久偏干。</p>
-      <div
-        id="digestion-options"
-        class="digestion-options"
-        role="group"
-        aria-label="消化时间"
-      ></div>
-      <p class="settings-note">
-        2 / 4 / 8 为时间档位，并非便便分型；无需实际等待。
-      </p>
-      <button class="food-confirm" data-close="digestion-dialog">
-        就这样，去试试
-      </button>
-    </dialog>
-    <dialog
       id="equipment-dialog"
       class="equipment-dialog"
       aria-labelledby="equipment-title"
@@ -609,18 +565,18 @@
           <summary>先这样操作</summary>
           <ol>
             <li>选1～3种食物、1种饮料，可选添加剂。点卡片看介绍；食物＋加入、✓移除，确认生效。</li>
-            <li>用拉条定饮用量，选择消化时间。取消选择会保留原配方。</li>
+            <li>用拉条定饮用量，确认后生效。取消选择会保留原配方。</li>
             <li>点开始启动力度指针，再点停止锁定，约0.4秒揭晓。</li>
           </ol>
         </details>
         <details name="game-help">
-          <summary>食物、饮料和消化时间</summary>
+          <summary>食物、饮料和添加剂</summary>
           <p>食物决定基础质地和食材残留；饮料影响软硬与颜色。饮用量0～1250 mL，每档250 mL；0 mL时不计饮料效果。</p>
-          <p>消化时间分为2（短时）、4（适中）、8（较久）。短时更偏湿，较久更偏干；随机在开始时抽一档。这是时间档位，不是便便分型，无需实际等待。</p>
+          <p>主食、水分和添加剂共同决定产出。可以照图鉴的推荐搭配尝试，也可以自由组合，每餐都有对应的结果。</p>
         </details>
         <details name="game-help">
           <summary>力度、配方与益生菌</summary>
-          <p>力度只改变同型造型，不能把硬便变成水样。想复现某款，可在图鉴看配方与来源；完整匹配通常有80%的普通分支命中率。</p>
+          <p>力度影响同类造型，不改变物态和来源身份。想探索某款，可在图鉴看推荐搭配与来源；自由组合也会保留食材特点。</p>
           <p>益生菌将最符合当前搭配的普通结果稳定为100%，仍可能出稀有；它占用唯一的添加剂位置。</p>
         </details>
         <details name="game-help">

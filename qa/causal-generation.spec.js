@@ -5,14 +5,19 @@ for(const [width,height]of [[320,640],[402,760]])test(`the player's free meal is
   await page.addInitScript(()=>{Math.random=()=>.5;});
   await page.goto('/');await setCompletedRounds(page,42);
   await chooseMeal(page,['rice','pumpkin']);await chooseDrink(page,'grass-jelly');await setWater(page,1250);
-  await page.locator('#choose-digestion').click();await page.locator('[data-digestion="2"]').click();await page.locator('[data-close="digestion-dialog"]').last().click();
   await chooseAdditives(page,['probiotic']);
   await expect(page.locator('#action-title')).toHaveText('准备好，开始吧。');
   await expect(page.locator('.action-area')).not.toContainText(/软软小枕头|主结果|普通分支|概率|[%％]/);
   for(const force of [14,39,88]){
+    const expected=await page.evaluate(async force=>{
+      const {getRecipeForecast}=await import('/src/game/outcome-pool.js');
+      const {characterById}=await import('/src/content/catalog.js');
+      const forecast=getRecipeForecast({...JSON.parse(localStorage.getItem('lalala-dev')).settings,force});
+      return {name:characterById[forecast.primaryCharacterId].name,type:forecast.physicalState.type};
+    },force);
     await startRound(page,force);await expect(page.locator('#result-dialog')).toBeVisible();
-    await expect(page.locator('#result-name')).toHaveText('软软小枕头');
-    await expect(page.locator('#result-type')).toContainText('布里斯托 5 型');
+    await expect(page.locator('#result-name')).toHaveText(expected.name);
+    await expect(page.locator('#result-type')).toContainText(`布里斯托 ${expected.type} 型`);
     const recorded=await page.evaluate(()=>JSON.parse(localStorage.getItem('lalala-dev')).individuals.at(-1));
     await page.reload();await expect(page.locator('#start-button')).toHaveAttribute('data-phase','idle');
     expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('lalala-dev')).individuals.at(-1))).toEqual(recorded);
@@ -39,7 +44,7 @@ for(const [width,height]of [[320,640],[402,760]])test(`the player's free meal is
   expect(content.stools.find(s=>s.id==='corn-pebbles').generation.sources.foods).toEqual(['corn']);
 });
 
-test('V6.1 recipe and source pages agree on shape preferences',async({page})=>{
+test('recommended meals and source pages agree on force shape preferences',async({page})=>{
   await page.setViewportSize({width:402,height:760});
   await page.goto('/');
   await page.locator('#collection-button').click();

@@ -11,8 +11,7 @@ export function collectEffects(input) {
   const drink = drinkById[selection.drinkId];
   const additive = additiveById[selection.additives[0]];
   const toilet = toiletById[selection.toiletId];
-  const retentionChange = selection.digestionTime === "2" ? 1 : selection.digestionTime === "8" ? -2 : 0;
-  food.residues = food.residues.map(residue => ({ ...residue, retention: Math.max(1, Math.min(7, residue.retention + retentionChange)) })).filter(residue => residue.retention > 1);
+  const retentionChange = 0;
   return {
     food,
     tags: [...new Set([...meal.flatMap(item => item.tags), ...(selection.water > 0 ? drink.tags : []), ...(additive?.tags || [])])],

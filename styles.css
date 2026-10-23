@@ -193,10 +193,6 @@ svg {
   left: 3%;
   top: 19%;
 }
-.right-tools {
-  right: 3%;
-  top: 32%;
-}
 .tool-button {
   padding: 2px;
   position: relative;
@@ -1020,41 +1016,6 @@ input[type="range"] {
 }
 .settings-dialog h2 {
   font-size: 22px;
-}
-.settings-note {
-  font-size: 14px;
-  line-height: 1.5;
-  color: #647258;
-  margin: 0;
-}
-.digestion-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.digestion-option {
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  border: 1px solid #e0e5d0;
-  border-radius: 18px;
-  background: #f1f4e5;
-  padding: 12px 8px;
-  gap: 6px;
-  min-height: 112px;
-}
-.digestion-option strong {
-  font-size: 32px;
-  font-weight: 500;
-  color: #647258;
-}
-.digestion-option span {
-  font-size: 16px;
-}
-.digestion-option small {
-  font-size: 13px;
-  line-height: 1.5;
-  color: #647258;
 }
 .settings-dialog > p {
   font-size: 14px;

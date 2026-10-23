@@ -3,7 +3,6 @@ import { toiletDrawing, toiletSvg } from "./artwork/toilets.js";
 import { toilets } from "../content/toilets.js";
 import { toiletUnlockHint } from "../progression/toilets.js";
 import { toiletById } from "../content/catalog.js";
-import { digestionOptions, digestionById } from "../content/digestion.js";
 import { createFoodPicker } from "./food-picker.js";
 import { $, $$ } from "./dom.js";
 
@@ -21,15 +20,6 @@ export function createSelectionView({
     onCommit: (foodIds) => onChange({ foodIds }),
   });
   const supplies = createSuppliesView({ getSelection, onChange });
-  $("#digestion-options").innerHTML = digestionOptions
-    .map(
-      (option) =>
-        `<button class="digestion-option" data-digestion="${option.id}" aria-pressed="false"><strong>${option.label}</strong><span>${option.name}</span><small>${option.description}</small></button>`,
-    )
-    .join("");
-  $("#choose-digestion").addEventListener("click", () =>
-    $("#digestion-dialog").showModal(),
-  );
   const equipmentDialog = $("#equipment-dialog");
   let previewToiletId = getSelection().toiletId;
   let locked = false;
@@ -38,10 +28,6 @@ export function createSelectionView({
     previewToiletId = getSelection().toiletId;
     renderToiletPicker();
     equipmentDialog.showModal();
-  });
-  $("#digestion-options").addEventListener("click", (event) => {
-    const option = event.target.closest("[data-digestion]");
-    if (option) onChange({ digestionTime: option.dataset.digestion });
   });
   function switchToilet(direction) {
     if (locked) return;
@@ -95,14 +81,6 @@ export function createSelectionView({
   });
   function render() {
     const selection = getSelection();
-    const digestion = digestionById[selection.digestionTime];
-    $("#digestion-summary").textContent =
-      selection.digestionTime === "random" ? "随机" : `${digestion.label} · ${selection.digestionTime === "2" ? "偏湿" : selection.digestionTime === "8" ? "偏干" : "适中"}`;
-    $$("[data-digestion]").forEach((button) => {
-      const selected = button.dataset.digestion === selection.digestionTime;
-      button.classList.toggle("selected", selected);
-      button.setAttribute("aria-pressed", selected);
-    });
     const toilet = toiletById[selection.toiletId];
     $("#toilet-name").textContent = toilet.name;
     $("#choose-toilet").setAttribute(
@@ -127,7 +105,7 @@ export function createSelectionView({
     foodPicker.lock(locked);
     supplies.lock(locked);
     $$(
-      ".recipe-card, .drink-choice, #water, #choose-toilet, #choose-digestion, [data-digestion]",
+      ".recipe-card, .drink-choice, #water, #choose-toilet",
     ).forEach((input) => {
       input.disabled = locked;
     });
